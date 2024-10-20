@@ -1,28 +1,51 @@
-import "dvd" -- DEMO
-local dvd = dvd(1, -1) -- DEMO
+import "CoreLibs/object"
+import "CoreLibs/graphics"
+import "CoreLibs/sprites"
+import "CoreLibs/timer"
+
+import "obj/SceneManager"
 
 local gfx <const> = playdate.graphics
-local font = gfx.font.new('font/Mini Sans 2X') -- DEMO
 
 local function loadGame()
-	playdate.display.setRefreshRate(50) -- Sets framerate to 50 fps
-	math.randomseed(playdate.getSecondsSinceEpoch()) -- seed for math.random
-	gfx.setFont(font) -- DEMO
+
+	SCENE_Z_INDEX = 0
+	UI_Z_INDEX = 10000
+	TRANSITIONS_Z_INDEX = 20000
+
+	local font = gfx.font.new('font/BAUHAUS93')
+	gfx.setFont(font)
+
+	g_inverted = false
+	g_fps = false
+	playdate.display.setInverted(g_inverted)
+
+	local menu = playdate.getSystemMenu()
+
+	local menuItem, error = menu:addMenuItem("Theme", function()
+		g_inverted = not g_inverted
+		playdate.display.setInverted(g_inverted)
+	end)
+
+	local menuItem, error = menu:addMenuItem("Show FPS", function()
+		g_fps = not g_fps
+	end)
+
+	playdate.display.setRefreshRate(50)
+	gfx.setBackgroundColor(playdate.graphics.kColorClear)
+
+	g_SceneManager= SceneManager()
+
 end
 
-local function updateGame()
-	dvd:update() -- DEMO
-end
-
-local function drawGame()
-	gfx.clear() -- Clears the screen
-	dvd:draw() -- DEMO
-end
 
 loadGame()
 
 function playdate.update()
-	updateGame()
-	drawGame()
-	playdate.drawFPS(0,0) -- FPS widget
+	gfx.sprite.update()
+	playdate.timer.updateTimers()
+	
+	if g_fps then
+		playdate.drawFPS(0, 0)
+	end
 end
