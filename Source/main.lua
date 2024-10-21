@@ -5,6 +5,8 @@ import "CoreLibs/timer"
 
 import "obj/SceneManager"
 
+import "data/map"
+
 local gfx <const> = playdate.graphics
 
 local function loadGame()
@@ -17,7 +19,7 @@ local function loadGame()
 	gfx.setFont(font)
 
 	g_inverted = false
-	g_fps = false
+	g_fps = true
 	playdate.display.setInverted(g_inverted)
 
 	local menu = playdate.getSystemMenu()
@@ -35,6 +37,8 @@ local function loadGame()
 	gfx.setBackgroundColor(playdate.graphics.kColorClear)
 
 	g_SceneManager= SceneManager()
+
+	initMap()
 
 end
 

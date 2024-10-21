@@ -13,11 +13,12 @@ local gfx <const> = pd.graphics
 
 class('Scene').extends(gfx.sprite)
 
-function Scene:init()
-
-    self.name = "Scene"
-    self.sprites = {}
-    
+function Scene:init(data)
+    print(data)
+    if data then
+        self.data = data
+    end
+    self.sprites = {} 
 end
 
 function Scene:load()

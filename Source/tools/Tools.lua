@@ -1,3 +1,7 @@
+import "data/Map"
+import "data/Asteroids"
+import "data/StarSystems"
+
 function getRandomDistinctPair(min, max)
     -- Get the first random number
     local first = math.random(min, max)
@@ -104,4 +108,22 @@ function rotatePoint(x, y, cx, cy, angle)
     local new_y = new_py + cy
 
     return new_x, new_y
+end
+
+function printTable(table)
+    for k,v in pairs(table) do
+        print(k,v)
+    end
+end
+
+function goTo(x, y, z)
+
+    local _label = string.format("%i.%i.%i", x, y, z)
+
+    if map[_label] then
+        g_SceneManager:pushScene(map[_label], 'hwipe')
+    else
+        g_SceneManager:pushScene(StarSystem(empty), 'hwipe')
+    end
+
 end

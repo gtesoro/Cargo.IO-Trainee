@@ -106,7 +106,7 @@ function Ship:doUpdate()
 	x = playdate.math.lerp(self.x, shipX, 0.5)
     y = playdate.math.lerp(self.y, shipY, 0.5)
 
-	self:moveWitTo(x, y)
+	self:moveTo(x, y)
 
     -- local _a_x, _a_y, col, col_len = self:moveWithCollisions(shipX, shipY)
 

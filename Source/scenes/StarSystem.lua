@@ -14,49 +14,21 @@ import "ui/objective"
 import "tools/tools"
 import "obj/AnimatedSprite"
 
+import "scenes/scene"
+
 import "scenes/PlanetCard"
 
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('StarSystem').extends(gfx.sprite)
+class('StarSystem').extends(Scene)
 
-function StarSystem:init()
-    self.sprites = {}
-    self.name = "Star System"
-end
-
-function StarSystem:load()
-
-    self:startScene()
-    
-end
-
-function StarSystem:add()
-
-    for k,v in pairs(self.sprites) do
-        print(v.className, v:getPosition(), v:getZIndex())
-        v:add()
-    end
-    StarSystem.super.add(self)
-
-end
-
-function StarSystem:remove()
-    for k,v in pairs(self.sprites) do
-        v:remove()
-    end
-    StarSystem.super.remove(self)
-end
 
 function StarSystem:startScene()
 
-    self.playfield_width = 1600
-    self.playfield_height = 960
-
     self.ship = Ship(self)
     self.ship:setZIndex(2000)
-    self.ship:moveTo(self.playfield_width/2-100, self.playfield_height/2)
+    self.ship:moveTo(self.data.playfield_width/2-100, self.data.playfield_height/2)
 
     self.sprites[#self.sprites+1] = self.ship
 
@@ -70,62 +42,103 @@ function StarSystem:startScene()
     self:initPlanets()
     self:initOrbits()
     self:initIU()
+    self:initArrows()
 
 end
 
-function StarSystem:initBg() 
-    self.bg_sprite = gfx.sprite.new(gfx.image.new("sprites/bg") )
-    self.bg_sprite:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
-    self.bg_sprite:setIgnoresDrawOffset(true)
+function StarSystem:initBg()
+
+    self.bg_sprite = gfx.sprite.new(gfx.image.new(self.data.background))
+    self.bg_sprite:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)
     self.bg_sprite:setZIndex(0)
 
     self.sprites[#self.sprites+1] = self.bg_sprite
+
 end
 
 function StarSystem:initPlanets() 
-    local angle = 0.35
     self.planets = {}
 
-    local p = Planet("sprites/planets/planet3", 200, angle, 1, math.random(0, 360), self.playfield_width, self.playfield_height, true)
-    self.planets[#self.planets+1] = p
-    self.sprites[#self.sprites+1] = p
+    if self.data.planets then
+        for k,v in pairs(self.data.planets) do
+            local p = Planet(v.img, v.orbit_size, self.data.angle, v.speed, math.random(0, 360), self.data.playfield_width, self.data.playfield_height, v.outline)
+            self.planets[#self.planets+1] = p
+            self.sprites[#self.sprites+1] = p
+        end
+    end
 
-    p = Planet("sprites/planets/planet2", 300, angle, 1, math.random(0, 360), self.playfield_width, self.playfield_height, true)
-    self.planets[#self.planets+1] = p
-    self.sprites[#self.sprites+1] = p
+    if self.data.sun then
+        self.sun = AnimatedSprite(self.data.sun)
+        self.sun:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)
 
-    p = Planet("sprites/planets/planet1", 400, angle, 1, math.random(0, 360), self.playfield_width, self.playfield_height, true)
-    self.planets[#self.planets+1] = p
-    self.sprites[#self.sprites+1] = p
-
-    p = Planet("sprites/planets/planet4", 700, angle, 1, math.random(0, 360), self.playfield_width, self.playfield_height, false)
-    self.planets[#self.planets+1] = p
-    self.sprites[#self.sprites+1] = p
-
-    local _o, _t = getRandomDistinctPair(1, #self.planets)
-    self.current_origin = self.planets[_o]
-    self.current_destination = self.planets[_t]
-    self.current_target = self.planets[_o]
-
-    self.sun = AnimatedSprite("sprites/planets/star")
-    self.sun:moveTo(self.playfield_width/2, self.playfield_height/2)
-
-    self.sprites[#self.sprites+1] = self.sun
+        self.sprites[#self.sprites+1] = self.sun
+    end
 
 end
 
+function StarSystem:initArrows()
+
+    local offset = 20
+    self.arrow_y = 0
+
+    self.arrow_img = gfx.image.new("sprites/arrow")
+    self.arrow_canvas = gfx.image.new(self.arrow_img.width, self.arrow_img.height)
+
+    local _up = gfx.sprite.new(self.arrow_canvas)
+    _up:moveTo(self.data.playfield_width/2, _up.height/2 + offset)
+    _up:setZIndex(2)
+    self.sprites[#self.sprites+1] = _up
+
+    local _down = gfx.sprite.new(self.arrow_canvas)
+    _down:moveTo(self.data.playfield_width/2, self.data.playfield_height - _down.height/2 - offset)
+    _down:setZIndex(2)
+    _down:setRotation(180)
+    self.sprites[#self.sprites+1] = _down
+
+    local _left = gfx.sprite.new(self.arrow_canvas)
+    _left:moveTo(_left.height/2 + offset, self.data.playfield_height/2)
+    _left:setRotation(270)
+    _left:setZIndex(2)
+    self.sprites[#self.sprites+1] = _left
+
+    local _right = gfx.sprite.new(self.arrow_canvas)
+    _right:moveTo(self.data.playfield_width - _right.height/2 - offset, self.data.playfield_height/2)
+    _right:setZIndex(2)
+    _right:setRotation(90)
+    self.sprites[#self.sprites+1] = _right
+
+end
+
+function StarSystem:moveArrows()
+    self.arrow_y += 0.5
+    if self.arrow_y > self.arrow_img.height then
+        self.arrow_y = 0
+    end
+    gfx.pushContext(self.arrow_canvas)
+        gfx.clear()
+        gfx.setColor(playdate.graphics.kColorWhite)
+        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+        gfx.fillRect(0,0, self.arrow_canvas:getSize())
+        self.arrow_img:drawAnchored(self.arrow_canvas.width/2, self.arrow_canvas.height/2 - self.arrow_y, 0.5, 0.5)
+        self.arrow_img:drawAnchored(self.arrow_canvas.width/2, self.arrow_canvas.height + self.arrow_canvas.height/2 - self.arrow_y, 0.5, 0.5)
+    gfx.popContext()
+end
+
 function StarSystem:initOrbits() 
-    self.orbits_sprite = gfx.sprite.new(gfx.image.new(self.playfield_width, self.playfield_height))
-    gfx.pushContext(self.orbits_sprite:getImage())
-        local center_x = self.playfield_width/2
-        local center_y = self.playfield_height/2
+    self.orbits_sprite = gfx.sprite.new(gfx.image.new(self.data.playfield_width, self.data.playfield_height))
+    local img = self.orbits_sprite:getImage()
+    gfx.pushContext(img)
 
         gfx.setColor(playdate.graphics.kColorWhite)
+        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+        gfx.setLineWidth(2)
         for k, p in pairs(self.planets) do
-            drawDottedEllipse(p.cx , p.cy, p.h_radius, p.v_radius, math.floor(p.h_radius/self.playfield_width * 1000), 1, 0)
+            
+            gfx.drawEllipseInRect(p.cx - p.h_radius, p.cy - p.v_radius, 2 * p.h_radius, 2 * p.v_radius)
+            --drawDottedEllipse(p.cx , p.cy, p.h_radius, p.v_radius, math.floor(p.h_radius/self.data.playfield_width * 1000), 3, 0)
         end
     gfx.popContext()
-    self.orbits_sprite:moveTo(self.playfield_width/2, self.playfield_height/2)
+    self.orbits_sprite:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)
     self.orbits_sprite:setZIndex(1)
 
     self.sprites[#self.sprites+1] = self.orbits_sprite
@@ -133,11 +146,7 @@ end
 
 function StarSystem:initIU()
 
-    self.objective_ui = ObjectiveUI(self)
-    local objetive_ui_offset = 10
-    self.objective_ui:moveTo(pd.display.getWidth() - self.objective_ui.width/2 - objetive_ui_offset, self.objective_ui.height/2 + objetive_ui_offset)
 
-    self.sprites[#self.sprites+1] = self.objective_ui
     
 end
 
@@ -158,8 +167,8 @@ function StarSystem:moveCamera()
     
     _nx = playdate.math.lerp(self.x_offset, _nx, 0.5)
     _ny = playdate.math.lerp(self.y_offset, _ny, 0.5)
-    self.x_offset = clamp(_nx , 0, self.playfield_width - playdate.display.getWidth())
-    self.y_offset = clamp(_ny , 0, self.playfield_height - playdate.display.getHeight())
+    self.x_offset = clamp(_nx , 0, self.data.playfield_width - playdate.display.getWidth())
+    self.y_offset = clamp(_ny , 0, self.data.playfield_height - playdate.display.getHeight())
 
     gfx.setDrawOffset(-math.floor(self.x_offset), -math.floor(self.y_offset))
 
@@ -173,31 +182,33 @@ function StarSystem:update()
         return
     end     
 
+    self:moveArrows()
+
     local _s_x = self.ship.x
     local _s_y = self.ship.y
 
     if self.wrap then
 		if _s_x < 0 then
-			_s_x = self.playfield_width
+			_s_x = self.data.playfield_width
 		end
-		if _s_x > self.playfield_width then
+		if _s_x > self.data.playfield_width then
 			_s_x  = 0
 		end
 	
 		if _s_y < 0 then
-			_s_y = self.playfield_height 
+			_s_y = self.data.playfield_height 
 		end
-		if _s_y > self.playfield_height then
+		if _s_y > self.data.playfield_height then
 			_s_y = 0
 		end
         self.ship:moveTo(_s_x, _s_y)
 	else
-        if _s_y < 0 or _s_y > self.playfield_height then
+        if _s_y < 0 or _s_y > self.data.playfield_height then
             self.ship.shipVector.y *= -1
             self.ship.shipVector /= 2
         end
 
-        if _s_x < 0 or _s_x > self.playfield_width then
+        if _s_x < 0 or _s_x > self.data.playfield_width then
             self.ship.shipVector.x *= -1
             self.ship.shipVector /= 2
         end
@@ -205,15 +216,15 @@ function StarSystem:update()
         if _s_x < 0 then
 			_s_x = 0
 		end
-		if _s_x > self.playfield_width then
-			_s_x  = self.playfield_width
+		if _s_x > self.data.playfield_width then
+			_s_x  = self.data.playfield_width
 		end
 	
 		if _s_y < 0 then
 			_s_y = 0
 		end
-		if _s_y > self.playfield_height then
-			_s_y = self.playfield_height 
+		if _s_y > self.data.playfield_height then
+			_s_y = self.data.playfield_height 
 		end
         self.ship:moveTo(_s_x, _s_y)
 

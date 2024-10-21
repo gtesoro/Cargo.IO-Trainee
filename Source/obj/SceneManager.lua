@@ -2,6 +2,8 @@ import "CoreLibs/object"
 import "CoreLibs/sprites"
 import "CoreLibs/graphics"
 
+import "data/asteroids"
+
 import "scenes/Intro"
 import "scenes/StarSystem"
 import "scenes/MiningLaser"
@@ -9,7 +11,7 @@ import "transitions/HorizontalWipe"
 import "transitions/Unstack"
 import "transitions/Stack"
 
-
+print("wooooooo")
 
 local gfx <const> = playdate.graphics
 local pd <const> = playdate
@@ -23,7 +25,7 @@ function SceneManager:init()
     self.transition_duration = 500
     self.transitioning = false
 
-    local _initial_scene = MiningLaser()
+    local _initial_scene = Intro()
     _initial_scene:load()
 
     self.scene_stack[#self.scene_stack+1] = _initial_scene

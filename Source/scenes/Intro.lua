@@ -2,8 +2,7 @@ import "CoreLibs/object"
 import "CoreLibs/sprites"
 import "CoreLibs/graphics"
 
-import "scenes/StarSystem"
-import "scenes/MiningLaser"
+import "tools/tools"
 
 local gfx <const> = playdate.graphics
 class('Intro').extends(playdate.graphics.sprite)
@@ -37,8 +36,7 @@ end
 function Intro:update()
 
     if playdate.buttonJustReleased(playdate.kButtonA) then
-        --self.test_sprite:add()
-        g_SceneManager:pushScene(MiningLaser(), 'hwipe')
+        goTo(0,0,0)
     end
 
 end
