@@ -69,15 +69,15 @@ function Solar:startStage()
     self.stage_over = false
 
 
-    self.planets[1] =  Planet("sprites/planets/p1", 0.3, 55, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
+    self.planets[1] =  Planet("assets/planets/p1", 0.3, 55, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
 
-    self.planets[2] =  Planet("sprites/planets/p1", 0.4, 100, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
+    self.planets[2] =  Planet("assets/planets/p1", 0.4, 100, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
 
-    self.planets[3] =  Planet("sprites/planets/p1", 1, 100, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
+    self.planets[3] =  Planet("assets/planets/p1", 1, 100, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
 
-    self.planets[4] =  Planet("sprites/planets/p1", 0.6, 150, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
+    self.planets[4] =  Planet("assets/planets/p1", 0.6, 150, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
 
-    self.planets[5] =  Planet("sprites/planets/p1", 0.5, 200, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
+    self.planets[5] =  Planet("assets/planets/p1", 0.5, 200, angle, 0.001 * math.random(1, 8), math.random(0, 360), 2)
 
 
     local _o, _t = getRandomDistinctPair(1, #self.planets)

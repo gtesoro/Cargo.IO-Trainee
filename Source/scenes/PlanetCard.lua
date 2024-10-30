@@ -1,31 +1,61 @@
-import "CoreLibs/object"
-import "CoreLibs/sprites"
-import "CoreLibs/graphics"
-
-import "CoreLibs/animator"
-import "CoreLibs/sprites"
-import "CoreLibs/math"
-
-import "obj/ship"
-import "obj/planet"
-
-import "ui/fuel"
-import "ui/objective"
-import "tools/tools"
-import "obj/AnimatedSprite"
-
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('PlanetCard').extends(gfx.sprite)
+class('PlanetCard').extends(Scene)
 
-function PlanetCard:initBg() 
+function PlanetCard:initGrid()
+     
+    local menuOptions = self.data.facilities
+    self.listview = playdate.ui.gridview.new(0, 30)
+    self.listview:setNumberOfRows(#menuOptions)
+    self.listview:setCellPadding(0, 0, 0, 0)
+    self.listview:setContentInset(5, 5, 5, 5)
 
-    local img = gfx.image.new(pd.display.getWidth(), pd.display.getHeight())
-    gfx.pushContext(img)
+    function self.listview:drawCell(section, row, column, selected, x, y, width, height)
+        if selected then
+            gfx.setColor(gfx.kColorBlack)
+            gfx.fillRoundRect(x, y, width, height, 4)
+            gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+        else
+            gfx.setImageDrawMode(gfx.kDrawModeCopy)
+        end
+        gfx.drawTextInRect(string.format("*%s*",menuOptions[row]), x, y+height/4, width, height, nil, "...", kTextAlignment.center)
+    end
+
+    self.grid_sprite = gfx.sprite.new(gfx.image.new(self.data_width, self.data_height))
+    self.grid_sprite:moveTo(self.data_x + self.data_width/2, self.data_y + self.data_height/2)
+    self.grid_sprite:setZIndex(1)
+
+    gfx.pushContext(self.grid_sprite:getImage())
+        gfx.clear()
+        self.listview:drawInRect(0,0, self.data_width, self.data_height)
         gfx.setColor(playdate.graphics.kColorBlack)
-        --gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
-        gfx.fillRect(0,0, img:getSize())
+    gfx.popContext()
+
+    self.sprites[#self.sprites+1] = self.grid_sprite
+    
+end
+
+function PlanetCard:initBg()
+
+    local offset_x = 10
+    local offset_y = 20
+    local float = 2
+    local radius = 4
+
+    local data_width = pd.display.getWidth()/2 - self.planet_offset*2
+
+    local img = gfx.image.new(pd.display.getWidth(), pd.display.getHeight(), gfx.kColorBlack)
+    gfx.pushContext(img)
+        gfx.setColor(playdate.graphics.kColorWhite)
+        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+        gfx.fillRoundRect(offset_x + float, offset_y + float, data_width - offset_x*2 + float , pd.display.getHeight() - offset_y*2 + float, radius)
+        gfx.setColor(playdate.graphics.kColorWhite)
+        gfx.fillRoundRect(offset_x, offset_y, data_width- offset_x*2, pd.display.getHeight() - offset_y*2, radius)
+        self.data_x = offset_x
+        self.data_y = offset_y
+        self.data_width = data_width- offset_x*2
+        self.data_height = pd.display.getHeight() - offset_y*2
     gfx.popContext()
     self.bg_sprite = gfx.sprite.new(img)
     self.bg_sprite:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
@@ -36,8 +66,9 @@ function PlanetCard:initBg()
 end
 
 function PlanetCard:initPlanet()
-    self.planet = AnimatedSprite("sprites/planets/planet5",100)
-    self.planet:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
+    self.planet_offset = 20
+    self.planet = AnimatedSprite(self.data.img_hd,100)
+    self.planet:moveTo(pd.display.getWidth() - pd.display.getWidth()/4 - self.planet_offset, pd.display.getHeight()/2)
 
     local img = gfx.image.new(self.planet:getSize())
     gfx.pushContext(img)
@@ -47,55 +78,44 @@ function PlanetCard:initPlanet()
     gfx.popContext()
     self.planet_outline = gfx.sprite.new(img)
     self.planet_outline:setZIndex(2)
-    self.planet_outline:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
+    self.planet_outline:moveTo(pd.display.getWidth() - self.planet.width/2 - self.planet_offset, pd.display.getHeight()/2)
 
     self.sprites[#self.sprites+1] = self.planet_outline
     self.sprites[#self.sprites+1] = self.planet
     
 end
 
-function PlanetCard:init()
-
-    self.name = "Planet Card"
-    self.sprites = {}
-    
-end
-
-function PlanetCard:load()
-    self:startScene()
-end
-
-
-function PlanetCard:add()
-
-    for k,v in pairs(self.sprites) do
-        v:add()
-    end
-    PlanetCard.super.add(self)
-
-end
-
 function PlanetCard:startScene()
-    self:initBg()
     self:initPlanet()
-end
-
-function PlanetCard:remove()
-    
-    for k,v in pairs(self.sprites) do
-        v:remove()
-    end
-    PlanetCard.super.remove(self)
+    self:initBg()
+    self:initGrid()
 end
 
 function PlanetCard:update()
-    gfx.setDrawOffset(0,0)
-
-    if g_SceneManager.transitioning then
-        return
-    end
+    PlanetCard.super.update(self)
 
     if pd.buttonJustReleased(pd.kButtonB) then
         g_SceneManager:popScene('hwipe')
     end
+
+    local list_mod = false
+
+    if pd.buttonJustPressed(pd.kButtonUp) then
+        self.listview:selectPreviousRow(false)
+        list_mod = true
+    end
+
+    if pd.buttonJustPressed(pd.kButtonDown) then
+        self.listview:selectNextRow(false)
+        list_mod = true
+    end
+
+    if list_mod then
+        gfx.pushContext(self.grid_sprite:getImage())
+            gfx.clear()
+            self.listview:drawInRect(0,0, self.data_width, self.data_height)
+            gfx.setColor(playdate.graphics.kColorBlack)
+        gfx.popContext()
+    end
+
 end

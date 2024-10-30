@@ -1,9 +1,3 @@
-import "CoreLibs/object"
-import "CoreLibs/sprites"
-import "CoreLibs/graphics"
-
-import "tools/tools"
-
 local gfx <const> = playdate.graphics
 class('Intro').extends(playdate.graphics.sprite)
 
@@ -11,7 +5,7 @@ function Intro:init()
 
     self.name = "Intro"
 
-    local bgImage = gfx.image.new("sprites/intro")
+    local bgImage = gfx.image.new("assets/intro")
     assert( bgImage )
 
     self.test_sprite = gfx.sprite.new(gfx.image.new(400,240, gfx.kColorClear))

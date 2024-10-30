@@ -1,13 +1,7 @@
-import "CoreLibs/object"
-import "CoreLibs/graphics"
-import "CoreLibs/sprites"
-import "CoreLibs/timer"
+import "init"
 
-import "obj/SceneManager"
-
-import "data/map"
-
-local gfx <const> = playdate.graphics
+local pd <const> = playdate
+local gfx <const> = pd.graphics
 
 local function loadGame()
 
@@ -42,6 +36,15 @@ local function loadGame()
 
 end
 
+function pd.gameWillPause()
+	pd.setMenuImage(drawPauseMenu())
+	pd.stop()
+end
+
+
+function pd.gameWillResume()
+	pd.start()
+end
 
 loadGame()
 

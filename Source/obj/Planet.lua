@@ -1,11 +1,3 @@
-import "CoreLibs/object"
-import "CoreLibs/sprites"
-import "CoreLibs/graphics"
-
-import "CoreLibs/animator"
-import "CoreLibs/sprites"
-import "CoreLibs/animation"
-
 local gfx <const> = playdate.graphics
 
 class('Planet').extends(playdate.graphics.sprite)

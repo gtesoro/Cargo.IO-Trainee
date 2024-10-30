@@ -1,6 +1,10 @@
 import "data/Map"
+import "data/Player"
 import "data/Asteroids"
-import "data/StarSystems"
+import "data/Systems"
+
+local pd <const> = playdate
+local gfx <const> = pd.graphics
 
 function getRandomDistinctPair(min, max)
     -- Get the first random number
@@ -118,12 +122,79 @@ end
 
 function goTo(x, y, z)
 
+    
     local _label = string.format("%i.%i.%i", x, y, z)
 
+    if g_player.current_position.x then
+        g_player.last_position.x = g_player.current_position.x
+        g_player.last_position.y = g_player.current_position.y
+        g_player.last_position.z = g_player.current_position.z
+    end
+
+    g_player.current_position.x = x
+    g_player.current_position.y = y
+    g_player.current_position.z = z
+
+    print("Going to:", _label)
+
     if map[_label] then
-        g_SceneManager:pushScene(map[_label], 'hwipe')
+        g_SceneManager:switchScene(map[_label], 'hwipe')
     else
-        g_SceneManager:pushScene(StarSystem(empty), 'hwipe')
+        empty.x = x
+        empty.y = y 
+        empty.z = z
+        g_SceneManager:switchScene(System(empty), 'hwipe')
     end
 
 end
+
+function drawPauseMenu()
+
+    local img =  gfx.image.new("assets/pause_bg")
+	if g_player.current_position.x then
+		local _label = "*System*"
+        local _data = string.format("%i.%i.%i", g_player.current_position.x, g_player.current_position.y, g_player.current_position.z)
+		gfx.pushContext(img)
+			gfx.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
+			gfx.setColor(gfx.kColorWhite)
+			gfx.drawTextAligned(_label, 10, 65, kTextAlignment.left)
+            gfx.drawTextAligned(_data, 190, 65, kTextAlignment.right)
+		gfx.popContext()
+	end
+
+    return img
+    
+end
+
+function checkAndOpenInventory()
+    if pd.buttonJustReleased(pd.kButtonUp) then
+        g_SceneManager:pushScene(Inventory(), 'hwipe')
+    end
+end
+
+function scaleAndCenterImage(image, canvas)
+    -- Get the original image dimensions
+    local imageWidth, imageHeight = image:getSize()
+    
+    -- Calculate the scaling factor to fit the image within the canvas
+    local scaleX = canvas.width / imageWidth
+    local scaleY = canvas.height / imageHeight
+    local scale = math.max(scaleX, scaleY)
+
+    -- Calculate the new image dimensions
+    local newWidth = imageWidth * scale
+    local newHeight = imageHeight * scale
+
+    -- Calculate the top-left position to center the image on the canvas
+    local x = (canvas.width  - newWidth) / 2
+    local y = (canvas.height - newHeight) / 2
+
+    -- Draw the scaled image at the calculated position
+    gfx.pushContext(canvas)
+        image:drawScaled(x, y, scale)
+    gfx.popContext()
+end
+
+function round(x)
+    return x>=0 and math.floor(x+0.5) or math.ceil(x-0.5)
+  end

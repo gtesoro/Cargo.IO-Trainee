@@ -12,7 +12,7 @@ function SolarBg:init(stage)
 
     self.image = gfx.image.new(playdate.display.getWidth(), playdate.display.getHeight())
 
-    self.bg_sprite = gfx.sprite.new(gfx.image.new("sprites/solar_bg"))
+    self.bg_sprite = gfx.sprite.new(gfx.image.new("assets/solar_bg"))
 
     self.bg_sprite:add()
     self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)

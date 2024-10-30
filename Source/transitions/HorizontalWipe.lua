@@ -14,7 +14,7 @@ local gfx <const> = pd.graphics
 class('HorizontalWipe').extends(gfx.sprite)
 
 function HorizontalWipe:init(duration, start_x, stop_x, inverted)
-    local img = gfx.image.new("sprites/loading") --pd.display.getWidth(), pd.display.getHeight(), gfx.kColorBlack)
+    local img = gfx.image.new("assets/loading") --pd.display.getWidth(), pd.display.getHeight(), gfx.kColorBlack)
     self:setImage(img)
     self:setZIndex(TRANSITIONS_Z_INDEX)
     self:setIgnoresDrawOffset(true)

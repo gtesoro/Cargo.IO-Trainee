@@ -1,9 +1,10 @@
-import "scenes/StarSystem"
-import "scenes/MiningLaser"
-import "data/StarSystems"
-
 map = {}
 
+function addToMap(type, data)
+    map[string.format("%i.%i.%i", data.x, data.y, data.z)] = type(data)
+end
+
 function initMap()
-    map["0.0.0"] = StarSystem(sol)
+    addToMap(System, sol)
+    addToMap(System, asteroid_field)
 end

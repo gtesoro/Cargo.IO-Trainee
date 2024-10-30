@@ -1,28 +1,21 @@
-import "CoreLibs/object"
-import "CoreLibs/sprites"
-import "CoreLibs/graphics"
-
-import "CoreLibs/animator"
-import "CoreLibs/sprites"
-import "CoreLibs/math"
-
-import "tools/tools"
-
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('Scene').extends(gfx.sprite)
+class('Scene').extends(Widget)
 
 function Scene:init(data)
-    print(data)
     if data then
         self.data = data
     end
+    self.loaded = false
     self.sprites = {} 
 end
 
 function Scene:load()
-    self:startScene()
+    if not self.loaded then
+        self:startScene()
+    end
+    self.loaded = true
 end
 
 function Scene:startScene()

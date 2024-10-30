@@ -1,18 +1,3 @@
-import "CoreLibs/object"
-import "CoreLibs/sprites"
-import "CoreLibs/graphics"
-
-import "CoreLibs/animator"
-import "CoreLibs/sprites"
-import "CoreLibs/math"
-
-import "scenes/scene"
-import "tools/tools"
-
-import "CoreLibs/crank"
-
-import "obj/AnimatedSprite"
-
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
@@ -31,17 +16,17 @@ end
 
 function MiningLaser:initBg() 
 
-    self.bg_sprite = gfx.sprite.new(gfx.image.new("sprites/asteroid_bg") )
+    self.bg_sprite = gfx.sprite.new(self.data.bg_img:blurredImage(0.5, 2, gfx.image.kDitherTypeScreen)) --gfx.sprite.new(gfx.image.new("assets/backgrounds/asteroid_bg") )
     self.bg_sprite:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
     self.bg_sprite:setIgnoresDrawOffset(true)
     self.bg_sprite:setZIndex(0)
 
     self.sprites[#self.sprites+1] = self.bg_sprite
 
-    self.ship_overlay = gfx.sprite.new(gfx.image.new("sprites/asteroid_bg_overlay") )
+    self.ship_overlay = gfx.sprite.new(gfx.image.new("assets/backgrounds/asteroid_bg_overlay") )
     self.ship_overlay:moveTo(pd.display.getWidth()/2, pd.display.getHeight()*1.5)
     self.ship_overlay:setIgnoresDrawOffset(true)
-    self.ship_overlay:setZIndex(3)
+    self.ship_overlay:setZIndex(5)
 
     self.sprites[#self.sprites+1] = self.ship_overlay
 
@@ -66,19 +51,40 @@ function MiningLaser:initMinerals()
 
     self.minerals = {}
 
-    for k,v in pairs(self.data.minerals_data) do
-        local img = gfx.image.new(v[3], v[3])
-        gfx.pushContext(img)
-            gfx.setColor(gfx.kColorWhite)
-            gfx.fillCircleAtPoint(img.width/2, img.height/2, img.width/2)
-        gfx.popContext()
-        local sprt = gfx.sprite.new(img)
-        sprt:moveTo(v[1] + pd.display.getWidth()/2 - self.asteroid_img.width/2, v[2] + pd.display.getHeight()/2 - self.asteroid_img.height/2)
-        sprt:setZIndex(4)
-        self.minerals[#self.minerals+1] = {sprt, sprt.x, sprt.y}
-        self.sprites[#self.sprites+1] = sprt
+    local _x_split = 2
+    local _y_split = 2
+
+    for i=0,_x_split-1 do
+        for j=0,_y_split-1 do
+
+            local _covered = false
+            local _x_start, _y_start = math.floor(i*self.asteroid_img.width/_x_split), math.floor(j*self.asteroid_img.height/_y_split)
+            local _x_end, _y_end = math.floor((i+1)*self.asteroid_img.width/_x_split), math.floor((j+1)*self.asteroid_img.height/_y_split)
+            local _x, _y = _x_start, _y_start
+            local _d = 0
+
+            while not _covered do
+                _x, _y = math.random(_x_start, _x_end), math.random(_y_start, _y_end)
+                _d = math.random(10, 20)
+                _covered = self:checkCirlcecIsCovered(_x, _y, _d/2, self.asteroid_img)
+            end
+
+            local img = gfx.image.new(_d, _d)
+            gfx.pushContext(img)
+                gfx.setColor(gfx.kColorWhite)
+                gfx.fillCircleAtPoint(img.width/2, img.height/2, img.width/2)
+                gfx.setColor(gfx.kColorBlack)
+                gfx.setLineWidth(2)
+                gfx.drawCircleAtPoint(img.width/2, img.height/2, img.width/2)
+            gfx.popContext()
+            local sprt = gfx.sprite.new(img)
+            sprt:moveTo(_x + pd.display.getWidth()/2 - self.asteroid_img.width/2, _y + pd.display.getHeight()/2 - self.asteroid_img.height/2)
+            sprt:setZIndex(4)
+            self.minerals[#self.minerals+1] = {sprt, sprt.x, sprt.y}
+            self.sprites[#self.sprites+1] = sprt
+
+        end
     end
-    
 end
 
 function MiningLaser:rotateMinerals()
@@ -104,6 +110,11 @@ function MiningLaser:animateMineral(mineral)
         mineral:remove()
         self:closeDoor()
     end
+
+    if #g_player.inventory.items < g_player.inventory.capacity then
+        g_player.inventory.items[#g_player.inventory.items+1] = Neodymium()
+    end
+
 end
 
 function MiningLaser:initDoor()
@@ -113,7 +124,7 @@ function MiningLaser:initDoor()
     local _thick = 10
     local _line_sprite = gfx.sprite.new(gfx.image.new(_s, _thick))
     _line_sprite:moveTo(_c_x, _c_y+_thick/2)
-    _line_sprite:setZIndex(3)
+    _line_sprite:setZIndex(6)
 
     self.door_sprite = _line_sprite
     
@@ -154,6 +165,21 @@ function MiningLaser:openDoor()
     end
 end
 
+function MiningLaser:checkCirlcecIsCovered(x, y, r, img)
+    local _arc = pd.geometry.arc.new(x, y, r, 0, 360)
+    if img:sample(x, y) == gfx.kColorClear then
+        return false
+    end
+    for d=0,_arc:length() do
+        local _p = _arc:pointOnArc(d)
+        if img:sample(_p.x, _p.y) == gfx.kColorClear then
+            return false
+        end
+    end
+
+    return true
+end
+
 function MiningLaser:checkFreeMinerals()
     local img = self.asteroid_canvas:getImage()
     for k,v in pairs(self.minerals) do
@@ -184,7 +210,8 @@ function MiningLaser:initAsteroid()
     self.asteroid_rotation = 1
     self.asteroid_angular_speed = 0
 
-    self.asteroid_img = gfx.image.new(self.data.asteroid_img, gfx.kColorClear)
+    print(self.data.img_hd)
+    self.asteroid_img = gfx.image.new(self.data.img_hd, gfx.kColorClear)
     assert(self.asteroid_img)
 
     self.asteroid_canvas = gfx.sprite.new()
@@ -291,6 +318,8 @@ function MiningLaser:applyLaser()
 end
 
 function MiningLaser:update()
+
+    MiningLaser.super.update(self)
 
     if g_SceneManager.transitioning then
         return

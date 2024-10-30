@@ -1,18 +1,3 @@
-import "CoreLibs/object"
-import "CoreLibs/sprites"
-import "CoreLibs/graphics"
-
-import "data/asteroids"
-
-import "scenes/Intro"
-import "scenes/StarSystem"
-import "scenes/MiningLaser"
-import "transitions/HorizontalWipe"
-import "transitions/Unstack"
-import "transitions/Stack"
-
-print("wooooooo")
-
 local gfx <const> = playdate.graphics
 local pd <const> = playdate
 
@@ -42,6 +27,46 @@ function SceneManager:getCurrentImageAsSprite()
     _s:setZIndex(0)
     _s:moveTo(200,120)
     return _s
+
+end
+
+function SceneManager:switchSceneStack(scene, duration)
+
+    local _t1 = Stack(duration, gfx.image.new(400,240, gfx.kColorBlack))
+    
+    _t1.endCallback = function ()    
+
+        if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:remove()
+        end
+        self.scene_stack[#self.scene_stack] = scene
+        scene:load()
+        scene:add()
+
+        self.transitioning = false
+    end
+
+    _t1:add()
+
+end
+
+function SceneManager:switchSceneHWipe(scene, duration)
+
+    local _t_in = HorizontalWipe(duration, 0, pd.display.getWidth())
+    _t_in.endCallback = function ()
+        if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:remove()
+        end
+        self.scene_stack[#self.scene_stack] = scene
+        scene:load()
+        scene:add()
+        local _t_out = HorizontalWipe(duration, 0, pd.display.getWidth(), true)
+        _t_out.endCallback = function ()
+            self.transitioning = false
+        end
+        _t_out:add()
+    end
+    _t_in:add()
 
 end
 
@@ -88,8 +113,33 @@ function SceneManager:pushSceneHWipe(scene, duration)
 
 end
 
+function SceneManager:switchScene(scene, transition, duration)
+
+    if not duration then
+        duration = self.transition_duration
+    end
+
+    if transition then
+        if transition == 'stack' then
+            self:switchhSceneStack(scene, duration)
+        elseif transition == 'hwipe' then
+            self:switchSceneHWipe(scene, duration)
+        end
+    else
+
+        if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:remove()
+        end
+        self.scene_stack[#self.scene_stack] = scene
+        scene:load()
+        scene:add()
+    end
+end
+
 
 function SceneManager:pushScene(scene, transition, duration)
+
+    self.transitioning = true
 
     if not duration then
         duration = self.transition_duration
@@ -111,11 +161,9 @@ function SceneManager:pushScene(scene, transition, duration)
         scene:add()
 
     end
-
 end
 
 function SceneManager:popSceneHWipe(duration)
-    self.transitioning = true
     local _t1 = Unstack(duration)
 
     self.scene_stack[#self.scene_stack]:remove()
@@ -133,7 +181,6 @@ function SceneManager:popSceneHWipe(duration)
 end
 
 function SceneManager:popSceneHWipe(duration)
-    self.transitioning = true
     
     local _t_in = HorizontalWipe(duration, 0, pd.display.getWidth())
     _t_in.endCallback = function ()
@@ -152,6 +199,8 @@ function SceneManager:popSceneHWipe(duration)
 end
 
 function SceneManager:popScene(transition, duration)
+
+    self.transitioning = true
 
     if not duration then
         duration = self.transition_duration
