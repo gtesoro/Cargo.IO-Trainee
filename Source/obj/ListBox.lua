@@ -1,9 +1,9 @@
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
-class('ListBox').extends(playdate.graphics.sprite)
+class('ListBox').extends(Widget)
 
-function ListBox:init(data) 
+function ListBox:init(data, width, height, item_height)
 
     if not data then
         data = {}
@@ -11,141 +11,113 @@ function ListBox:init(data)
 
     self.data = data
 
-    local _w, _h = 0, 0
+    local padding = 2
 
-    local _min_width = 0
+    local _w, _h = 0, 0
+    local text_offset = 1
     local _item_height = 0
 
+    local _min_width = 0
+        
     for k,v in pairs(data) do
-        local _w, _h = gfx.getTextSize(v.name)
-        if _w > _min_width then
-            _min_width = _w
+        local __w, __h = gfx.getTextSize(v.name)
+        if __w > _min_width then
+            _min_width = __w
         end
-        _item_height = _h
+        _item_height = __h
     end
-
-    self.list_mod = false
-    self.focused = true
-    self.outline = false
-
-    local text_offset = 5
-
-    self.float = 5
 
     _item_height = text_offset + _item_height
 
-    _w = _min_width + self.float + text_offset 
-    _h = _item_height * #data + self.float + text_offset
-    
-
-    self.listview = playdate.ui.gridview.new(0, _item_height)
-    self.listview:setNumberOfRows(#data)
-
-    -- self.listview:setCellPadding(5, 5, 2, 2)
-    -- self.listview:setContentInset(5, 5, 5, 5)
-
-    function self.listview:drawCell(section, row, column, selected, x, y, width, height)
-        if selected then
-            gfx.setColor(gfx.kColorBlack)
-            gfx.fillRoundRect(x, y, width-text_offset, height, 4)
-            gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-        else
-            gfx.setImageDrawMode(gfx.kDrawModeCopy)
-        end
-        gfx.drawTextAligned(string.format("*%s*", data[row].name), x+text_offset , y+text_offset, kTextAlignment.left)
+    if item_height then
+        _item_height = item_height
     end
 
-    self:setImage(gfx.image.new(_w, _h))
+    _w = _min_width + text_offset*2 + padding*2
+    _h = _item_height * #data + text_offset*2 + padding*2
 
-    self:updateImg()
-    
-end
+    if width and height then
+        _w = width
+        _h = height
+    end
 
-function ListBox:setData(data)
-    
-    self.data = data
+    self.list_color = gfx.kColorBlack
+    self.listview = playdate.ui.gridview.new(0, _item_height)
+    self.listview:setNumberOfRows(#data)
+    self.listview:setCellPadding(padding,padding,padding,padding)
+    local img = gfx.image.new(_w, _h)
+    gfx.pushContext(img)
+        gfx.setColor(gfx.kColorWhite)
+        gfx.fillRoundRect(0, 0, _w, _h, 4)
+    gfx.popContext()
+    self.listview.backgroundImage = img
+
     function self.listview:drawCell(section, row, column, selected, x, y, width, height)
         if selected then
-            gfx.setColor(gfx.kColorBlack)
             gfx.fillRoundRect(x, y, width, height, 4)
             gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
         else
             gfx.setImageDrawMode(gfx.kDrawModeCopy)
         end
-        gfx.drawTextAligned(string.format("*%s*", data[row].name), x+text_offset , y+text_offset, kTextAlignment.left)
+        gfx.setFont(g_font)
+        --gfx.drawTextAligned(string.format("*%s*", data[row].name), x+text_offset , y+text_offset, kTextAlignment.left)
+        --gfx.drawTextInRect(string.format("%s", data[row].name), x+text_offset , y+text_offset, width, height, nil, nil, kTextAlignment.left, g_font)
+        gfx.drawText(string.format("%s", data[row].name), x + text_offset , y + text_offset)
     end
 
-    self:updateImg()
+    self:setImage(gfx.image.new(_w, _h))
 
+    self:drawList()
+
+    self:initInputs()
+    
 end
 
-function ListBox:updateImg()
-
-    local _w, _h =  self:getSize()
+function ListBox:drawList()
 
     gfx.pushContext(self:getImage())
         gfx.clear()
-
-        gfx.setColor(playdate.graphics.kColorBlack)
-        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
-        gfx.fillRoundRect(self.float, self.float, _w, _h, 4)
-        gfx.setColor(playdate.graphics.kColorWhite)
-        gfx.fillRoundRect(0,0, _w - self.float, _h - self.float, 4)
-
-        local outline_size = 2
-
-        self.listview:drawInRect(outline_size, outline_size, _w - outline_size - self.float, _h - outline_size - self.float)
-        
-        if self.outline then
-            gfx.setColor(gfx.kColorBlack)
-            gfx.setLineWidth(outline_size)
-            gfx.drawRoundRect(outline_size, outline_size, _w - outline_size - self.float, _h - outline_size - self.float, 4)
-        end
-
+        gfx.setColor(self.list_color)
+        self.listview:drawInRect(0, 0, self:getSize())
     gfx.popContext()
 
+    self:markDirty()
+end
+
+function ListBox:setListColor(color)
+    self.list_color = color
+    self:drawGrid()
 end
 
 
-function ListBox:handleControls()
-    if not self.focused then
-        return 
-    end
+function ListBox:initInputs()
 
-    if pd.buttonJustPressed(pd.kButtonUp) then
-        self.listview:selectPreviousRow(false)
-        self.list_mod = true
-    end
+    self.input_handlers = {
 
-    if pd.buttonJustPressed(pd.kButtonDown) then
-        self.listview:selectNextRow(false)
-        self.list_mod = true
-    end
+        AButtonUp = function ()
+            local s, r, c = self.listview:getSelection()
 
-    if pd.buttonJustReleased(pd.kButtonA) then
-        local s, r, c = self.listview:getSelection()
+            if self.data[r].callback then
+                self.data[r].callback()
+            end
+        end,
 
-        if self.data[r].callback then
-            self.data[r].callback()
+        BButtonUp = function ()
+            if self.b_callback then
+                self.b_callback()
+            end
+        end,
+
+        upButtonDown = function ()
+            self.listview:selectPreviousRow(false)
+            self:drawList()
+        end,
+
+        downButtonDown = function ()
+            self.listview:selectNextRow(false)
+            self:drawList()
         end
 
-    end
-
-    if pd.buttonJustReleased(pd.kButtonB) then
-        if self.b_callback then
-            self.b_callback()
-        end
-    end
-end
-
-function ListBox:update()
-
-    self:handleControls() 
-
-    if self.list_mod then
-        self:updateImg()
-        self:markDirty()
-    end
-
+    }
     
 end

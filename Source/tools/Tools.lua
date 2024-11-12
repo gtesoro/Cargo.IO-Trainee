@@ -1,8 +1,3 @@
-import "data/Map"
-import "data/Player"
-import "data/Asteroids"
-import "data/Systems"
-
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
@@ -135,41 +130,67 @@ function goTo(x, y, z)
     g_player.current_position.y = y
     g_player.current_position.z = z
 
-    print("Going to:", _label)
 
-    if map[_label] then
-        g_SceneManager:switchScene(map[_label], 'hwipe')
+    local _s = g_systems[_label]
+
+    if _s then
+        g_player.map[_label] = _s
+        g_SceneManager:switchScene(_s.class(_s), 'hwipe')
     else
         empty.x = x
-        empty.y = y 
+        empty.y = y
         empty.z = z
+
+        g_player.map[_label] = {x = x, y = y, z = z, empty = true}
         g_SceneManager:switchScene(System(empty), 'hwipe')
     end
+
+    playdate.datastore.write(g_player, 'player')
 
 end
 
 function drawPauseMenu()
 
     local img =  gfx.image.new("assets/pause_bg")
+    gfx.pushContext(img)
+    gfx.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
+    gfx.setColor(gfx.kColorWhite)
 	if g_player.current_position.x then
 		local _label = "*System*"
         local _data = string.format("%i.%i.%i", g_player.current_position.x, g_player.current_position.y, g_player.current_position.z)
-		gfx.pushContext(img)
-			gfx.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
-			gfx.setColor(gfx.kColorWhite)
-			gfx.drawTextAligned(_label, 10, 65, kTextAlignment.left)
-            gfx.drawTextAligned(_data, 190, 65, kTextAlignment.right)
-		gfx.popContext()
+		
+        gfx.drawTextAligned(_label, 10, 65, kTextAlignment.left)
+        gfx.drawTextAligned(_data, 190, 65, kTextAlignment.right)
 	end
+
+    if g_player.money then
+		local _label = "*Money*"
+        local _data = string.format("%i", g_player.money)
+		
+        
+        gfx.drawTextAligned(_label, 10, 130, kTextAlignment.left)
+        gfx.drawTextAligned(_data, 190, 130, kTextAlignment.right)
+	end
+
+    gfx.popContext()
 
     return img
     
 end
 
-function checkAndOpenInventory()
-    if pd.buttonJustReleased(pd.kButtonUp) then
-        g_SceneManager:pushScene(Inventory(), 'hwipe')
-    end
+function getRelativePoint(x, y, offsetX, offsetY, angle)
+    -- Convert the angle from degrees to radians
+    local radians = math.rad(angle)
+    
+    -- Rotate the offset vector by the given angle
+    local rotatedOffsetX = offsetX * math.cos(radians) - offsetY * math.sin(radians)
+    local rotatedOffsetY = offsetX * math.sin(radians) + offsetY * math.cos(radians)
+    
+    -- Calculate the new coordinates
+    local newX = x + rotatedOffsetX
+    local newY = y + rotatedOffsetY
+    
+    return newX, newY
 end
 
 function scaleAndCenterImage(image, canvas)
@@ -197,4 +218,10 @@ end
 
 function round(x)
     return x>=0 and math.floor(x+0.5) or math.ceil(x-0.5)
+end
+
+function tableLength(T)
+    local count = 0
+    for _ in pairs(T) do count = count + 1 end
+    return count
   end

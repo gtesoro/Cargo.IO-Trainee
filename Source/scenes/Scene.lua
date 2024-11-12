@@ -8,7 +8,7 @@ function Scene:init(data)
         self.data = data
     end
     self.loaded = false
-    self.sprites = {} 
+    self.sprites = List()
 end
 
 function Scene:load()
@@ -18,19 +18,19 @@ function Scene:load()
     self.loaded = true
 end
 
+function Scene:unload()
+    if self.loaded then
+        self:stopScene()
+    end
+    self.loaded = false
+end
+
+
 function Scene:startScene()
 end
 
-function Scene:update()
-    gfx.setDrawOffset(0,0)
-
-    if g_SceneManager.transitioning then
-        return
-    end
-end
-
 function Scene:add()
-    for k,v in pairs(self.sprites) do
+    for v in self.sprites:iter() do
         v:add()
     end
     Scene.super.add(self)
@@ -38,7 +38,7 @@ function Scene:add()
 end
 
 function Scene:remove()
-    for k,v in pairs(self.sprites) do
+    for v in self.sprites:iter() do
         v:remove()
     end
     Scene.super.remove(self)

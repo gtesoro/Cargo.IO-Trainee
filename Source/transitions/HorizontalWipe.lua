@@ -26,7 +26,7 @@ function HorizontalWipe:init(duration, start_x, stop_x, inverted)
     end
 
     
-    self.timer = pd.timer.new(duration, start_x, stop_x, pd.easingFunctions.inOutCubic)
+    self.timer = pd.timer.new(duration, start_x, stop_x, pd.easingFunctions.outQuint)
     self.timer.updateCallback = function(timer)
         if inverted then
             self:setClipRect(timer.value,0, pd.display.getWidth(), pd.display.getHeight())

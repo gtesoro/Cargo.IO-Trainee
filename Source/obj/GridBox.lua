@@ -3,7 +3,7 @@ local gfx <const> = playdate.graphics
 
 class('GridBox').extends(Widget)
 
-function GridBox:init(data, r, c, g_w, g_h, w, h)
+function GridBox:init(data, r, c, g_w, g_h, w, h, scale_icons)
 
     self.data = data
 
@@ -37,14 +37,19 @@ function GridBox:init(data, r, c, g_w, g_h, w, h)
     self.grid:setCellPadding(self.cell_padding, self.cell_padding, self.cell_padding, self.cell_padding)
     self.grid.backgroundImage = gfx.image.new(w, h, gfx.kColorBlack)
 
+    local _self = self
+
     function self.grid:drawCell(section, row, column, selected, x, y, width, height)
         if data[((row-1)*c) + column] then
-            local img = data[((row-1)*c) + column]:getImage()
-            local _s = math.max(g_w, g_h)/math.max(img.width, img.height)
+            local img = data[((row-1)*c) + column] :getImage()
+            local _s =  1
+            if scale_icons then
+                _s = (math.max(g_w, g_h)-math.max(img.width, img.height)*0.2)/math.max(img.width, img.height)
+            end
             img:scaledImage(_s):drawAnchored(x+ width/2, y + height/2, 0.5, 0.5)
         end
 
-        if selected then
+        if selected and _self:hasFocus() then
             gfx.setLineWidth(3)
             gfx.drawRoundRect(x-1, y-1, width+1, height+1, 2)
         else
@@ -53,11 +58,13 @@ function GridBox:init(data, r, c, g_w, g_h, w, h)
         end
 
     end
-    
-    print(w, h)
+
+    self:initInputs()
+
     local img = gfx.image.new(w, h)
     self:setImage(img)
     self:drawGrid()
+
     
 
 end
@@ -94,52 +101,56 @@ function GridBox:remove()
 
 end
 
-function GridBox:handleControls()
+function GridBox:initInputs()
 
-    if not self:hasFocus() then
-        return
-    end
+    self.input_handlers = {
 
-    local grid_draw = false
+        AButtonUp = function ()
+            if self.a_callback then
+                self.a_callback()
+            end
+        end,
 
-    if pd.buttonJustPressed(pd.kButtonUp) then
-        self.grid:selectPreviousRow(true)
-        grid_draw = true
-    end
+        BButtonUp = function ()
+            if self.b_callback then
+                self.b_callback()
+            end
+        end,
 
-    if pd.buttonJustPressed(pd.kButtonDown) then
-        self.grid:selectNextRow(true)
-        grid_draw = true
-    end
+        upButtonDown = function ()
+            self.grid:selectPreviousRow(true)
+            if self.on_change then
+                self.on_change(self:getSelection())
+            end
+            self:drawGrid()
+        end,
 
-    if pd.buttonJustPressed(pd.kButtonRight) then
-        self.grid:selectNextColumn(true)
-        grid_draw = true
-    end
+        downButtonDown = function ()
+            self.grid:selectNextRow(true)
+            if self.on_change then
+                self.on_change(self:getSelection())
+            end
+            self:drawGrid()
+        end,
 
-    if pd.buttonJustPressed(pd.kButtonLeft) then
-        self.grid:selectPreviousColumn(true)
-        grid_draw = true
-    end
+        leftButtonDown = function ()
+            self.grid:selectPreviousColumn(true)
+            if self.on_change then
+                self.on_change(self:getSelection())
+            end
+            self:drawGrid()
+        end,
 
-    if pd.buttonJustReleased(pd.kButtonA) then
-        if self.a_callback then
-            self.a_callback()
+        rightButtonDown = function ()
+            self.grid:selectNextColumn(true)
+            if self.on_change then
+                self.on_change(self:getSelection())
+            end
+            self:drawGrid()
         end
-        
-    end
 
-    if pd.buttonJustReleased(pd.kButtonB) then
-        if self.b_callback then
-            print('b_callback')
-            self.b_callback()
-        end
-    end
-
-    if grid_draw then
-        self:drawGrid()
-    end
-
+    }
+    
 end
 
 function GridBox:getSelection()
@@ -163,8 +174,12 @@ function GridBox:getSelectionPosition()
     return self.x - self.width/2 + (c-1)*(self.g_w + self.cell_padding*2) + (self.g_w+self.cell_padding)/2, self.y - self.height/2 + (r-1)*(self.g_h + self.cell_padding*2) + (self.g_h+self.cell_padding)/2
 end
 
-function GridBox:update()
+function GridBox:focus()
+    GridBox.super.focus(self)
+    self:drawGrid()
+end
 
-    self:handleControls()
-    
+function GridBox:unfocus()
+    GridBox.super.unfocus(self)
+    self:drawGrid()
 end

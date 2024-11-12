@@ -5,12 +5,17 @@ class('MiningLaser').extends(Scene)
 
 function MiningLaser:startScene()
 
+    self.exiting = false
+    self.firing = false
+    self.exploding = false
+
     self:initBg()
     self:initAsteroid()
     self:initLaser()
     self:initMinerals()
     self:initDoor()
     self:animateShipIn()
+    self:initInputs()
 
 end
 
@@ -21,14 +26,14 @@ function MiningLaser:initBg()
     self.bg_sprite:setIgnoresDrawOffset(true)
     self.bg_sprite:setZIndex(0)
 
-    self.sprites[#self.sprites+1] = self.bg_sprite
+    self.sprites:append(self.bg_sprite)
 
     self.ship_overlay = gfx.sprite.new(gfx.image.new("assets/backgrounds/asteroid_bg_overlay") )
     self.ship_overlay:moveTo(pd.display.getWidth()/2, pd.display.getHeight()*1.5)
     self.ship_overlay:setIgnoresDrawOffset(true)
     self.ship_overlay:setZIndex(5)
 
-    self.sprites[#self.sprites+1] = self.ship_overlay
+    self.sprites:append(self.ship_overlay)
 
 end
 
@@ -50,6 +55,8 @@ end
 function MiningLaser:initMinerals()
 
     self.minerals = {}
+
+    self.trigger_radius = math.random(5,10)
 
     local _x_split = 2
     local _y_split = 2
@@ -81,10 +88,39 @@ function MiningLaser:initMinerals()
             sprt:moveTo(_x + pd.display.getWidth()/2 - self.asteroid_img.width/2, _y + pd.display.getHeight()/2 - self.asteroid_img.height/2)
             sprt:setZIndex(4)
             self.minerals[#self.minerals+1] = {sprt, sprt.x, sprt.y}
-            self.sprites[#self.sprites+1] = sprt
+            self.sprites:append(sprt)
 
         end
     end
+
+    
+
+    self.trigger_animator = gfx.animator.new(1000, 0, 1, playdate.easingFunctions.inOutCubic)
+    self.trigger_animator.repeatCount = -1 
+    self.trigger_animator.reverses = true
+
+    local img = gfx.image.new(self.trigger_radius*2, self.trigger_radius*2)
+    local sprt = gfx.sprite.new(img)
+    sprt:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
+    sprt:setZIndex(5)
+    self.sprites:append(sprt)
+    self.trigger_point = sprt
+    self:drawTrigger()
+end
+
+function MiningLaser:drawTrigger()
+    local img = self.trigger_point:getImage() --gfx.image.new(self.trigger_point:getSize()) --
+
+    gfx.pushContext(img)
+        gfx.setColor(gfx.kColorWhite)
+        gfx.fillCircleAtPoint(img.width/2, img.height/2, img.width/2)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setDitherPattern(self.trigger_animator:currentValue(), gfx.image.kDitherTypeBayer8x8)
+        gfx.fillCircleAtPoint(img.width/2, img.height/2, img.width/2)
+        gfx.setColor(gfx.kColorWhite)
+    gfx.popContext()
+
+    self.trigger_point:markDirty()
 end
 
 function MiningLaser:rotateMinerals()
@@ -128,7 +164,7 @@ function MiningLaser:initDoor()
 
     self.door_sprite = _line_sprite
     
-    self.sprites[#self.sprites+1] = _line_sprite
+    self.sprites:append(_line_sprite)
 
 end
 
@@ -170,6 +206,11 @@ function MiningLaser:checkCirlcecIsCovered(x, y, r, img)
     if img:sample(x, y) == gfx.kColorClear then
         return false
     end
+    
+    if pd.geometry.distanceToPoint(x, y, img.width/2, img.height/2) < self.trigger_radius + r then
+        return false
+    end
+
     for d=0,_arc:length() do
         local _p = _arc:pointOnArc(d)
         if img:sample(_p.x, _p.y) == gfx.kColorClear then
@@ -180,21 +221,73 @@ function MiningLaser:checkCirlcecIsCovered(x, y, r, img)
     return true
 end
 
+function MiningLaser:checkCore()
+    local img = self.asteroid_canvas:getImage()
+    local _arc = pd.geometry.arc.new(img.width/2, img.height/2, self.trigger_radius, 0, 360)
+    local _free = math.floor(_arc:length()*.75)
+    for d=0,_arc:length() do
+        local _p = _arc:pointOnArc(d)
+        if img:sample(_p.x, _p.y) == gfx.kColorClear then
+            _free -= 1
+            if _free < 0 then
+                break
+            end
+        end
+    end
+    if _free <= 0 then
+        self:triggerExplosion()
+    end
+end
+
+function MiningLaser:triggerExplosion()
+
+    local img = gfx.image.new(pd.display.getWidth(), pd.display.getHeight())
+    local sprt = gfx.sprite.new(img)
+    sprt:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
+    sprt:setZIndex(6)
+    sprt:add()
+    self.sprites:append(sprt)
+    self.explosion = sprt
+    self.exploding = true
+    self.explosion_animator = gfx.animator.new(3000, 0, math.sqrt(pd.display.getWidth()^2 + pd.display.getHeight()^2)/2, playdate.easingFunctions.outCubic)
+
+end
+
+function MiningLaser:drawExplotion()
+
+    local img = self.explosion:getImage()
+
+    gfx.pushContext(img)
+        gfx.clear()
+        
+        gfx.setColor(gfx.kColorWhite)
+        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+        gfx.fillCircleAtPoint(img.width/2, img.height/2, self.explosion_animator:currentValue()*1.2)
+        gfx.setColor(gfx.kColorWhite)
+        gfx.fillCircleAtPoint(img.width/2, img.height/2, self.explosion_animator:currentValue())
+    gfx.popContext()
+
+    self.explosion:markDirty()
+
+end
+
+
+
 function MiningLaser:checkFreeMinerals()
     local img = self.asteroid_canvas:getImage()
     for k,v in pairs(self.minerals) do
-        local _arc = pd.geometry.arc.new(v[1].x, v[1].y, v[1]:getImage().width, 0, 360)
-        local _free = math.floor(_arc:length()/3)
+        local _arc = pd.geometry.arc.new(v[1].x, v[1].y, v[1]:getImage().width/2, 0, 360)
+        local _free = math.floor(_arc:length()*.75)
         for d=0,_arc:length() do
             local _p = _arc:pointOnArc(d)
-            if img:sample(_p.x, _p.y) ~= gfx.kColorClear then
+            if img:sample(_p.x, _p.y) == gfx.kColorClear then
                 _free -= 1
                 if _free < 0 then
                     break
                 end
             end
         end
-        if _free > 0 then
+        if _free <= 0 then
             self:animateMineral(v[1])
             table.remove(self.minerals, k)
         end
@@ -210,9 +303,9 @@ function MiningLaser:initAsteroid()
     self.asteroid_rotation = 1
     self.asteroid_angular_speed = 0
 
-    print(self.data.img_hd)
-    self.asteroid_img = gfx.image.new(self.data.img_hd, gfx.kColorClear)
-    assert(self.asteroid_img)
+
+    local img_path = string.format('assets/asteroids/a%i', math.random(1,2))
+    self.asteroid_img = gfx.image.new(img_path, gfx.kColorClear)
 
     self.asteroid_canvas = gfx.sprite.new()
     self.asteroid_canvas:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
@@ -231,18 +324,18 @@ function MiningLaser:initAsteroid()
         self.asteroid_canvas:setImage(self.asteroid_cache[math.floor(self.asteroid_rotation)])
     end
 
-    self.sprites[#self.sprites+1] = self.asteroid_canvas
+    self.sprites:append(self.asteroid_canvas)
 
 end
 
 function MiningLaser:initLaser()
 
-    self.beam_size = 10
+    self.beam_size = 5
     self.remaining_beam = self.beam_size
-    self.beam_rate = 0.5
+    self.beam_rate = 0.1
 
     self.laser_counter = 0
-    self.laser_update = 8
+    self.laser_update = 25
 
     self.laser_origin_x = 70
     self.laser_origin_y = 120
@@ -254,7 +347,7 @@ function MiningLaser:initLaser()
     self.laser_sprite:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
     self.laser_sprite:setZIndex(3)
 
-    self.sprites[#self.sprites+1] = self.laser_sprite
+    self.sprites:append(self.laser_sprite)
 end
 
 function MiningLaser:castRay(img, _laser_line)
@@ -296,6 +389,7 @@ function MiningLaser:applyLaser()
                 gfx.popContext()
             end
             self:checkFreeMinerals()
+            self:checkCore()
         else
             self.laser_target_x = 330
             self.laser_target_y = 120
@@ -317,31 +411,66 @@ function MiningLaser:applyLaser()
 
 end
 
-function MiningLaser:update()
+function MiningLaser:initInputs()
 
-    MiningLaser.super.update(self)
+    local _acc_mod = 1/250
+    local _max_speed = 3
 
-    if g_SceneManager.transitioning then
+    self.input_handlers = {
+
+        cranked = function (change, acceleratedChange)
+            if math.abs(self.asteroid_angular_speed) < _max_speed then
+                self.asteroid_angular_speed += acceleratedChange * _acc_mod
+                if math.abs(self.asteroid_angular_speed) > _max_speed then
+                    self.asteroid_angular_speed = 2 * self.asteroid_angular_speed/math.abs(self.asteroid_angular_speed)
+                end
+            end
+        end,
+
+        AButtonDown = function ()
+            self.firing = true
+        end,
+
+        AButtonUp = function ()
+            self.firing = false
+        end,
+
+        BButtonDown = function ()
+            self.exiting = true
+        end,
+
+        BButtonUp = function ()
+            self.exiting = false
+        end,
+
+        upButtonDown = function ()
+            g_SceneManager:pushScene(Inventory(), 'hwipe')
+        end
+
+    }
+end
+
+function MiningLaser:doUpdate()
+
+    if self.exploding then
+        self:drawExplotion()
+        if self.explosion_animator:ended() then
+            g_SceneManager:switchScene(Intro(), 'hwipe')
+        end
         return
     end
 
-    pd.display.setOffset(0,0)
+
+    self:drawTrigger()
+
+    local _as_decay = 0.001
 
     if self.asteroid_angular_speed > 0 then
-        self.asteroid_angular_speed -= 0.005
+        self.asteroid_angular_speed -= _as_decay
     end
 
     if self.asteroid_angular_speed < 0 then
-        self.asteroid_angular_speed += 0.005
-    end
-
-    local ticks = pd.getCrankTicks(360)
-
-    if math.abs(self.asteroid_angular_speed) < 2 then
-        self.asteroid_angular_speed += ticks/1000
-        if math.abs(self.asteroid_angular_speed) > 2 then
-            self.asteroid_angular_speed = 2 * self.asteroid_angular_speed/math.abs(self.asteroid_angular_speed)
-        end
+        self.asteroid_angular_speed += _as_decay
     end
 
     self.asteroid_rotation += self.asteroid_angular_speed
@@ -358,13 +487,12 @@ function MiningLaser:update()
 
     self.laser_counter += 1
 
-    if pd.buttonIsPressed(pd.kButtonA) and self.remaining_beam > 0 then
-        if not pd.buttonIsPressed(pd.kButtonB) then
-            pd.display.setOffset(math.random(-2,2), math.random(-2,2))
-            self.laser_sprite:add()
-            self:applyLaser()
-        end
+    if self.ship_overlay.y <= pd.display.getHeight()/2 and self.firing and self.remaining_beam > 0 then
+        pd.display.setOffset(math.random(-2,2), math.random(-2,2))
+        self.laser_sprite:add()
+        self:applyLaser()
     else
+        pd.display.setOffset(0,0)
         if self.remaining_beam < self.beam_size then
             self.remaining_beam += (self.beam_size/pd.getFPS())
         end
@@ -372,7 +500,7 @@ function MiningLaser:update()
     end
 
     if not self.animating_ship then
-        if pd.buttonIsPressed(pd.kButtonB) then
+        if self.exiting then
             if self.ship_overlay.y > pd.display.getHeight()*1.5 then
                 g_SceneManager:popScene('hwipe')
             end

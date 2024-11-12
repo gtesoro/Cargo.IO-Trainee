@@ -63,7 +63,7 @@ function Planet:doUpdate()
 
     self:setZIndex(self.y + 1000)
 
-    self.angle = (self.angle + self.speed * (2 * math.pi/playdate.getFPS())/60)
+    self.angle = (self.angle + self.speed * (2 * math.pi/50)/60)
 
     self.angle = math.fmod(self.angle, 2 * math.pi)
 

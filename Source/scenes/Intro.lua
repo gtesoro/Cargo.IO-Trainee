@@ -1,20 +1,14 @@
 local gfx <const> = playdate.graphics
-class('Intro').extends(playdate.graphics.sprite)
+class('Intro').extends(Scene)
 
-function Intro:init()
 
-    self.name = "Intro"
+function Intro:startScene()
+
+    self:initInputs()
+
 
     local bgImage = gfx.image.new("assets/intro")
     assert( bgImage )
-
-    self.test_sprite = gfx.sprite.new(gfx.image.new(400,240, gfx.kColorClear))
-    gfx.pushContext(self.test_sprite:getImage())
-        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
-        gfx.fillRect(0,0,400,240)
-    gfx.popContext()
-    self.test_sprite:setZIndex(30000)
-    self.test_sprite:moveTo(200,120)
 
     self:setImage(bgImage)
     self:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
@@ -23,14 +17,14 @@ function Intro:init()
 
 end
 
-function Intro:load()
-    
+function Intro:initInputs()
+
+    self.input_handlers = {
+
+        AButtonUp = function()
+            goTo(g_player.current_position.x, g_player.current_position.y, g_player.current_position.z)
+        end
+    }
+
 end
 
-function Intro:update()
-
-    if playdate.buttonJustReleased(playdate.kButtonA) then
-        goTo(0,0,0)
-    end
-
-end

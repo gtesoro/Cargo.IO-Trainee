@@ -3,4 +3,7 @@ local gfx <const> = pd.graphics
 
 class('Item').extends(gfx.sprite)
 
+function Item:init()
 
+    
+end

@@ -10,8 +10,9 @@ function SceneManager:init()
     self.transition_duration = 500
     self.transitioning = false
 
-    local _initial_scene = Intro()
+    local _initial_scene = Intro() --MiningLaser({bg_img = gfx.image.new(400, 240, gfx.kColorBlack)}) --
     _initial_scene:load()
+    _initial_scene:focus()
 
     self.scene_stack[#self.scene_stack+1] = _initial_scene
     
@@ -37,10 +38,12 @@ function SceneManager:switchSceneStack(scene, duration)
     _t1.endCallback = function ()    
 
         if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
         end
         self.scene_stack[#self.scene_stack] = scene
         scene:load()
+        scene:focus()
         scene:add()
 
         self.transitioning = false
@@ -55,10 +58,12 @@ function SceneManager:switchSceneHWipe(scene, duration)
     local _t_in = HorizontalWipe(duration, 0, pd.display.getWidth())
     _t_in.endCallback = function ()
         if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
         end
         self.scene_stack[#self.scene_stack] = scene
         scene:load()
+        scene:focus()
         scene:add()
         local _t_out = HorizontalWipe(duration, 0, pd.display.getWidth(), true)
         _t_out.endCallback = function ()
@@ -70,27 +75,6 @@ function SceneManager:switchSceneHWipe(scene, duration)
 
 end
 
-function SceneManager:pushSceneStack(scene, duration)
-
-    self.transitioning = true
-    local _t1 = Stack(duration, gfx.image.new(400,240, gfx.kColorBlack))
-    
-    _t1.endCallback = function ()    
-
-        if #self.scene_stack > 0 then
-            self.scene_stack[#self.scene_stack]:remove()
-        end
-        self.scene_stack[#self.scene_stack+1] = scene
-        scene:load()
-        scene:add()
-
-        self.transitioning = false
-    end
-
-    _t1:add()
-
-end
-
 function SceneManager:pushSceneHWipe(scene, duration)
 
     self.transitioning = true
@@ -98,10 +82,12 @@ function SceneManager:pushSceneHWipe(scene, duration)
     local _t_in = HorizontalWipe(duration, 0, pd.display.getWidth())
     _t_in.endCallback = function ()
         if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
         end
         self.scene_stack[#self.scene_stack+1] = scene
         scene:load()
+        scene:focus()
         scene:add()
         local _t_out = HorizontalWipe(duration, 0, pd.display.getWidth(), true)
         _t_out.endCallback = function ()
@@ -124,18 +110,45 @@ function SceneManager:switchScene(scene, transition, duration)
             self:switchhSceneStack(scene, duration)
         elseif transition == 'hwipe' then
             self:switchSceneHWipe(scene, duration)
+        else
+            assert(false)
         end
+        
     else
 
         if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
         end
         self.scene_stack[#self.scene_stack] = scene
         scene:load()
+        scene:focus()
         scene:add()
     end
 end
 
+function SceneManager:pushSceneUnstack(scene, duration)
+
+    self.transitioning = true
+    local _t1 = Unstack(duration)
+
+    if #self.scene_stack > 0 then
+        self.scene_stack[#self.scene_stack]:unfocus()
+        self.scene_stack[#self.scene_stack]:remove()
+    end
+    self.scene_stack[#self.scene_stack+1] = scene
+    scene:load()
+    scene:focus()
+    scene:add()
+    
+    _t1.endCallback = function ()    
+
+        self.transitioning = false
+    end
+
+    _t1:add()
+
+end
 
 function SceneManager:pushScene(scene, transition, duration)
 
@@ -150,26 +163,32 @@ function SceneManager:pushScene(scene, transition, duration)
             self:pushSceneStack(scene, duration)
         elseif transition == 'hwipe' then
             self:pushSceneHWipe(scene, duration)
+        elseif transition == 'unstack' then
+            self:pushSceneUnstack(scene, duration/2)
         end
     else
 
         if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
         end
         self.scene_stack[#self.scene_stack+1] = scene
         scene:load()
+        scene:focus()
         scene:add()
 
     end
 end
 
-function SceneManager:popSceneHWipe(duration)
+function SceneManager:popSceneUnstack(duration)
     local _t1 = Unstack(duration)
 
+    self.scene_stack[#self.scene_stack]:unfocus()
     self.scene_stack[#self.scene_stack]:remove()
     table.remove(self.scene_stack, #self.scene_stack)
 
     if #self.scene_stack > 0 then
+        self.scene_stack[#self.scene_stack]:focus()
         self.scene_stack[#self.scene_stack]:add()
     end
 
@@ -184,9 +203,11 @@ function SceneManager:popSceneHWipe(duration)
     
     local _t_in = HorizontalWipe(duration, 0, pd.display.getWidth())
     _t_in.endCallback = function ()
+        self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
         table.remove(self.scene_stack, #self.scene_stack)
         if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
         end
         local _t_out = HorizontalWipe(duration, 0, pd.display.getWidth(), true)
@@ -211,12 +232,16 @@ function SceneManager:popScene(transition, duration)
             self:popSceneStack(duration)
         elseif transition == 'hwipe' then
             self:popSceneHWipe(duration)
+        elseif transition == 'unstack' then
+            self:popSceneUnstack(duration/2)
         end
     else
 
+        self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
         table.remove(self.scene_stack, #self.scene_stack)
         if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
         end
 

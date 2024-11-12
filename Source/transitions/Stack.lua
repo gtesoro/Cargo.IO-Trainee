@@ -30,7 +30,6 @@ function Stack:init(duration, img)
         if self.endCallback then
             self.endCallback()
         end
-        print('Removing Stack')
         self:remove()
     end
 

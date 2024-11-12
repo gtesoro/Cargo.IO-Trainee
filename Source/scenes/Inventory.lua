@@ -6,6 +6,7 @@ class('Inventory').extends(Scene)
 
 function Inventory:startScene()
 
+    g_Notifications:notify("Inventory", 500)
     self:initGrids()
     self:initBg()
     
@@ -15,19 +16,14 @@ function Inventory:generateContextMenu(grid)
 
     local data = {
         {
-            name="Use"
-        },
-        {
             name="Drop"
         }
     }
 
     local _l = ListBox(data)
 
-    data[2].callback = function ()
-        local idx = grid:getSelectionIndex()
-        g_player.inventory.items[idx] = nil
-        table.remove(g_player.inventory.items, idx)
+    data[1].callback = function ()
+        table.remove(g_player.inventory.items, grid:getSelectionIndex())
         grid:drawGrid()
         grid:focus()
         _l:remove()
@@ -41,58 +37,76 @@ function Inventory:generateContextMenu(grid)
         grid:focus()
         _l:remove()
     end
+    _l:focus()
     _l:add()
 end
 
 function Inventory:initGrids()
 
-    local player_grid = GridBox(g_player.inventory.items, math.sqrt(g_player.inventory.capacity), math.sqrt(g_player.inventory.capacity))
-    player_grid:setBackgroundImage(gfx.image.new(180, 220, gfx.kColorBlack))
-    player_grid:setGridColor(gfx.kColorWhite)
-    player_grid:moveTo(100, 120)
-    player_grid:setZIndex(1)
-    player_grid:focus()
-    player_grid.a_callback = function ()
-        self:generateContextMenu(player_grid)
+    self.player_grid = GridBox(g_player.inventory.items, math.sqrt(g_player.inventory.capacity), math.sqrt(g_player.inventory.capacity), 40, 40)
+    self.player_grid:setBackgroundImage(gfx.image.new(180, 220, gfx.kColorBlack))
+    self.player_grid:setGridColor(gfx.kColorWhite)
+    self.player_grid:moveTo(100, 120)
+    self.player_grid:setZIndex(1)
+    self.player_grid:drawGrid()
+    self.player_grid.a_callback = function ()
+        self:generateContextMenu(self.player_grid)
     end
 
-    player_grid.b_callback = function ()
-        -- player_grid:unfocus()
-        -- self:focus()
-
-        g_SceneManager:popScene('hwipe')
+    self.player_grid.b_callback = function ()
+        g_SceneManager:popScene('unstack')
     end
 
-    self.sprites[#self.sprites+1] = player_grid
+    self.player_grid.on_change = function (item)
+        if item then
+            self.item_panel:setVisible(true)
+            self.item_panel:setItem(item)
+        else
+            self.item_panel:setVisible(false)
+        end
+    end
+
+    self.item_panel = ItemPanel(180, 150)
+    self.item_panel:setItem(self.player_grid:getSelection())
+    self.item_panel:setZIndex(2)
+    self.item_panel:add()
+    self.item_panel:moveTo(280, 120)
+
+    self.sprites:append(self.player_grid)
+    self.sprites:append(self.item_panel)
 
 end
-
-function Inventory:addPlayerItems()
-
-end
-
 
 function Inventory:initBg()
 
     local img = gfx.image.new(pd.display.getWidth(), pd.display.getHeight(), gfx.kColorBlack)
 
-    self.bg_sprite = gfx.sprite.new(img) --gfx.sprite.new(gfx.image.new("assets/backgrounds/asteroid_bg") )
+    self.bg_sprite = gfx.sprite.new(img)
     self.bg_sprite:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
     self.bg_sprite:setIgnoresDrawOffset(true)
     self.bg_sprite:setZIndex(0)
 
-    self.sprites[#self.sprites+1] = self.bg_sprite
+    self.sprites:append(self.bg_sprite)
+
+    self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
+    self.ui_overlay:setIgnoresDrawOffset(true)
+    self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
+    self.ui_overlay:setZIndex(2)
+    self.ui_overlay:add()
+
+    self.sprites:append(self.ui_overlay)
 
 end
 
-function Inventory:update()
-
-    Inventory.super.update(self)
-    
-    if self.focused then
-        if pd.buttonJustReleased(pd.kButtonB) then
-            g_SceneManager:popScene('hwipe')
-        end
+function Inventory:focus()
+    if self.player_grid then
+        self:unfocus()
+        self.player_grid:focus()
     end
-    
+end
+
+function Inventory:unfocus()
+    if self.player_grid then
+        self.player_grid:unfocus()
+    end
 end
