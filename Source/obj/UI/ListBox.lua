@@ -14,12 +14,14 @@ function ListBox:init(data, width, height, item_height)
     local padding = 2
 
     local _w, _h = 0, 0
-    local text_offset = 1
+    local text_offset = 5
     local _item_height = 0
 
     local _min_width = 0
+
+    gfx.setFont(g_font_18)
         
-    for k,v in pairs(data) do
+    for k,v in pairs(self.data.options) do
         local __w, __h = gfx.getTextSize(v.name)
         if __w > _min_width then
             _min_width = __w
@@ -27,14 +29,14 @@ function ListBox:init(data, width, height, item_height)
         _item_height = __h
     end
 
-    _item_height = text_offset + _item_height
+    _item_height = text_offset*2 + _item_height
 
     if item_height then
         _item_height = item_height
     end
 
     _w = _min_width + text_offset*2 + padding*2
-    _h = _item_height * #data + text_offset*2 + padding*2
+    _h = _item_height * #self.data.options + text_offset*2 + padding*2
 
     if width and height then
         _w = width
@@ -43,7 +45,7 @@ function ListBox:init(data, width, height, item_height)
 
     self.list_color = gfx.kColorBlack
     self.listview = playdate.ui.gridview.new(0, _item_height)
-    self.listview:setNumberOfRows(#data)
+    self.listview:setNumberOfRows(#self.data.options)
     self.listview:setCellPadding(padding,padding,padding,padding)
     local img = gfx.image.new(_w, _h)
     gfx.pushContext(img)
@@ -62,7 +64,7 @@ function ListBox:init(data, width, height, item_height)
         gfx.setFont(g_font)
         --gfx.drawTextAligned(string.format("*%s*", data[row].name), x+text_offset , y+text_offset, kTextAlignment.left)
         --gfx.drawTextInRect(string.format("%s", data[row].name), x+text_offset , y+text_offset, width, height, nil, nil, kTextAlignment.left, g_font)
-        gfx.drawText(string.format("%s", data[row].name), x + text_offset , y + text_offset)
+        gfx.drawText(string.format("%s", data.options[row].name), x + text_offset , y + text_offset)
     end
 
     self:setImage(gfx.image.new(_w, _h))
@@ -97,14 +99,14 @@ function ListBox:initInputs()
         AButtonUp = function ()
             local s, r, c = self.listview:getSelection()
 
-            if self.data[r].callback then
-                self.data[r].callback()
+            if self.data.options[r].callback then
+                self.data.options[r].callback(self)
             end
         end,
 
         BButtonUp = function ()
             if self.b_callback then
-                self.b_callback()
+                self.b_callback(self)
             end
         end,
 

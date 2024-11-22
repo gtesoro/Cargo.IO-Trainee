@@ -14,7 +14,15 @@ if not g_player then
         capacity = 9
     }
 
+    g_player.ship = {
+        fuel_current = 100,
+        fuel_capacity = 100,
+        fuel_usage = 0.01
+    }
+
     g_player.map = {}
+
+    g_player.cycle = 1
 
     g_player.inventory.items = {}
     g_player.inventory.items[#g_player.inventory.items+1] = Neodymium()

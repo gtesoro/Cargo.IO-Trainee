@@ -21,11 +21,6 @@ local function loadGame()
 
 	local menu = playdate.getSystemMenu()
 
-	local menuItem, error = menu:addMenuItem("Theme", function()
-		g_inverted = not g_inverted
-		playdate.display.setInverted(g_inverted)
-	end)
-
 	local menuItem, error = menu:addMenuItem("Show FPS", function()
 		g_fps = not g_fps
 	end)
@@ -33,8 +28,20 @@ local function loadGame()
 	playdate.display.setRefreshRate(50)
 	gfx.setBackgroundColor(playdate.graphics.kColorClear)
 
+	g_SystemManager = SystemManager()
+	g_SoundManager = SoundManager()
+	g_NotificationManager = NotificationManager()
+	g_CycleManager = CycleManager()
 	g_SceneManager = SceneManager()
-	g_Notifications = NotificationSystem()
+	
+
+	local menuItem, error = menu:addMenuItem("Delete Save", function()
+		pd.datastore.delete("player")
+		pd.file.run('data/player')
+		pd.file.run('data/Systems')
+		g_SceneManager:reset()
+		g_SceneManager:pushScene(Intro(), 'hwipe')
+	end)
 
 	once = true
 
@@ -50,6 +57,19 @@ function pd.gameWillResume()
 	pd.start()
 end
 
+function pd.deviceWillSleep()
+	pd.stop()
+end
+
+
+function pd.deviceWillLock()
+	pd.stop()
+end
+
+function pd.deviceDidUnlock()
+	pd.start()
+end
+
 loadGame()
 
 function playdate.update()
@@ -62,37 +82,19 @@ function playdate.update()
 	end
 
 	if once then
-		l = List()
-		local _t1 = {test="First Element"}
-		local _t2 = {test="Second Element"}
-		local _t3 = {test="Third Element"}
-
-		l:append(_t1)
-		l:append(_t2)
-		l:append(_t3)
-		print(l.length)
-		for v in l:iter() do
-			print(v.test)
-		end
-
-		print(l:get(1).test)
-
-		l:remove(_t2)
-
-		print(l.length)
-
-		for v in l:iter() do
-			print(v.test)
-		end
-
-		local _test = {'value1', 'value2', 'value3'}
-
-		print(_test[2], #_test)
-
-		table.remove(_test, 2)
-
-		print(_test[2], #_test)
-
 		once = false
+
+		-- local img = gfx.image.new(400, 240, gfx.kColorBlack)
+		-- gfx.pushContext(img)
+		-- 	local _i = gfx.image.new('assets/backgrounds/grid')
+		-- 	_i:drawAnchored(pd.display.getWidth()/2, pd.display.getHeight()/2, 0.5, 0.5)
+		-- gfx.popContext()
+
+		-- img = img:blurredImage(1, 2, gfx.image.kDitherTypeScreen)
+
+		-- for i=0,100 do
+		-- 	pd.simulator.writeToFile(img:fadedImage(i/100, gfx.image.kDitherTypeBayer8x8), string.format("C:\\playdate\\Assets\\sim\\fading_grid_%i.png", i))
+		-- end
+
 	end
 end

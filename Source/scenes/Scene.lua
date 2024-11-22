@@ -4,15 +4,25 @@ local gfx <const> = pd.graphics
 class('Scene').extends(Widget)
 
 function Scene:init(data)
+
     if data then
         self.data = data
+    else
+        self.data = {}
     end
+
     self.loaded = false
     self.sprites = List()
 end
 
+function Scene:preload()
+
+end
+
 function Scene:load()
+    
     if not self.loaded then
+        self:preload()
         self:startScene()
     end
     self.loaded = true

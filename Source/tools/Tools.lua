@@ -109,13 +109,35 @@ function rotatePoint(x, y, cx, cy, angle)
     return new_x, new_y
 end
 
+function stringToSeed(str)
+    local hash = 0
+    for i = 1, #str do
+        local char = string.byte(str, i)
+        hash = (hash * 31 + char) % 2147483647  -- Keep it within 32-bit range
+    end
+    return hash
+end
+
 function printTable(table)
     for k,v in pairs(table) do
         print(k,v)
     end
 end
 
-function goTo(x, y, z)
+function getShadowSprite(spr)
+
+    local img = gfx.image.new(spr:getSize())
+
+    inContext(img, function ()
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+        gfx.fillRoundRect(0,0, img.width,img.height, 4)
+    end)
+
+    return gfx.sprite.new(img)
+end
+
+function goTo(x, y, z, no_cycle)
 
     
     local _label = string.format("%i.%i.%i", x, y, z)
@@ -133,6 +155,11 @@ function goTo(x, y, z)
 
     local _s = g_systems[_label]
 
+    -- if not no_cycle then
+    --     g_CycleManager:nextCycle()
+    -- end
+    
+
     if _s then
         g_player.map[_label] = _s
         g_SceneManager:switchScene(_s.class(_s), 'hwipe')
@@ -142,7 +169,7 @@ function goTo(x, y, z)
         empty.z = z
 
         g_player.map[_label] = {x = x, y = y, z = z, empty = true}
-        g_SceneManager:switchScene(System(empty), 'hwipe')
+        g_SceneManager:switchScene(EmptySystem(empty), 'hwipe')
     end
 
     playdate.datastore.write(g_player, 'player')
@@ -153,25 +180,41 @@ function drawPauseMenu()
 
     local img =  gfx.image.new("assets/pause_bg")
     gfx.pushContext(img)
-    gfx.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
-    gfx.setColor(gfx.kColorWhite)
-	if g_player.current_position.x then
-		local _label = "*System*"
-        local _data = string.format("%i.%i.%i", g_player.current_position.x, g_player.current_position.y, g_player.current_position.z)
-		
-        gfx.drawTextAligned(_label, 10, 65, kTextAlignment.left)
-        gfx.drawTextAligned(_data, 190, 65, kTextAlignment.right)
-	end
+        gfx.setFont(g_font_18)
+        gfx.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
+        gfx.setColor(gfx.kColorWhite)
+        if g_player.current_position.x then
+            local _label = "System"
+            local _data = string.format("%i.%i.%i", g_player.current_position.x, g_player.current_position.y, g_player.current_position.z)
+            
+            gfx.drawTextAligned(_label, img.width*0.05, img.height*0.3, kTextAlignment.left)
+            gfx.drawTextAligned(_data, img.width*0.45, img.height*0.3, kTextAlignment.right)
+        end
 
-    if g_player.money then
-		local _label = "*Money*"
-        local _data = string.format("%i", g_player.money)
-		
+        if g_player.cycle then
+            local _label = "Cycle"
+            local _data = string.format("%i", g_player.cycle)
+            
+            
+            gfx.drawTextAligned(_label, img.width*0.05, img.height*0.4, kTextAlignment.left)
+            gfx.drawTextAligned(_data, img.width*0.45, img.height*0.4, kTextAlignment.right)
+
         
-        gfx.drawTextAligned(_label, 10, 130, kTextAlignment.left)
-        gfx.drawTextAligned(_data, 190, 130, kTextAlignment.right)
-	end
+        end
 
+        if g_player.money then
+            local _label = "Money"
+            local _data = string.format("%i", g_player.money)
+            
+            
+            gfx.drawTextAligned(_label, img.width*0.05, img.height*0.5, kTextAlignment.left)
+            gfx.drawTextAligned(_data, img.width*0.45, img.height*0.5, kTextAlignment.right)
+        end
+
+        gfx.drawTextAligned("Fuel", img.width/4, img.height*0.78, kTextAlignment.center)
+        gfx.setImageDrawMode(playdate.graphics.kDrawModeCopy)
+        gfx.imagetable.new('assets/fuel'):getImage(clamp(math.floor(10*(g_player.ship.fuel_current/g_player.ship.fuel_capacity))+2, 1, 11)):drawAnchored(img.width/4, img.height*.9 , 0.5, 0.5)
+        gfx.setFont()
     gfx.popContext()
 
     return img
@@ -220,8 +263,26 @@ function round(x)
     return x>=0 and math.floor(x+0.5) or math.ceil(x-0.5)
 end
 
-function tableLength(T)
+function table_length(T)
     local count = 0
     for _ in pairs(T) do count = count + 1 end
     return count
+  end
+
+  function table_remove(t, e)
+    local count = 1
+    for k,v in pairs(t) do 
+        if v == e then
+            table.remove(t, count)
+            break
+        end
+        count = count + 1 
+    end
+  end
+
+
+  function inContext(img, func)
+    gfx.pushContext(img)
+        func()
+    gfx.popContext()
   end

@@ -12,6 +12,8 @@ function Neodymium:init()
     self.price_max = 100
     self.price_min = 50
 
+    self.name = self.className
+
     self.description = {
         {
             "Type",  self.type 
@@ -20,22 +22,7 @@ function Neodymium:init()
             "Usage", self.usage
         },
         {
-            "Price", string.format("%s-%s", self.price_min, self.price_min)
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_min)
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_min)
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_min)
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_min)
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_min)
+            "Price", string.format("%s-%s", self.price_min, self.price_max)
         }
     }
 

@@ -5,7 +5,7 @@ class('System').extends(Scene)
 
 function System:startScene()
 
-    g_Notifications:notify(self.data.name, 1000)
+    g_NotificationManager:notify(self.data.name)
 
     self.x_offset = 0
     self.y_offset = 0
@@ -15,22 +15,25 @@ function System:startScene()
 
     self.selection_spr = gfx.sprite.new()
     self.selection_focus = nil
-    
+
     self:initBg()
-    self:initPlanets()
-    self:initOrbits()
-    self:initIU()
+    
     self:initBorders()
-    self:initAsteroids()
     self:initShip()
     self:initInputs()
     self:moveCamera()
-
+    self:initUI()
 end
 
 function System:add()
     System.super.add(self)
-    
+    g_CycleManager:unpause()
+    gfx.setDrawOffset(-self.x_offset, -self.y_offset)
+end
+
+function System:remove()
+    System.super.remove(self)
+    g_CycleManager:pause()
 end
 
 function System:setSelectionSprite(spr)
@@ -71,47 +74,28 @@ end
 
 function System:initShip()
 
-    local thruster_size = 4
-
-    self.thruster_normal_img = gfx.image.new(thruster_size, thruster_size)
-    gfx.pushContext(self.thruster_normal_img)
-        gfx.setColor(gfx.kColorWhite)
-        gfx.fillCircleAtPoint(self.thruster_normal_img .width/2, self.thruster_normal_img .height/2, self.thruster_normal_img .width/2)
-    gfx.popContext()
-
-    self.thruster_double_img = gfx.image.new(thruster_size*1.5, thruster_size*1.5)
-    gfx.pushContext(self.thruster_double_img)
-        gfx.setColor(gfx.kColorWhite)
-        gfx.fillCircleAtPoint(self.thruster_double_img.width/2, self.thruster_double_img.height/2, self.thruster_double_img.width/2)
-    gfx.popContext()
-
-    self.thruster_sprite = gfx.sprite.new(thruster_normal_img)
-    self.thruster_sprite:setZIndex(self.data.playfield_height*2+2)
-    self.sprites:append(self.thruster_sprite)
-    
-
-    self.ship_moving = false
-
     self.ship = Ship(self)
     self.ship:setZIndex(self.data.playfield_height*2+1)
-
     self.ship:moveTo(self.data.playfield_width/2-100, self.data.playfield_height/2)
     if g_player.last_position.x then
         local dx, dy, dz = self.data.x - g_player.last_position.x, self.data.y - g_player.last_position.y, self.data.z - g_player.last_position.z
         if math.abs(dx) + math.abs(dy) + math.abs(dz) == 1 then
             if dx > 0 then
                 self.ship:moveTo(50, self.data.playfield_height/2)
-                self.ship:setRotation(90)
+                self.ship.angle = 90
+                self.ship:updateImg()
             end
 
             if dx < 0 then
                 self.ship:moveTo(self.data.playfield_width - 50, self.data.playfield_height/2)
-                self.ship:setRotation(270)
+                self.ship.angle = 270
+                self.ship:updateImg()
             end
 
             if dy > 0 then
                 self.ship:moveTo(self.data.playfield_width/2, 50)
-                self.ship:setRotation(180)
+                self.ship.angle = 180
+                self.ship:updateImg()
             end
 
             if dy < 0 then
@@ -119,6 +103,9 @@ function System:initShip()
             end
         end
     end
+    local _x, _y = self.ship:getPosition()
+    self.x_offset = _x - pd.display.getWidth()/2
+    self.y_offset = _y - pd.display.getHeight()/2
 
     self.sprites:append(self.ship)
 end
@@ -135,27 +122,6 @@ function System:initBg()
     self.bg_sprite:setZIndex(0)
 
     self.sprites:append(self.bg_sprite)
-
-end
-
-function System:initPlanets() 
-    self.planets = {}
-
-    if self.data.planets then
-        for k,v in pairs(self.data.planets) do
-            local p = Planet(v.img, v.orbit_size, self.data.angle, v.speed, math.random(0, 360), self.data.playfield_width, self.data.playfield_height, v.outline)
-            self.planets[#self.planets+1] = p
-            self.sprites:append(p)
-            v.sprite = p
-        end
-    end
-
-    if self.data.sun then
-        self.sun = AnimatedSprite(self.data.sun)
-        self.sun:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)
-
-        self.sprites:append(self.sun)
-    end
 
 end
 
@@ -245,95 +211,9 @@ function System:handleBorders()
 
 end
 
-function System:moveArrows()
-    self.arrow_y += 0.5
-    if self.arrow_y > self.arrow_img.height then
-        self.arrow_y = 0
-    end
-    gfx.pushContext(self.arrow_canvas)
-        gfx.clear()
-        gfx.setColor(playdate.graphics.kColorWhite)
-        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
-        gfx.fillRect(0,0, self.arrow_canvas:getSize())
-        self.arrow_img:drawAnchored(self.arrow_canvas.width/2, self.arrow_canvas.height/2 - self.arrow_y, 0.5, 0.5)
-        self.arrow_img:drawAnchored(self.arrow_canvas.width/2, self.arrow_canvas.height + self.arrow_canvas.height/2 - self.arrow_y, 0.5, 0.5)
-    gfx.popContext()
-end
+function System:initUI()
 
-function System:initOrbits() 
-    self.orbits_sprite = gfx.sprite.new(gfx.image.new(self.data.playfield_width, self.data.playfield_height))
-    local img = self.orbits_sprite:getImage()
-    gfx.pushContext(img)
-
-        gfx.setColor(playdate.graphics.kColorWhite)
-        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
-        gfx.setLineWidth(2)
-        for k, p in pairs(self.planets) do
-            
-            gfx.drawEllipseInRect(p.cx - p.h_radius, p.cy - p.v_radius, 2 * p.h_radius, 2 * p.v_radius)
-            --drawDottedEllipse(p.cx , p.cy, p.h_radius, p.v_radius, math.floor(p.h_radius/self.data.playfield_width * 1000), 3, 0)
-        end
-    gfx.popContext()
-    self.orbits_sprite:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)
-    self.orbits_sprite:setZIndex(1)
-
-    self.sprites:append(self.orbits_sprite)
-end
-
-function System:initAsteroids()
-
-    local scale_factor = 0.15
-
-    if self.data.asteroid_count then     
-        self.asteroids = {}
-        for i=0,self.data.asteroid_count do
-            local v = {}
-            local spr = gfx.sprite.new(gfx.image.new("assets/asteroids/a_map_1"))
-            local _x, _y = math.random(math.floor(self.data.playfield_width*0.3), math.floor(self.data.playfield_width*0.7)),
-                           math.random(math.floor(self.data.playfield_height*0.3), math.floor(self.data.playfield_height*0.7))
-                   
-            spr:moveTo(_x, _y)
-            spr:setZIndex(1900)
-            
-            spr:setRotation(math.random(0, 359))
-            spr:setCollideRect( 0, 0, spr:getSize() )
-            
-            v.sprite = spr
-            v.linear_speed = math.random(20,100)/250
-            v.angular_speed = math.random(0,100)/1000
-            v.rotation = math.random(0,359)
-            spr:setRotation(v.rotation)
-
-            self.asteroids[#self.asteroids+1] = v
-            self.sprites:append(spr)
-        end
-    end
-end
-
-function System:moveAsteroids()
-    if self.asteroids then
-        for k,v in pairs(self.asteroids) do
-            local spr = v.sprite
-
-            if spr.y < 0 or spr.y > self.data.playfield_height then
-                v.rotation = 180 - v.rotation
-            end
-    
-            if spr.x < 0 or spr.x > self.data.playfield_width then
-                v.rotation = 360 - v.rotation
-            end
-
-            v.rotation += v.angular_speed
-            v.rotation = math.fmod(v.rotation, 360)
-            v.move_vector = pd.geometry.vector2D.newPolar(v.linear_speed, v.rotation)
-            spr:moveBy(v.move_vector.x, v.move_vector.y)
-        end
-    end
-end
-
-function System:initIU()
-
-
+    self.sprites:append(FuelUI(self.ship))
     
 end
 
@@ -386,25 +266,24 @@ function System:initInputs()
     self.input_handlers = {
 
         cranked = function (change, acceleratedChange)
-            local ship_angle = self.ship:getRotation()
+            local ship_angle = self.ship.angle
             ship_angle += change * self.ship.rotation_modifier
-		    self.ship:setRotation(ship_angle)
+		    self.ship:setAngle(ship_angle)
         end,
 
         BButtonDown = function ()
-            self.ship_moving = true
+            self.ship.move_ship = true
         end,
 
         BButtonUp = function ()
-            self.ship_moving = false
+            self.ship.move_ship = false
         end,
 
         upButtonDown = function ()
-            g_SceneManager:pushScene(Map(), 'unstack')
         end,
 
         downButtonDown = function ()
-            g_SceneManager:pushScene(Inventory(), 'unstack')
+            g_SceneManager:pushScene(PlayerMenu(), 'to menu')
         end
 
     }
@@ -462,72 +341,11 @@ function System:checkBoundaries(spr, wrap)
 end
 
 function System:doUpdate()
-
     self:moveCamera()
 
-    self.ship:doUpdate()
-
-    local _x, _y = getRelativePoint(self.ship.x, self.ship.y, 0, 12, self.ship:getRotation())
-    if self.ship_moving then
-        local ship_angle = self.ship:getRotation()
-        if self.ship.speed_vector:magnitude() < self.ship.max_speed then
-            self.ship.speed_vector += pd.geometry.vector2D.newPolar(self.ship.acceleration , ship_angle)
-        end
-        self.thruster_sprite:setImage(self.thruster_double_img)
-        self.thruster_sprite:moveTo(_x + math.random(0, 0) , _y + math.random(0,0))
-    else
-        self.thruster_sprite:setImage(self.thruster_normal_img)
-        self.thruster_sprite:moveTo(_x , _y)
-    end
-
-    Particle(_x, _y, 150, 4)
-
-    
-
-    self:moveAsteroids()
     self:handleBorders()
     self:checkBoundaries(self.ship, self.wrap)
 
     self:updateSelectionSprite()
 
-    local collisions = self.ship:overlappingSprites()
-
-    if #collisions == 0 then
-        self.selection_spr:remove()
-        self.selection_focus = nil
-    end
-
-	for i = 1, #collisions do
-        self:setSelectionSprite(collisions[i])
-        if pd.buttonJustReleased(playdate.kButtonA) then
-            self.selection_spr:remove()
-            self.selection_focus = nil
-            if self.data.planets then
-                for k,v in pairs(self.data.planets) do
-                    if v.sprite == collisions[i] then
-                        g_SceneManager:pushScene(PlanetCard(v), 'hwipe')
-                        break
-                    end
-                end
-            end
-            if self.asteroids then
-                for k,v in pairs(self.asteroids) do
-                    if v.sprite == collisions[i] then
-                        g_SceneManager:pushScene(MiningLaser({bg_img = self:getCurrentBg()}), 'hwipe')
-                        
-                        self.sprites:remove(v.sprite)
-
-                        v.sprite:remove()
-                        self.asteroids[k] = nil
-
-                        break
-                    end
-                end
-            end
-        end
-	end   
-
-    for k,v in pairs(self.planets) do
-        v:doUpdate()
-    end
 end

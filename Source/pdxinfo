@@ -1,7 +1,7 @@
-name="Cargo.IO Trainee Program"
+name=Cargo.IO
 author=RJV
 description=Cargo.IO Sidequest
-bundleID=com.rjv.cargo.io.trainee
+bundleID=com.rjv.cargo.io
 version=0.0.1
 buildNumber=1
 imagePath=launcher

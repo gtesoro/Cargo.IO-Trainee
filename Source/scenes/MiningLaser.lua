@@ -3,6 +3,17 @@ local gfx <const> = pd.graphics
 
 class('MiningLaser').extends(Scene)
 
+function MiningLaser:add()
+    gfx.setDrawOffset(0,0)
+    MiningLaser.super.add(self)
+    g_CycleManager:unpause()
+end
+
+function MiningLaser:remove()
+    MiningLaser.super.remove(self)
+    g_CycleManager:pause()
+end
+
 function MiningLaser:startScene()
 
     self.exiting = false
@@ -145,6 +156,7 @@ function MiningLaser:animateMineral(mineral)
     timer.timerEndedCallback = function()
         mineral:remove()
         self:closeDoor()
+        g_NotificationManager:notify(string.format("Acquired: %s", Neodymium.className))
     end
 
     if #g_player.inventory.items < g_player.inventory.capacity then
@@ -270,8 +282,6 @@ function MiningLaser:drawExplotion()
     self.explosion:markDirty()
 
 end
-
-
 
 function MiningLaser:checkFreeMinerals()
     local img = self.asteroid_canvas:getImage()
@@ -443,8 +453,8 @@ function MiningLaser:initInputs()
             self.exiting = false
         end,
 
-        upButtonDown = function ()
-            g_SceneManager:pushScene(Inventory(), 'hwipe')
+        downButtonDown = function ()
+            g_SceneManager:pushScene(Inventory(), 'to menu')
         end
 
     }

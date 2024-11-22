@@ -1,16 +1,16 @@
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
-class('ItemPanel').extends(Widget)
+class('ItemPanelShop').extends(Widget)
 
-function ItemPanel:init(w, h)
+function ItemPanelShop:init(w, h)
 
     self._w = w
     self._h = h
 
 end
 
-function ItemPanel:setItem(item)
+function ItemPanelShop:setItem(item)
     local img = gfx.image.new(self._w, self._h)
 
     gfx.pushContext(img)
@@ -37,25 +37,17 @@ function ItemPanel:setItem(item)
 
         self.grid = pd.ui.gridview.new((self._w)/2 - 2*cell_padding,  20)
         self.grid:setNumberOfColumns(2)
-        self.grid:setNumberOfRows(#item.description)
-        print(tableLength(item.description))
+        self.grid:setNumberOfRows(1)
         self.grid:setCellPadding(cell_padding, cell_padding, 2, 2)
 
         function self.grid:drawCell(section, row, column, selected, x, y, width, height)
-            local _c = 1
-            local _desc = item.description[row]
-
-            -- gfx.setColor(gfx.kColorBlack)
-            -- gfx.setLineWidth(1)
-            -- gfx.drawRect( x, y, width, height)
-
             local _text = "n/a"
             if column == 1 then
-                _text = string.format("*%s:*", _desc[1])
+                _text = "Price:"
                 gfx.drawTextInRect(_text, x, y, width, height, nil, nil, kTextAlignment.left)
             end
             if column == 2 then
-                _text = _desc[2]
+                _text = string.format("%i", item:getCurrentPrice())
                 gfx.drawTextInRect(_text, x, y, width, height, nil, nil, kTextAlignment.right)
             end
             

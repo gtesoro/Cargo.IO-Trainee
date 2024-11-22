@@ -40,8 +40,8 @@ function GridBox:init(data, r, c, g_w, g_h, w, h, scale_icons)
     local _self = self
 
     function self.grid:drawCell(section, row, column, selected, x, y, width, height)
-        if data[((row-1)*c) + column] then
-            local img = data[((row-1)*c) + column] :getImage()
+        if data.items[((row-1)*c) + column] then
+            local img = data.items[((row-1)*c) + column] :getImage()
             local _s =  1
             if scale_icons then
                 _s = (math.max(g_w, g_h)-math.max(img.width, img.height)*0.2)/math.max(img.width, img.height)
@@ -107,13 +107,13 @@ function GridBox:initInputs()
 
         AButtonUp = function ()
             if self.a_callback then
-                self.a_callback()
+                self.a_callback(self)
             end
         end,
 
         BButtonUp = function ()
             if self.b_callback then
-                self.b_callback()
+                self.b_callback(self)
             end
         end,
 
@@ -156,7 +156,7 @@ end
 function GridBox:getSelection()
     local s, r, c = self.grid:getSelection()
 
-    return self.data[((r-1)*self.columns) + c]
+    return self.data.items[((r-1)*self.columns) + c]
 
 end
 

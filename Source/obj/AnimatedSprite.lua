@@ -3,7 +3,7 @@ local gfx <const> = pd.graphics
 
 class('AnimatedSprite').extends(playdate.graphics.sprite)
 
-function AnimatedSprite:init(image_table, delay)
+function AnimatedSprite:init(image_table, delay, x_scale, y_scale)
 
     if not delay then
         self.delay = 100
@@ -11,9 +11,14 @@ function AnimatedSprite:init(image_table, delay)
         self.delay = delay
     end
 
+
     self.imageTable =  gfx.imagetable.new(image_table)
     self.animation = gfx.animation.loop.new(self.delay, self.imageTable, true)
     self.image = gfx.image.new(self.imageTable:getImage(1):getSize())
+    if x_scale then
+        self:setScale(x_scale, y_scale)
+    end
+    
     self:setImage(self.image)
 	self:setZIndex(1)
  
@@ -24,4 +29,5 @@ function AnimatedSprite:update()
         gfx.clear()
         self.animation:draw(0,0)
     gfx.popContext()
+    self:markDirty()
 end

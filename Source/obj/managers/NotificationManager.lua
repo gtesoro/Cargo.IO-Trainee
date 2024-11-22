@@ -1,18 +1,28 @@
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
-class('NotificationSystem').extends(gfx.sprite)
+class('NotificationManager').extends(gfx.sprite)
 
-function NotificationSystem:init()
+function NotificationManager:init()
 
     self.notifications = List()
-    self.default_duration = 3000
+    self.default_duration = 1500
+
+    self.y_pos = 10
+
+    self.wait_timer = nil
+
+    self.current = {}
+
+    self.in_out_duration = 300
+
+    self.easing = pd.easingFunctions.outBounce
 
     self:add()
     
 end
 
-function NotificationSystem:notify(str, duration)
+function NotificationManager:notify(str, duration)
 
     if not duration then
         duration = self.default_duration
@@ -22,27 +32,36 @@ function NotificationSystem:notify(str, duration)
     
 end
 
-function NotificationSystem:update()
+function NotificationManager:update()
     local _n = self.notifications:get(1)
-    if not self.notifying and _n then
-        self:_notify(_n.value, _n.duration)
-        self.notifications:remove(_n)
+    if not g_SceneManager.transitioning and _n and self.wait_timer == nil then
+        if self:_notify(_n.value, _n.duration) then
+            self.notifications:remove(_n)
+        end
     end
 end
 
-function NotificationSystem:_notify(str, duration)
-
-    self.notifying = true
+function NotificationManager:_notify(str, duration)
 
     local _w, _h = gfx.getTextSize(string.format("*%s*",str))
 
     local _h_padding = 5
     local _w_padding = 10
 
+    local _y_spacing = 5
+
     local _float = 5
 
     _w += _w_padding*2 + _float
     _h += _h_padding*2 + _float
+
+    local _x, _y = _w/2 + 400 , self.y_pos + _h/2
+
+    if _y + _h/2 >= 240 - _y_spacing then
+        return false
+    end
+
+    self.y_pos += _h + _y_spacing*2
 
     local img = gfx.image.new(_w, _h)
     gfx.pushContext(img)
@@ -62,27 +81,48 @@ function NotificationSystem:_notify(str, duration)
     spr:setZIndex(30000)
     spr:add()
 
-    local _x, _y = _w/2 + 400 , 30 + _h/2
-
     spr:moveTo(_x, _y)
 
-    local timer_in = pd.timer.new(500, 0, _w - _float, pd.easingFunctions.outBounce)
+    local timer_in = pd.timer.new(self.in_out_duration, 0, _w - _float, self.easing)
+    local timer_out = nil
+    local timer_wait = nil
+    local timer_global = pd.timer.new(self.in_out_duration *2 + duration)
+    timer_global.timerEndedCallback = function ()
+        spr:remove()
+        self.y_pos -= _h + _y_spacing*2
+        table_remove(self.current, timer_global)
+    end
+
+    self.current[#self.current+1] = timer_global
+
     timer_in.updateCallback = function (timer)
         spr:moveTo(_x - timer.value, _y)
     end
 
     timer_in.timerEndedCallback = function ()
-        local timer_wait = pd.timer.new(duration)
+        timer_wait = pd.timer.new(duration)
         timer_wait.timerEndedCallback = function ()
-            local timer_out = pd.timer.new(500, _w - _float, 0, pd.easingFunctions.outBounce)
+            timer_out = pd.timer.new(self.in_out_duration, _w - _float, 0, self.easing)
             timer_out.updateCallback = function (timer)
                 spr:moveTo(_x - timer.value, _y)
-            end
-            timer_out.timerEndedCallback = function ()
-                spr:remove()
-                self.notifying = false
             end
         end
     end
 
+    self.wait_timer = pd.timer.new(500)
+    self.wait_timer.timerEndedCallback = function ()
+        self.wait_timer = nil
+    end
+
+    return true
+
+end
+
+function NotificationManager:reset()
+    for k,v in pairs(self.current) do
+        v.timerEndedCallback()
+        v:remove()
+    end
+
+    self.notifications = List()
 end

@@ -5,8 +5,6 @@ class('Map').extends('Scene')
 
 function Map:startScene()
 
-    g_Notifications:notify("Map", 500)
-
     self.cube_size = 30
 
     self:initInputs()
@@ -107,31 +105,35 @@ function Map:initInputs()
         end,
 
         BButtonUp = function ()
-            g_SceneManager:popScene('unstack')
+            g_SceneManager:popScene('between menus')
         end,
 
         upButtonDown = function ()
             self.y_offset -= _cam_speed
             self.bg_sprite:setImage(self.bg_image:vcrPauseFilterImage())
             self.vcr = true
+            gfx.setDrawOffset(-self.x_offset, -self.y_offset)
         end,
 
         downButtonDown = function ()
             self.y_offset += _cam_speed
             self.bg_sprite:setImage(self.bg_image:vcrPauseFilterImage())
             self.vcr = true
+            gfx.setDrawOffset(-self.x_offset, -self.y_offset)
         end,
 
         leftButtonDown = function ()
             self.x_offset -= _cam_speed
             self.bg_sprite:setImage(self.bg_image:vcrPauseFilterImage())
             self.vcr = true
+            gfx.setDrawOffset(-self.x_offset, -self.y_offset)
         end,
 
         rightButtonDown = function ()
             self.x_offset += _cam_speed
             self.bg_sprite:setImage(self.bg_image:vcrPauseFilterImage())
             self.vcr = true
+            gfx.setDrawOffset(-self.x_offset, -self.y_offset)
         end
 
     }

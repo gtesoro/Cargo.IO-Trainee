@@ -1,4 +1,5 @@
-local gfx <const> = playdate.graphics
+local pd = playdate
+local gfx <const> = pd.graphics
 class('Intro').extends(Scene)
 
 
@@ -22,9 +23,13 @@ function Intro:initInputs()
     self.input_handlers = {
 
         AButtonUp = function()
-            goTo(g_player.current_position.x, g_player.current_position.y, g_player.current_position.z)
+            goTo(g_player.current_position.x, g_player.current_position.y, g_player.current_position.z, true)
         end
     }
 
+end
+
+function Intro:doUpdate()
+    
 end
 
