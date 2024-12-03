@@ -9,23 +9,12 @@ function FuelStation:init()
     
     self.data.options = {
         {
-            name = 'Refuel',
+            name = 'Refuel - 10C',
             callback = function ()
-                local pop_up_data = {
-                    text = "Do you want to refuel for 100C?",
-                    options = {
-                        {
-                            name = "Yes",
-                            callback = function ()
-                                g_player.ship.fuel_current = g_player.ship.fuel_capacity
-                            end
-                        },
-                        {
-                            name = "No",
-                        }
-                    }
-                }
-                g_SceneManager:pushScene(Popup(pop_up_data))
+                if g_SystemManager:getPlayer():chargeMoney(10) then
+                    g_SystemManager:getPlayer().ship.fuel_current = g_SystemManager:getPlayer().ship.fuel_capacity
+                    g_NotificationManager:notify("Fuel Refilled")
+                end
             end
         },
     }

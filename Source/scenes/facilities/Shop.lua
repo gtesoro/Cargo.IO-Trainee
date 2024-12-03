@@ -4,21 +4,21 @@ local gfx <const> = pd.graphics
 
 class('Shop').extends(GenericMenu)
 
-function Shop:init()
+function Shop:init(data)
 
-    Shop.super.init(self)
-    
+    Shop.super.init(self, data)
+
     self.data.options = {
         {
             name = 'Buy',
             callback = function ()
-                g_SceneManager:pushScene(ShopInventory())
+                g_SceneManager:pushScene(ShopInventory(self.data), 'between menus')
             end
         },
         {
             name = 'Sell',
             callback = function ()
-                g_SceneManager:pushScene(ShopPlayerInventory())
+                g_SceneManager:pushScene(ShopPlayerInventory(self.data), 'between menus')
             end
         }
     }
@@ -29,11 +29,11 @@ end
 
 class('ShopInventory').extends(GenericInventory)
 
-function ShopInventory:init()
+function ShopInventory:init(data)
 
-    ShopInventory.super.init(self)
+    ShopInventory.super.init(self, data)
 
-    self.data.items = {}
+    self.data.items = self.data.shop_items
 
     self.data.item_panel = ItemPanelShop(180, 150)
 
@@ -42,11 +42,15 @@ function ShopInventory:init()
             name="Buy",
             callback = function (_self)
                 local item = _self.data.parent.item_grid:getSelection()
-                g_player.inventory.items[#g_player.inventory.items+1] = item
-                table.remove(self.data.items, _self.data.parent.item_grid:getSelectionIndex())
-                _self.data.parent.item_grid:drawGrid()
-                _self.data.parent.item_grid:focus()
-                _self:remove()
+
+                if g_SystemManager:getPlayer():chargeMoney(item:getCurrentPrice()) then
+                    g_SystemManager:getPlayer():addToInventory(item)
+
+                    table.remove(self.data.items, _self.data.parent.item_grid:getSelectionIndex())
+                    _self.data.parent.item_grid:drawGrid()
+                    _self.data.parent.item_grid:focus()
+                    _self:remove()
+                end
             end
         }
     }
@@ -55,11 +59,11 @@ end
 
 class('ShopPlayerInventory').extends(GenericInventory)
 
-function ShopPlayerInventory:init()
+function ShopPlayerInventory:init(data)
 
-    ShopPlayerInventory.super.init(self)
+    ShopPlayerInventory.super.init(self, data)
 
-    self.data.items = g_player.inventory.items
+    self.data.items = g_SystemManager:getPlayer().inventory.items
     self.data.item_panel = ItemPanelShop(180, 150)
 
     self.data.context_options = {
@@ -68,29 +72,11 @@ function ShopPlayerInventory:init()
             callback = function (_self)
                 local item = _self.data.parent.item_grid:getSelection()
                 local price = item:getCurrentPrice()
-
-                local pop_up_data = {
-                    text = string.format("Sell for %s for %i?", item.name, price),
-                    options = {
-                        {
-                            name="Yes",
-                            callback = function ()
-                                g_player.money += price
-                                local idx = _self.data.parent.item_grid:getSelectionIndex()
-                                table.remove(g_player.inventory.items, idx)
-                                _self.data.parent.item_grid:drawGrid()
-                            end
-                        },
-                        {
-                            name="No",
-                            callback = function ()
-                            end
-                        }
-                    }
-                }
-
-                self.context_menu:remove()
-                g_SceneManager:pushScene(Popup(pop_up_data))
+                g_SystemManager:getPlayer():gainMoney(price)
+                g_SystemManager:getPlayer():removeFromInventory(item)
+                _self.data.parent.item_grid:drawGrid()
+                _self.data.parent:focus()
+                _self:remove()
             end
         }
     }

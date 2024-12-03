@@ -25,9 +25,9 @@ function ToMenu:init(duration)
     self.overlay:add()
 
     self.timer = pd.timer.new(duration)
-    self.fade_timer = pd.timer.new(duration/2, 0, 1, pd.easingFunctions.outCubic)
-    self.fade_timer.delay = duration/2
-    self.move_overlay_timer = pd.timer.new(duration/2, 0, 400, pd.easingFunctions.inOutCubic)
+    self.fade_timer = pd.timer.new(duration*0.7, 0, 1, pd.easingFunctions.inOutQuint)
+    self.fade_timer.delay = duration*0.3
+    self.move_overlay_timer = pd.timer.new(duration*0.3, 0, 400, pd.easingFunctions.inOutCubic)
 
     self.move_overlay_timer.updateCallback = function(timer)
         self.overlay:moveTo(pd.display.getWidth()*1.5 - timer.value, pd.display.getHeight()/2)

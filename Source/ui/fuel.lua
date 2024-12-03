@@ -34,7 +34,7 @@ end
 
 function FuelUI:update()
 
-    local new_fuel_img = clamp(math.floor(10*(g_player.ship.fuel_current/g_player.ship.fuel_capacity))+2, 1, 11)
+    local new_fuel_img = clamp(math.floor(10*(g_SystemManager:getPlayer().ship.fuel_current/g_SystemManager:getPlayer().ship.fuel_capacity))+2, 1, 11)
     if new_fuel_img ~= self.current_fuel_img then
 
         self:setVisible(true)

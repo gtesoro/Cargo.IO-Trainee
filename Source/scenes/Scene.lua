@@ -13,6 +13,24 @@ function Scene:init(data)
 
     self.loaded = false
     self.sprites = List()
+
+    self:setZIndex(0)
+
+    self:moveTo(200, 120)
+end
+
+function Scene:moveTo(x , y)
+    for spr in self.sprites:iter() do
+        spr:moveBy(x - self.x, y - self.y)
+    end
+    Scene.super.moveTo(self, x, y)
+end
+
+function Scene:setZIndex(z)
+    for spr in self.sprites:iter() do
+        spr:setZIndex(z - self.getZIndex() + spr:getZIndex())
+    end
+    Scene.super.setZIndex(self, z)
 end
 
 function Scene:preload()

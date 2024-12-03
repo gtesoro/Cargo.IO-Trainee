@@ -42,14 +42,17 @@ function Enemy:hunting()
 	self.acceleration = 0.1
 	
 
-	self.hunting_timer = pd.timer.new(5000)
+	if not self.hunting_timer then
+		self.hunting_timer = pd.timer.new(5000)
 
-	self.hunting_timer.timerEndedCallback = function (timer)
-		self.hunting_timer = nil
+		self.hunting_timer.timerEndedCallback = function (timer)
+			self.hunting_timer = nil
+		end
+	else
+		self.hunting_timer:reset()
 	end
 
-	if g_SystemManager:isTick(2) then
-		local _target_x, target_y = getRelativePoint(self.player.x, self.player.y, 0, 30, self.player.angle)
+	if g_SystemManager:isTick(8) then
 		local _target_vector = pd.geometry.vector2D.new(self.player.x + self.player.speed_vector.x - self.x, self.player.y + self.player.speed_vector.y - self.y)
 		self:setAngle(-_target_vector:angleBetween(pd.geometry.vector2D.new(0,-1)))
 	end
@@ -67,7 +70,7 @@ function Enemy:wandering()
 	self.acceleration = 0.025
 
 	if g_SystemManager:isTick(50) then
-		self:setAngle(self.angle + math.random(-5, 5))
+		self:setAngle(self.angle + math.random(-20, 20))
 	end
 
 	if self.current_boost < self.boost_power * .8 then

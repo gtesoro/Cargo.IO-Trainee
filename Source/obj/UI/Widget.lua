@@ -14,6 +14,7 @@ end
 function Widget:focus()
     self.focused = true
     if self.input_handlers then
+        --print('Setting inputs for', self.className)
         pd.inputHandlers.push(self.input_handlers)
     end
 end
@@ -22,6 +23,7 @@ function Widget:unfocus()
     self.focused = false
 
     if self.input_handlers then
+        --print('Popping inputs for', self.className)
         pd.inputHandlers.pop()
     end
 
@@ -42,6 +44,7 @@ function Widget:hasFocus()
 end
 
 function Widget:update()
+
     if g_SceneManager.transitioning then
         return
     end

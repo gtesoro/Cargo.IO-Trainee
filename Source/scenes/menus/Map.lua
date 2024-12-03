@@ -63,12 +63,12 @@ function Map:drawMap()
     gfx.pushContext(img)
 
         gfx.clear()
-        for k, v in pairs(g_player.map) do
+        for k, v in pairs(g_SystemManager:getPlayer().map) do
             local _type = 0
             if not v.empty then
                 _type = 1
             end
-            if v.x == g_player.current_position.x and v.y == g_player.current_position.y and v.z == g_player.current_position.z then
+            if v.x == g_SystemManager:getPlayer().current_position.x and v.y == g_SystemManager:getPlayer().current_position.y and v.z == g_SystemManager:getPlayer().current_position.z then
                 _type = 2
             end
             local _x, _y = drawWireframeCube(-v.y * (self.cube_size + _offset), v.z *(self.cube_size + _offset), -v.x *(self.cube_size + _offset), self.cube_size, img.width, img.height, _type) 

@@ -119,10 +119,12 @@ function NotificationManager:_notify(str, duration)
 end
 
 function NotificationManager:reset()
-    for k,v in pairs(self.current) do
-        v.timerEndedCallback()
-        v:remove()
-    end
 
-    self.notifications = List()
+
+    -- for k,v in pairs(self.current) do
+    --     v.timerEndedCallback()
+    --     v:remove()
+    -- end
+
+    -- self.notifications = List()
 end

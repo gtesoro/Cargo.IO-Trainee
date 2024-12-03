@@ -5,8 +5,6 @@ class('BetweenMenusIn').extends(gfx.sprite)
 
 function BetweenMenusIn:init(duration)
 
-    duration = 500
-
     gfx.setDrawOffset(0, 0)
 
     self.grid_sheet = g_SystemManager.fading_grid
@@ -25,7 +23,7 @@ function BetweenMenusIn:init(duration)
 
     self.fade_timer.updateCallback = function(timer)
         local value = clamp(math.ceil(timer.value*100), 1, 100)
-        self.grid:setImage(self.grid_sheet:getImage(value))
+        self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
         self.grid:markDirty()
     end
 
@@ -47,8 +45,6 @@ class('BetweenMenusOut').extends(gfx.sprite)
 
 function BetweenMenusOut:init(duration)
 
-    duration = 500 
-
     gfx.setDrawOffset(0, 0)
 
     self.grid_sheet = g_SystemManager.fading_grid
@@ -67,7 +63,7 @@ function BetweenMenusOut:init(duration)
 
     self.fade_timer.updateCallback = function(timer)
         local value = clamp(math.ceil(timer.value*100), 1, 100)
-        self.grid:setImage(self.grid_sheet:getImage(value))
+        self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
         self.grid:markDirty()
     end
 

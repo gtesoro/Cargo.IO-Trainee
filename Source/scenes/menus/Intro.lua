@@ -23,7 +23,8 @@ function Intro:initInputs()
     self.input_handlers = {
 
         AButtonUp = function()
-            goTo(g_player.current_position.x, g_player.current_position.y, g_player.current_position.z, true)
+            g_SystemManager:load()
+            goTo(g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z, true)
         end
     }
 

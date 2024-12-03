@@ -31,14 +31,11 @@ local function loadGame()
 	g_SystemManager = SystemManager()
 	g_SoundManager = SoundManager()
 	g_NotificationManager = NotificationManager()
-	g_CycleManager = CycleManager()
 	g_SceneManager = SceneManager()
 	
 
 	local menuItem, error = menu:addMenuItem("Delete Save", function()
-		pd.datastore.delete("player")
-		pd.file.run('data/player')
-		pd.file.run('data/Systems')
+		pd.datastore.delete(g_SystemManager.autosave_filename)
 		g_SceneManager:reset()
 		g_SceneManager:pushScene(Intro(), 'hwipe')
 	end)
@@ -48,7 +45,9 @@ local function loadGame()
 end
 
 function pd.gameWillPause()
-	pd.setMenuImage(drawPauseMenu())
+	if g_SystemManager:getPlayer() then
+		pd.setMenuImage(drawPauseMenu())
+	end
 	pd.stop()
 end
 
@@ -93,7 +92,7 @@ function playdate.update()
 		-- img = img:blurredImage(1, 2, gfx.image.kDitherTypeScreen)
 
 		-- for i=0,100 do
-		-- 	pd.simulator.writeToFile(img:fadedImage(i/100, gfx.image.kDitherTypeBayer8x8), string.format("C:\\playdate\\Assets\\sim\\fading_grid_%i.png", i))
+		-- 	pd.simulator.writeToFile(img:fadedImage(i/100, gfx.image.kDitherTypeBayer4x4), string.format("C:\\playdate\\Assets\\sim\\fading_grid_%i.png", i))
 		-- end
 
 	end

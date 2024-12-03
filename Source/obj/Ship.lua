@@ -15,7 +15,7 @@ function Ship:init()
 	self.friction = 0.01
 
 	self.fuel_enabled =  true
-	self.fuel_usage = g_player.ship.fuel_usage
+	self.fuel_usage = g_SystemManager:getPlayer().ship.fuel_usage
 
 	self.angle = 0
 	self.move_ship = false
@@ -45,32 +45,39 @@ function Ship:setZIndex(z)
 	
 end
 
+function Ship:stop()
+	self.speed_vector = playdate.geometry.vector2D.new(0,0)
+end
+
 function Ship:updateImg()
 	self:setImage(self.sheet:getImage(math.floor(self.angle) + 1))
 end
 
 
 function Ship:setAngle(angle)
-	self.angle = angle
-	self.angle = math.fmod(angle, 359)
-	if self.angle < 0 then
-		self.angle += 359
+	
+	local _new_angle =  math.fmod(angle, 359)
+	if _new_angle < 0 then
+		_new_angle += 359
 	end
-	self:updateImg()
+	if _new_angle ~= self.angle then
+		self.angle = _new_angle
+		self:updateImg()
+	end
+	
 end
 
-function Ship:update()
+function Ship:doUpdate()
 
 	if g_SceneManager.transitioning then
 		return
 	end
 
-	if self.move_ship and g_player.ship.fuel_current > 0 then
-		--g_SoundManager:play()
+	if self.move_ship and g_SystemManager:getPlayer().ship.fuel_current > 0 then
 		if self.speed_vector:magnitude() < self.max_speed then
         	self.speed_vector += pd.geometry.vector2D.newPolar(self.acceleration  , self.angle)
 		end
-		g_player.ship.fuel_current -= self.fuel_usage
+		g_SystemManager:getPlayer().ship.fuel_current -= self.fuel_usage
     end
 
 	local shipX, shipY = self:getPosition()

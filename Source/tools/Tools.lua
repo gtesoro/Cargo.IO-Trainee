@@ -134,46 +134,65 @@ function getShadowSprite(spr)
         gfx.fillRoundRect(0,0, img.width,img.height, 4)
     end)
 
-    return gfx.sprite.new(img)
+    local _spr = gfx.sprite.new(img)
+    _spr:setZIndex(spr:getZIndex()-1)
+
+    return _spr
 end
 
-function goTo(x, y, z, no_cycle)
+function goTo(x, y, z)
 
     
     local _label = string.format("%i.%i.%i", x, y, z)
 
-    if g_player.current_position.x then
-        g_player.last_position.x = g_player.current_position.x
-        g_player.last_position.y = g_player.current_position.y
-        g_player.last_position.z = g_player.current_position.z
+    if g_SystemManager:getPlayer().current_position then
+        g_SystemManager:getPlayer().last_position.x = g_SystemManager:getPlayer().current_position.x
+        g_SystemManager:getPlayer().last_position.y = g_SystemManager:getPlayer().current_position.y
+        g_SystemManager:getPlayer().last_position.z = g_SystemManager:getPlayer().current_position.z
     end
 
-    g_player.current_position.x = x
-    g_player.current_position.y = y
-    g_player.current_position.z = z
+    g_SystemManager:getPlayer().current_position.x = x
+    g_SystemManager:getPlayer().current_position.y = y
+    g_SystemManager:getPlayer().current_position.z = z
 
-
-    local _s = g_systems[_label]
-
-    -- if not no_cycle then
-    --     g_CycleManager:nextCycle()
-    -- end
-    
+    local _s = g_SystemManager:getSystems()[_label]
 
     if _s then
-        g_player.map[_label] = _s
-        g_SceneManager:switchScene(_s.class(_s), 'hwipe')
+        g_SystemManager:getPlayer().map[_label] = _s
+        g_SceneManager:switchScene(_G[_s.class](_s), 'hwipe')
     else
         empty.x = x
         empty.y = y
         empty.z = z
 
-        g_player.map[_label] = {x = x, y = y, z = z, empty = true}
+        g_SystemManager:getPlayer().map[_label] = {x = x, y = y, z = z, empty = true}
         g_SceneManager:switchScene(EmptySystem(empty), 'hwipe')
     end
 
-    playdate.datastore.write(g_player, 'player')
+    g_SystemManager:save()
 
+end
+
+function getRandomMineral()
+
+    local _minerals = {'Neodymium', 'Scandium', 'Yttrium'}
+    return _G[_minerals[math.random(1, #_minerals)]]()
+    
+end
+
+function tableUpdate(t1, t2)
+    for k2,v2 in pairs (t2) do
+        t1[k2] = v2
+    end
+
+    return t1
+end
+
+function tableConcat(t1,t2)
+    for i=1,#t2 do
+        t1[#t1+1] = t2[i]
+    end
+    return t1
 end
 
 function drawPauseMenu()
@@ -183,17 +202,17 @@ function drawPauseMenu()
         gfx.setFont(g_font_18)
         gfx.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
         gfx.setColor(gfx.kColorWhite)
-        if g_player.current_position.x then
+        if g_SystemManager:getPlayer().current_position.x then
             local _label = "System"
-            local _data = string.format("%i.%i.%i", g_player.current_position.x, g_player.current_position.y, g_player.current_position.z)
+            local _data = string.format("%i.%i.%i", g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z)
             
             gfx.drawTextAligned(_label, img.width*0.05, img.height*0.3, kTextAlignment.left)
             gfx.drawTextAligned(_data, img.width*0.45, img.height*0.3, kTextAlignment.right)
         end
 
-        if g_player.cycle then
+        if g_SystemManager:getPlayer().cycle then
             local _label = "Cycle"
-            local _data = string.format("%i", g_player.cycle)
+            local _data = string.format("%i", g_SystemManager:getPlayer().cycle)
             
             
             gfx.drawTextAligned(_label, img.width*0.05, img.height*0.4, kTextAlignment.left)
@@ -202,9 +221,9 @@ function drawPauseMenu()
         
         end
 
-        if g_player.money then
+        if g_SystemManager:getPlayer().money then
             local _label = "Money"
-            local _data = string.format("%i", g_player.money)
+            local _data = string.format("%i", g_SystemManager:getPlayer().money)
             
             
             gfx.drawTextAligned(_label, img.width*0.05, img.height*0.5, kTextAlignment.left)
@@ -213,7 +232,7 @@ function drawPauseMenu()
 
         gfx.drawTextAligned("Fuel", img.width/4, img.height*0.78, kTextAlignment.center)
         gfx.setImageDrawMode(playdate.graphics.kDrawModeCopy)
-        gfx.imagetable.new('assets/fuel'):getImage(clamp(math.floor(10*(g_player.ship.fuel_current/g_player.ship.fuel_capacity))+2, 1, 11)):drawAnchored(img.width/4, img.height*.9 , 0.5, 0.5)
+        gfx.imagetable.new('assets/fuel'):getImage(clamp(math.floor(10*(g_SystemManager:getPlayer().ship.fuel_current/g_SystemManager:getPlayer().ship.fuel_capacity))+2, 1, 11)):drawAnchored(img.width/4, img.height*.9 , 0.5, 0.5)
         gfx.setFont()
     gfx.popContext()
 

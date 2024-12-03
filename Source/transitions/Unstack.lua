@@ -4,16 +4,19 @@ local gfx <const> = pd.graphics
 class('Unstack').extends(gfx.sprite)
 
 function Unstack:init(duration)
-    local img = gfx.getDisplayImage()
-    self:setImage(img)
-    self:setZIndex(TRANSITIONS_Z_INDEX)
-    self:setIgnoresDrawOffset(true)
-    self:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
 
-    self.timer = pd.timer.new(duration, 0, pd.display.getHeight(), pd.easingFunctions.linear)
+    self.scene = g_SceneManager:getCurrentScene()
+
+    self.timer = pd.timer.new(duration, 0, pd.display.getHeight(), pd.easingFunctions.inCubic)
     self.timer.updateCallback = function(timer)
-        self:moveTo(self.x, pd.display.getHeight()/2 - timer.value)
+        self.scene:moveTo(self.scene.x, pd.display.getHeight()/2 - timer.value)
     end
+
+    self:setImage(self.scene.previous_scene_img)
+    self:setZIndex(-TRANSITIONS_Z_INDEX)
+    self:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
+    self:setIgnoresDrawOffset(true)
+    gfx.setDrawOffset(0, 0)
 
     self.timer.timerEndedCallback = function(timer)
         if self.endCallback then

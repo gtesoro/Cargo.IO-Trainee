@@ -6,12 +6,12 @@ class('MiningLaser').extends(Scene)
 function MiningLaser:add()
     gfx.setDrawOffset(0,0)
     MiningLaser.super.add(self)
-    g_CycleManager:unpause()
+    g_SystemManager:unpause()
 end
 
 function MiningLaser:remove()
     MiningLaser.super.remove(self)
-    g_CycleManager:pause()
+    g_SystemManager:pause()
 end
 
 function MiningLaser:startScene()
@@ -156,12 +156,9 @@ function MiningLaser:animateMineral(mineral)
     timer.timerEndedCallback = function()
         mineral:remove()
         self:closeDoor()
-        g_NotificationManager:notify(string.format("Acquired: %s", Neodymium.className))
     end
 
-    if #g_player.inventory.items < g_player.inventory.capacity then
-        g_player.inventory.items[#g_player.inventory.items+1] = Neodymium()
-    end
+    g_SystemManager:getPlayer():addToInventory(getRandomMineral())
 
 end
 
@@ -465,7 +462,7 @@ function MiningLaser:doUpdate()
     if self.exploding then
         self:drawExplotion()
         if self.explosion_animator:ended() then
-            g_SceneManager:switchScene(Intro(), 'hwipe')
+            g_SystemManager:death()
         end
         return
     end

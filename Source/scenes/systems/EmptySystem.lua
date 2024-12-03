@@ -27,6 +27,8 @@ function EmptySystem:doUpdate()
         self:initEnemy()
     end
 
+    self.enemy:doUpdate()
+
     EmptySystem.super.doUpdate(self)
 
 end

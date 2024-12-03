@@ -7,10 +7,14 @@ function GridBox:init(data, r, c, g_w, g_h, w, h, scale_icons)
 
     self.data = data
 
+    self.last_crank = pd.getCrankPosition()
+
     self.cell_padding = 2
     self.grid_color = gfx.kColorWhite
     self.rows = r
     self.columns = c
+
+    self.accumulated_crank = 0
 
     if not g_w then
         g_w = 32
@@ -104,6 +108,25 @@ end
 function GridBox:initInputs()
 
     self.input_handlers = {
+        
+        cranked = function (change, acceleratedChange)
+
+            local _sensitivity = g_SystemManager.crank_menu_sensitivity
+            self.accumulated_crank += acceleratedChange
+
+            if math.abs(self.accumulated_crank) > _sensitivity then
+                if self.accumulated_crank > 0 then
+                    self.grid:selectNextColumn(true)
+                else
+                    self.grid:selectPreviousColumn(true)
+                end
+                if self.on_change then
+                    self.on_change(self:getSelection())
+                end
+                self:drawGrid()
+                self.accumulated_crank = 0
+            end
+        end,
 
         AButtonUp = function ()
             if self.a_callback then

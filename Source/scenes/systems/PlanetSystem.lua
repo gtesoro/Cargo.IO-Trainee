@@ -73,6 +73,7 @@ function PlanetSystem:doUpdate()
             if self.data.planets then
                 for k,v in pairs(self.data.planets) do
                     if v.sprite == collisions[i] then
+                        self.ship:stop()
                         g_SceneManager:pushScene(PlanetMenu(v), 'to menu')
                         break
                     end

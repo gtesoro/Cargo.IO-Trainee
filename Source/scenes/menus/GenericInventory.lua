@@ -13,8 +13,23 @@ end
 
 function GenericInventory:generateContextMenu(grid)
 
+
+    local _options = {}
+
+    for k,v in pairs(grid:getSelection():getOptions()) do
+        if v.blacklist and v.blacklist[self.className] then
+            
+        else
+            _options[#_options+1] = v
+        end
+    end
+
+    for k,v in pairs(self.data.context_options) do
+        _options[#_options+1] = v
+    end
+
     local _list_box_data = {
-        options = self.data.context_options,
+        options = _options,
         parent = self
     }
 
@@ -39,7 +54,7 @@ function GenericInventory:initGrids()
         parent = self
     }
 
-    self.item_grid = GridBox(_grid_box_data, math.sqrt(g_player.inventory.capacity), math.sqrt(g_player.inventory.capacity), 40, 40)
+    self.item_grid = GridBox(_grid_box_data, math.sqrt(g_SystemManager:getPlayer().inventory.capacity), math.sqrt(g_SystemManager:getPlayer().inventory.capacity), 40, 40)
     self.item_grid:setBackgroundImage(gfx.image.new(180, 220, gfx.kColorBlack))
     self.item_grid:setGridColor(gfx.kColorWhite)
     self.item_grid:moveTo(100, 120)
@@ -113,5 +128,21 @@ end
 function GenericInventory:unfocus()
     if self.item_grid then
         self.item_grid:unfocus()
+    end
+end
+
+function GenericInventory:doUpdate()
+    if not self.noise_timer then
+        self.noise_timer = pd.timer.new(math.random(3000, 10000))
+        self.noise_timer.updateCallback = function (timer)
+            if timer.timeLeft < 200 then
+                self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100):vcrPauseFilterImage())
+            end
+        end
+        self.noise_timer.timerEndedCallback = function ()
+            self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100))
+            self.bg_sprite:markDirty()
+            self.noise_timer = nil
+        end
     end
 end

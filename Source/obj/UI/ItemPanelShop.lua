@@ -27,7 +27,6 @@ function ItemPanelShop:setItem(item)
         gfx.drawRect(_l/2, _l/2, item_img.width + padding + _l, item_img.height + padding + _l)
 
         gfx.drawTextInRect(item.className, item_img.width + _l*2 + padding, _l, self._w-(item_img.width + _l + padding) - padding, item_img.height + _l*2 + padding, nil, nil, kTextAlignment.center, g_font_18)
-        --gfx.drawTextInRect(item.description, padding, item_img.height + padding + _l*2 + padding,  self._w - 2*padding, self._h - padding -(item_img.height + padding + _l*2), nil, nil, kTextAlignment.left)
 
         gfx.setImageDrawMode(gfx.kDrawModeXOR)
         item_img:draw(_l + padding/2, _l + padding/2)

@@ -24,19 +24,3 @@ function CycleManager:init()
     
 end
 
-function CycleManager:pause()
-    self.cycle_timer:pause()
-end
-
-function CycleManager:unpause()
-    self.cycle_timer:start()
-end
-
-function CycleManager:nextCycle()
-    
-    g_player.cycle += 1
-
-    for k, v in pairs(self.on_cycle) do
-        v(g_player.cycle)
-    end
-end

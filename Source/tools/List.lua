@@ -24,6 +24,10 @@ function List:get(idx)
 
 end
 
+function List:getLength()
+    return self.length
+end
+
 function List:append(o)
 
     if not self.first then

@@ -31,6 +31,10 @@ function SceneManager:getCurrentImageAsSprite()
 
 end
 
+function SceneManager:getCurrentScene()
+    return self.scene_stack[#self.scene_stack]
+end
+
 function SceneManager:switchSceneStack(scene, duration)
     
     self.transitioning = true
@@ -108,20 +112,20 @@ function SceneManager:pushSceneUnstack(scene, duration)
 
     local _t1 = Unstack(duration)
 
-    self.transitioning = false
-
-    if #self.scene_stack > 0 then
-        self.scene_stack[#self.scene_stack]:unfocus()
-        self.scene_stack[#self.scene_stack]:remove()
-    end
-    self.scene_stack[#self.scene_stack+1] = scene
-    scene:load()
-    scene:focus()
-    scene:add()
-    
     _t1.endCallback = function ()    
+        if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:unfocus()
+            self.scene_stack[#self.scene_stack]:remove()
+        end
+        self.scene_stack[#self.scene_stack+1] = scene
+        self.transitioning = false
 
-        
+        scene:load()
+        scene:focus()
+        scene:add()
+
+        print('Done')
+
     end
 
     _t1:add()
@@ -130,7 +134,7 @@ end
 
 function SceneManager:pushSceneToMenu(scene, duration, blur)
 
-    local _t1 = ToMenu(1000, blur)
+    local _t1 = ToMenu(duration, blur)
 
     if #self.scene_stack > 0 then
         self.scene_stack[#self.scene_stack]:unfocus()
@@ -141,9 +145,9 @@ function SceneManager:pushSceneToMenu(scene, duration, blur)
     
     _t1.endCallback = function ()
 
-        local _t2 = BetweenMenusIn(500)
+        local _t2 = BetweenMenusIn(duration/2)
         
-        _t1.endCallback = function ()
+        _t2.endCallback = function ()
             self.transitioning = false
         end
         _t2:add()
@@ -159,16 +163,18 @@ end
 
 function SceneManager:pushSceneStack(scene, duration, blur)
 
-    local _t1 = Stack(duration, blur)
-
     if #self.scene_stack > 0 then
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
     end
+
     self.scene_stack[#self.scene_stack+1] = scene
     scene:load()
     scene:focus()
+    scene:moveTo(200, -120)
     scene:add()
+
+    local _t1 = Stack(duration, blur)
     
     _t1.endCallback = function ()    
         self.transitioning = false
@@ -180,7 +186,7 @@ end
 
 function SceneManager:pushSceneBetweenMenus(scene, duration, blur)
 
-    local _t1 = BetweenMenusOut(500, blur)
+    local _t1 = BetweenMenusOut(duration/2, blur)
 
     if #self.scene_stack > 0 then
         self.scene_stack[#self.scene_stack]:unfocus()
@@ -191,9 +197,9 @@ function SceneManager:pushSceneBetweenMenus(scene, duration, blur)
     
     _t1.endCallback = function ()
 
-        local _t2 = BetweenMenusIn(500)
+        local _t2 = BetweenMenusIn(duration/2)
         
-        _t1.endCallback = function ()
+        _t2.endCallback = function ()
             self.transitioning = false
         end
         _t2:add()
@@ -208,11 +214,11 @@ function SceneManager:pushSceneBetweenMenus(scene, duration, blur)
 end
 
 function SceneManager:popSceneOutMenu(duration)
-    local _t1 = BetweenMenusOut(500)
+    local _t1 = BetweenMenusOut(duration/2)
 
     _t1.endCallback = function ()
 
-        local _t2 = OutMenu(1000)
+        local _t2 = OutMenu(duration)
 
         self.transitioning = false
 
@@ -224,7 +230,9 @@ function SceneManager:popSceneOutMenu(duration)
             self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
         end
-
+        _t2.endCallback = function ()
+            self.transitioning = false
+        end
         _t2:add()
         
     end
@@ -233,11 +241,11 @@ function SceneManager:popSceneOutMenu(duration)
 end
 
 function SceneManager:popSceneBetweenMenus(duration)
-    local _t1 = BetweenMenusOut(500)
+    local _t1 = BetweenMenusOut(duration/2)
 
     _t1.endCallback = function ()
 
-        local _t2 = BetweenMenusIn(500)
+        local _t2 = BetweenMenusIn(duration/2)
 
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
@@ -248,6 +256,9 @@ function SceneManager:popSceneBetweenMenus(duration)
             self.scene_stack[#self.scene_stack]:add()
         end
 
+        _t2.endCallback = function ()
+            self.transitioning = false 
+        end
         _t2:add()
 
     end
@@ -258,18 +269,18 @@ end
 function SceneManager:popSceneUnstack(duration)
     local _t1 = Unstack(duration)
 
-    self.transitioning = false
-
-    self.scene_stack[#self.scene_stack]:unfocus()
-    self.scene_stack[#self.scene_stack]:remove()
-    table.remove(self.scene_stack, #self.scene_stack)
-
-    if #self.scene_stack > 0 then
-        self.scene_stack[#self.scene_stack]:focus()
-        self.scene_stack[#self.scene_stack]:add()
-    end
-
     _t1.endCallback = function ()
+
+        self.scene_stack[#self.scene_stack]:unfocus()
+        self.scene_stack[#self.scene_stack]:remove()
+        table.remove(self.scene_stack, #self.scene_stack)
+
+        if #self.scene_stack > 0 then
+            self.scene_stack[#self.scene_stack]:focus()
+            self.scene_stack[#self.scene_stack]:add()
+        end
+
+        self.transitioning = false
         
     end
 
@@ -313,11 +324,11 @@ function SceneManager:popScene(transition, duration)
         elseif transition == 'hwipe' then
             self:popSceneHWipe(duration)
         elseif transition == 'unstack' then
-            self:popSceneUnstack(duration/2)
+            self:popSceneUnstack(500)
         elseif transition == 'out menu' then
             self:popSceneOutMenu(duration)
         elseif transition == 'between menus' then
-            self:popSceneBetweenMenus(duration)
+            self:popSceneBetweenMenus(500)
         end
     else
 
@@ -331,7 +342,17 @@ function SceneManager:popScene(transition, duration)
         self.transitioning = false
     end
 
-    
+end
+
+function SceneManager:popToSystem(transition, duration)
+
+    self.transitioning = true
+
+    while not self:getCurrentScene():isa(System) do
+        self:popScene()
+    end
+
+    self.transitioning = false
 
 end
 
@@ -348,17 +369,15 @@ function SceneManager:pushScene(scene, transition, duration)
 
     if transition then
         if transition == 'stack' then
-            self:pushSceneStack(scene, duration)
-        elseif transition == 'stack blur' then
-            self:pushSceneStack(scene, duration, true)
+            self:pushSceneStack(scene, 500)
         elseif transition == 'hwipe' then
             self:pushSceneHWipe(scene, duration)
         elseif transition == 'unstack' then
-            self:pushSceneUnstack(scene, duration/2)
+            self:pushSceneUnstack(scene, 500)
         elseif transition == 'to menu' then
-            self:pushSceneToMenu(scene, duration)
+            self:pushSceneToMenu(scene, 1000)
         elseif transition == 'between menus' then
-            self:pushSceneBetweenMenus(scene, duration)
+            self:pushSceneBetweenMenus(scene, 500)
         end 
     else
 
@@ -416,9 +435,7 @@ end
 function SceneManager:reset(scene)
 
     for k, v in pairs(self.scene_stack) do
-        v:remove()
+        self:popScene()
     end
-
-    self.scene_stack = {}
 
 end

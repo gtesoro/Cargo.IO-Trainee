@@ -19,7 +19,7 @@ function GenericMenu:initGrids()
     }
 
     self.list_box = ListBox(_list_box_data, 150, 150)
-    self.list_box:moveTo(100, 120)
+    self.list_box:moveTo(110, 120)
     self.list_box:setZIndex(2)
 
     self.list_box:add()
@@ -62,14 +62,26 @@ function GenericMenu:initBg()
 
     self.sprites:append(self.ui_overlay)
 
-    self.right_side = self.data.right_side
-    self.right_side:moveTo(300, 120)
-    self.right_side:setZIndex(0)
-    self.right_side:add()
+    if self.data.right_side then
+        self:setRightSide(self.data.right_side)
+    end
+end
 
-    self.sprites:append(self.right_side)
+function GenericMenu:setRightSide(spr)
 
+    if self.right_side then
+        self.right_side:remove()
+        self.sprites:remove(self.right_side)
+    end
 
+    if spr then
+        self.right_side = spr
+        self.right_side:moveTo(290, 120)
+        self.right_side:setZIndex(0)
+        self.right_side:add()
+
+        self.sprites:append(self.right_side)
+    end
 end
 
 function GenericMenu:focus()
@@ -85,16 +97,35 @@ function GenericMenu:unfocus()
     end
 end
 
+function GenericMenu:remove()
+    GenericMenu.super.remove(self)
+    self.data.right_side = nil
+end
+
 function GenericMenu:doUpdate()
 
-    -- if not self.right_side_animator then
-    --     self.right_side_animator = gfx.animator.new(500, pd.geometry.lineSegment.new(500, 120, 300, 120), pd.easingFunctions.outQuint)
-    -- end
-    -- self.right_side:moveTo(self.right_side_animator:currentValue())
+    if self.current_selected ~= self.list_box:getSelected() then
+        self.current_selected = self.list_box:getSelected()
+        if self.current_selected.sprite then
+            self:setRightSide(self.current_selected.sprite)
+        else
+            self:setRightSide(self.data.right_side)
+        end
+    end
 
-    -- if not self.list_box_animator then
-    --     self.list_box_animator = gfx.animator.new(500, pd.geometry.lineSegment.new(-200, 120, 100, 120), pd.easingFunctions.outQuint)
-    -- end
-    -- self.list_box:moveTo(self.list_box_animator:currentValue())
+    if not self.noise_timer then
+        self.noise_timer = pd.timer.new(math.random(3000, 10000))
+        self.noise_timer.delay = 1000
+        self.noise_timer.updateCallback = function (timer)
+            if timer.timeLeft < 200 then
+                self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100):vcrPauseFilterImage())
+            end
+        end
+        self.noise_timer.timerEndedCallback = function ()
+            self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100))
+            self.bg_sprite:markDirty()
+            self.noise_timer = nil
+        end
+    end
     
 end

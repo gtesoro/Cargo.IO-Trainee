@@ -11,6 +11,8 @@ function ListBox:init(data, width, height, item_height)
 
     self.data = data
 
+    self.accumulated_crank = 0
+
     local padding = 2
 
     local _w, _h = 0, 0
@@ -91,10 +93,33 @@ function ListBox:setListColor(color)
     self:drawGrid()
 end
 
+function ListBox:getSelected()
+
+    local s, r, c = self.listview:getSelection()
+
+    return self.data.options[r]
+
+end
+
 
 function ListBox:initInputs()
 
     self.input_handlers = {
+
+        cranked = function (change, acceleratedChange)
+            local _sensitivity = g_SystemManager.crank_menu_sensitivity
+            self.accumulated_crank += acceleratedChange
+
+            if math.abs(self.accumulated_crank) > _sensitivity then
+                if self.accumulated_crank < 0 then
+                    self.listview:selectPreviousRow(true)
+                else
+                    self.listview:selectNextRow(true)
+                end
+                self:drawList()
+                self.accumulated_crank = 0
+            end
+        end,
 
         AButtonUp = function ()
             local s, r, c = self.listview:getSelection()
@@ -111,12 +136,12 @@ function ListBox:initInputs()
         end,
 
         upButtonDown = function ()
-            self.listview:selectPreviousRow(false)
+            self.listview:selectPreviousRow(true)
             self:drawList()
         end,
 
         downButtonDown = function ()
-            self.listview:selectNextRow(false)
+            self.listview:selectNextRow(true)
             self:drawList()
         end
 

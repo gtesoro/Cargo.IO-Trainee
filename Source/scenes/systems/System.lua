@@ -27,13 +27,13 @@ end
 
 function System:add()
     System.super.add(self)
-    g_CycleManager:unpause()
+    g_SystemManager:unpause()
     gfx.setDrawOffset(-self.x_offset, -self.y_offset)
 end
 
 function System:remove()
     System.super.remove(self)
-    g_CycleManager:pause()
+    g_SystemManager:pause()
 end
 
 function System:setSelectionSprite(spr)
@@ -77,8 +77,8 @@ function System:initShip()
     self.ship = Ship(self)
     self.ship:setZIndex(self.data.playfield_height*2+1)
     self.ship:moveTo(self.data.playfield_width/2-100, self.data.playfield_height/2)
-    if g_player.last_position.x then
-        local dx, dy, dz = self.data.x - g_player.last_position.x, self.data.y - g_player.last_position.y, self.data.z - g_player.last_position.z
+    if g_SystemManager:getPlayer().last_position.x then
+        local dx, dy, dz = self.data.x - g_SystemManager:getPlayer().last_position.x, self.data.y - g_SystemManager:getPlayer().last_position.y, self.data.z - g_SystemManager:getPlayer().last_position.z
         if math.abs(dx) + math.abs(dy) + math.abs(dz) == 1 then
             if dx > 0 then
                 self.ship:moveTo(50, self.data.playfield_height/2)
@@ -113,8 +113,7 @@ end
 function System:initBg()
 
     local img = gfx.image.new(self.data.playfield_width, self.data.playfield_height)
-    local bg = gfx.image.new(self.data.background) -- :blurredImage(0.5, 2, gfx.image.kDitherTypeScreen)
-
+    local bg = gfx.image.new(self.data.background)--:blurredImage(1, 2, gfx.image.kDitherTypeBayer8x8) 
     scaleAndCenterImage(bg, img)
 
     self.bg_sprite = gfx.sprite.new(img)
@@ -280,6 +279,8 @@ function System:initInputs()
         end,
 
         upButtonDown = function ()
+            --self.ship.move_ship = not self.ship.move_ship 
+            g_SceneManager:pushScene(CloningFacility(), 'to menu')
         end,
 
         downButtonDown = function ()
@@ -341,6 +342,8 @@ function System:checkBoundaries(spr, wrap)
 end
 
 function System:doUpdate()
+
+    self.ship:doUpdate()
     self:moveCamera()
 
     self:handleBorders()

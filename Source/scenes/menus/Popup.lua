@@ -3,36 +3,49 @@ local gfx <const> = pd.graphics
 
 class('Popup').extends(Scene)
 
+function Popup:init(data)
+    Popup.super.init(self, data)
+    self.previous_scene_img = gfx.getDisplayImage()
+end
+
 function Popup:startScene()
 
     local _new_options = {}
 
-    for k,v in pairs(self.data.options) do
+    if self.data.options then
 
-        local _func = nil
+        for k,v in pairs(self.data.options) do
 
-        _func = function ()
-            if v.callback then
-                v.callback()
+            local _func = nil
+
+            _func = function ()
+                if v.callback then
+                    v.callback()
+                end
+                self:unblur(function ()
+                    g_SceneManager:popScene('unstack')
+                end)
             end
-            self:animateOut()
+
+            _new_options[k] = {
+                name = v.name,
+                callback = _func
+            }
+
         end
 
-        _new_options[k] = {
-            name = v.name,
-            callback = _func
-        }
+        self.data.options = _new_options
 
     end
 
-    self.data.options = _new_options
-
     self:initBg()
     self:initDialog()
-    self:animateIn()
+    self:initInputs()
+    -- self:animateIn()
 end
 
 function Popup:focus()
+    Popup.super.focus(self)
     if self.list_box then
         self:unfocus()
         self.list_box:focus()
@@ -40,19 +53,15 @@ function Popup:focus()
 end
 
 function Popup:unfocus()
+    Popup.super.unfocus(self)
     if self.list_box then
         self.list_box:unfocus()
     end
 end
 
-function Popup:add()
-    Popup.super.add(self)
-    self:unfocus()
-end
-
 function Popup:initBg()
 
-    self.base_bg_img = gfx.getDisplayImage()
+    self.base_bg_img = gfx.image.new(400, 240)
     self.bg_spr = gfx.sprite.new(self.base_bg_img)
 
     self.bg_spr:moveTo(200,120)
@@ -63,7 +72,7 @@ end
 
 function Popup:animateIn()
 
-    self.blur_target = 4
+    self.blur_target = 2
     self.blur_tick = 2
     self.blur_duration = 300
     self.move_duration = 300
@@ -92,32 +101,62 @@ function Popup:animateIn()
     end
 end
 
+function Popup:unblur(callback)
+    local unblur_timer = pd.timer.new(250, 4, 0, pd.easingFunctions.inLinear)
+    unblur_timer.updateCallback = function(timer)
+        self:setImage(self.previous_scene_img:blurredImage(timer.value, 2, gfx.image.kDitherTypeBayer8x8))
+        self:markDirty()
+    end
+
+    unblur_timer.timerEndedCallback = function ()
+        self:setImage(nil)
+        callback()
+    end
+end
+
+function Popup:initInputs()
+    self.input_handlers = {
+
+        BButtonUp = function ()
+            self:unblur(function ()
+                g_SceneManager:popScene('unstack')
+            end)
+        end
+
+    }
+end
+
 
 function Popup:initDialog()
 
-    local _list_box_data = {
-        options = self.data.options,
-        parent = self
-    }
+    if self.data.options then
+        local _list_box_data = {
+            options = self.data.options,
+            parent = self
+        }
 
-    self.list_box = ListBox(_list_box_data)
+        self.list_box = ListBox(_list_box_data)
+        self.list_box:setZIndex(2)
 
-    self.list_box.b_callback = function ()
-        self:animateOut()
+        self.list_box.b_callback = function ()
+            self:unblur(function ()
+                g_SceneManager:popScene('unstack')
+            end)
+        end
     end
 
     gfx.setFont(g_font_18)
 
-    local _w, _h = gfx.getTextSize(self.data.text)
-    _w = _w/2
-    _h = _h*2
+    local _w, _h = gfx.getTextSizeForMaxWidth(self.data.text, 300)
 
     local padding = 5
     _w += padding*2
     _h += padding*2
 
-    if _h < self.list_box.height then
-        _h = self.list_box.height
+    if self.list_box then
+        if _h < self.list_box.height then
+            _h = self.list_box.height
+        end
     end
 
     local box = gfx.image.new(_w, _h)
@@ -131,26 +170,24 @@ function Popup:initDialog()
 
     self.shdow_float = 5
 
-    self.list_box_shadow = getShadowSprite(self.list_box)
-    self.sprites:append(self.list_box_shadow)
+    self.box_spr_x = 200
 
-    self.list_box_x = (200 + _w/2) + padding/2
-
-    self.box_spr_x = 200 - self.list_box.width/2 - padding/2
-
-    self.list_box:moveTo(self.list_box_x, -120)
-    self.list_box_shadow:moveTo(self.list_box_x + self.shdow_float, -120 + self.shdow_float)
-
-    self.sprites:append(self.list_box)
+    if self.list_box then
+        self.list_box_shadow = getShadowSprite(self.list_box)
+        self.sprites:append(self.list_box_shadow)
+        self.list_box_x = (200 + _w/2) + padding/2
+        self.list_box:moveTo(self.list_box_x, 120)
+        self.list_box_shadow:moveTo(self.list_box_x + self.shdow_float, 120 + self.shdow_float)
+        self.sprites:append(self.list_box)
+        self.box_spr_x = 200 - self.list_box.width/2 - padding/2
+    end
 
     self.box_spr = gfx.sprite.new(box)
-
+    self.box_spr:setZIndex(2)
     self.box_spr_shadow = getShadowSprite(self.box_spr)
     self.sprites:append(self.box_spr_shadow)
-
-    self.box_spr:moveTo(self.box_spr_x, -120)
-    self.box_spr_shadow:moveTo(self.box_spr_x + self.shdow_float, -120 + self.shdow_float)
-
+    self.box_spr:moveTo(self.box_spr_x, 120)
+    self.box_spr_shadow:moveTo(self.box_spr_x + self.shdow_float, 120 + self.shdow_float)
     self.sprites:append(self.box_spr)
     
 end
@@ -180,3 +217,15 @@ function Popup:animateOut()
     end
 
 end 
+
+function Popup:doUpdate()
+
+    if not self.blur_timer_in then
+        self.blur_timer_in = pd.timer.new(250, 0, 4, pd.easingFunctions.inLinear)
+        self.blur_timer_in.updateCallback = function(timer)
+            self:setImage(self.previous_scene_img:blurredImage(timer.value, 2, gfx.image.kDitherTypeBayer8x8))
+            self:markDirty()
+        end
+    end
+
+end
