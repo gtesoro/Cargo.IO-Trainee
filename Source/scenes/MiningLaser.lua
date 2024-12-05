@@ -509,7 +509,7 @@ function MiningLaser:doUpdate()
     if not self.animating_ship then
         if self.exiting then
             if self.ship_overlay.y > pd.display.getHeight()*1.5 then
-                g_SceneManager:popScene('hwipe')
+                g_SceneManager:popScene('wipe down')
             end
             self.ship_overlay:moveBy(0, 5)
         else

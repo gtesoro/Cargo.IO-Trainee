@@ -83,7 +83,7 @@ function AsteroidSystem:doUpdate()
             if self.asteroids then
                 for k,v in pairs(self.asteroids) do
                     if v.sprite == collisions[i] then
-                        g_SceneManager:pushScene(MiningLaser({bg_img = self:getCurrentBg()}), 'hwipe')
+                        g_SceneManager:pushScene(MiningLaser({bg_img = self:getCurrentBg()}), 'wipe down')
                         
                         self.sprites:remove(v.sprite)
 

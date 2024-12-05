@@ -62,9 +62,9 @@ function SceneManager:switchSceneStack(scene, duration)
 
 end
 
-function SceneManager:switchSceneHWipe(scene, duration)
+function SceneManager:switchSceneHWipe(scene, duration, dir)
 
-    local _t_in = HorizontalWipe(duration, 0, pd.display.getWidth())
+    local _t_in = Wipe(duration, dir, false)
     _t_in.endCallback = function ()
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:unfocus()
@@ -74,7 +74,7 @@ function SceneManager:switchSceneHWipe(scene, duration)
         scene:load()
         scene:focus()
         scene:add()
-        local _t_out = HorizontalWipe(duration, 0, pd.display.getWidth(), true)
+        local _t_out = Wipe(duration, dir, true)
         _t_out.endCallback = function ()
             self.transitioning = false
         end
@@ -84,11 +84,11 @@ function SceneManager:switchSceneHWipe(scene, duration)
 
 end
 
-function SceneManager:pushSceneHWipe(scene, duration)
+function SceneManager:pushSceneHWipe(scene, duration, dir)
 
     self.transitioning = true
 
-    local _t_in = HorizontalWipe(duration, 0, pd.display.getWidth())
+    local _t_in = Wipe(duration, dir, false)
     _t_in.endCallback = function ()
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:unfocus()
@@ -98,7 +98,7 @@ function SceneManager:pushSceneHWipe(scene, duration)
         scene:load()
         scene:focus()
         scene:add()
-        local _t_out = HorizontalWipe(duration, 0, pd.display.getWidth(), true)
+        local _t_out = Wipe(duration, dir, true)
         _t_out.endCallback = function ()
             self.transitioning = false
         end
@@ -287,9 +287,9 @@ function SceneManager:popSceneUnstack(duration)
     _t1:add()
 end
 
-function SceneManager:popSceneHWipe(duration)
+function SceneManager:popSceneHWipe(duration, dir)
     
-    local _t_in = HorizontalWipe(duration, 0, pd.display.getWidth())
+    local _t_in = Wipe(duration, dir)
 
     _t_in.endCallback = function ()
         self.scene_stack[#self.scene_stack]:unfocus()
@@ -299,7 +299,7 @@ function SceneManager:popSceneHWipe(duration)
             self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
         end
-        local _t_out = HorizontalWipe(duration, 0, pd.display.getWidth(), true)
+        local _t_out = Wipe(duration, dir, true)
         _t_out.endCallback = function ()
             self.transitioning = false
         end
@@ -321,10 +321,10 @@ function SceneManager:popScene(transition, duration)
     if transition then
         if transition == 'stack' then
             self:popSceneStack(duration)
-        elseif transition == 'hwipe' then
-            self:popSceneHWipe(duration)
+        elseif transition == 'wipe down' then
+            self:popSceneHWipe(duration, 'down')
         elseif transition == 'unstack' then
-            self:popSceneUnstack(500)
+            self:popSceneUnstack(100)   
         elseif transition == 'out menu' then
             self:popSceneOutMenu(duration)
         elseif transition == 'between menus' then
@@ -369,11 +369,11 @@ function SceneManager:pushScene(scene, transition, duration)
 
     if transition then
         if transition == 'stack' then
-            self:pushSceneStack(scene, 500)
-        elseif transition == 'hwipe' then
-            self:pushSceneHWipe(scene, duration)
+            self:pushSceneStack(scene, 100)
+        elseif transition == 'wipe down' then
+            self:pushSceneHWipe(scene, duration, 'down')
         elseif transition == 'unstack' then
-            self:pushSceneUnstack(scene, 500)
+            self:pushSceneUnstack(scene, 250)
         elseif transition == 'to menu' then
             self:pushSceneToMenu(scene, 1000)
         elseif transition == 'between menus' then
@@ -409,9 +409,16 @@ function SceneManager:switchScene(scene, transition, duration)
             self:switchhSceneStack(scene, duration)
         elseif transition == 'stack blur' then
             self:switchhSceneStack(scene, duration, true)
-        elseif transition == 'hwipe' then
-            self:switchSceneHWipe(scene, duration)
+        elseif transition == 'wipe left' then
+            self:switchSceneHWipe(scene, duration, 'left')
+        elseif transition == 'wipe right' then
+            self:switchSceneHWipe(scene, duration, 'right')
+        elseif transition == 'wipe down' then
+            self:switchSceneHWipe(scene, duration, 'down')
+        elseif transition == 'wipe up' then
+            self:switchSceneHWipe(scene, duration, 'up')
         else
+            print(transition)
             assert(false)
         end
         

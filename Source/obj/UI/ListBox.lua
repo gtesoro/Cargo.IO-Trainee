@@ -40,8 +40,11 @@ function ListBox:init(data, width, height, item_height)
     _w = _min_width + text_offset*2 + padding*2
     _h = _item_height * #self.data.options + text_offset*2 + padding*2
 
-    if width and height then
+    if width and width > _w then
         _w = width
+    end
+
+    if height then
         _h = height
     end
 

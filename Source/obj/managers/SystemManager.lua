@@ -27,7 +27,7 @@ function SystemManager:init()
         g_NotificationManager:notify(string.format("Cycle %i", cycle))
     end
 
-    self.cycle_length = 5
+    self.cycle_length = 0.5
 
     self.cycle_timer = pd.timer.new(self.cycle_length*60*1000)
     self.cycle_timer.repeats = true
@@ -37,6 +37,8 @@ function SystemManager:init()
     end
 
     self.cycle_timer:pause()
+
+    self:initStatic()
     
 end
 
@@ -50,10 +52,10 @@ end
 
 function SystemManager:nextCycle()
     
-    self.player.cycle += 1
+    self.state.player.cycle += 1
 
     for k, v in pairs(self.on_cycle) do
-        v(self.player.cycle)
+        v(self.state.player.cycle)
     end
 end
 
@@ -75,7 +77,8 @@ function SystemManager:death()
     end
 
     playdate.datastore.delete(self.autosave_filename)
-    g_SceneManager:switchScene(Intro(), 'hwipe')
+    g_SceneManager:reset()
+    g_SceneManager:pushScene(Intro(), 'wipe down')
 
 end
 
@@ -84,48 +87,13 @@ function SystemManager:isTick(x)
     return math.fmod(self.frame_counter, x) == 0
 end
 
-function SystemManager:initState()
-
-    self.state = {}
-
-    -- Player
-    local _player = {}
-    self.state.player = _player
-
-    _player.last_position = {}
-    _player.current_position = {
-        x = 0,
-        y = 0,
-        z = 0
-    }
-    _player.money = 1000
-    _player.inventory = {
-        items = List(),
-        capacity = 9
-    }
-
-    _player.ship = {
-        fuel_current = 100,
-        fuel_capacity = 100,
-        fuel_usage = 0.005
-    }
-
-    _player.map = {}
-
-    _player.cycle = 1
-
-    _player.inventory.items = {}
-    _player.inventory.items[#_player.inventory.items+1] = { className='FuelCell'}
-    _player.inventory.items[#_player.inventory.items+1] = { className='Radar'}
-    _player.inventory.items[#_player.inventory.items+1] = { className='Radio'}
-
-    _player.contracts = {}
+function SystemManager:initStatic()
+    self.static = {}
 
     -- Planets
-    local _planets = {}
-    self.state.planets = _planets
+    self.static.planets = {}
 
-    _planet = {
+    local _freja = {
         img="assets/planets/planet3",
         img_hd="assets/planets/placeholder_hd",
         name="Freja",
@@ -137,9 +105,9 @@ function SystemManager:initState()
         }
     }
 
-    _planets[_planet.name] = _planet
+    self.static.planets[#self.static.planets+1] = _freja
     
-    _planet = {
+    local _thor = {
         img="assets/planets/thor/thor",
         img_hd="assets/planets/thor/thor_hd",
         name="Thor",
@@ -151,9 +119,9 @@ function SystemManager:initState()
         }
     }
 
-    _planets[_planet.name] = _planet
+    self.static.planets[#self.static.planets+1] = _thor
     
-    _planet = {
+    local _loki = {
         img="assets/planets/loki/sd",
         img_hd="assets/planets/loki/hd",
         name="Loki",
@@ -165,9 +133,9 @@ function SystemManager:initState()
         }
     }
 
-    _planets[_planet.name] = _planet
+    self.static.planets[#self.static.planets+1] = _loki
     
-    _planet = {
+    local _odin = {
         img="assets/planets/planet1",
         name="Odin",
         img_hd="assets/planets/placeholder_hd",
@@ -180,11 +148,11 @@ function SystemManager:initState()
         }
     }
 
-    _planets[_planet.name] = _planet
+    self.static.planets[#self.static.planets+1] = _odin
 
     -- Systems
     local _systems = {}
-    self.state.systems = _systems
+    self.static.systems = _systems
 
     local empty = {
         class = 'EmptySystem',
@@ -194,6 +162,8 @@ function SystemManager:initState()
         playfield_height = 3000,
         background = "assets/backgrounds/bg2"
     }
+
+    _systems['empty'] = empty
     
     local _sys = {
         class = 'AsteroidSystem',
@@ -321,15 +291,53 @@ function SystemManager:initState()
         sun = "assets/planets/star",
         angle = 0.6,
         planets = {
-            _planets['Freja'], 
-            _planets['Thor'],
-            _planets['Odin'],
-            _planets['Loki']
+            _freja, 
+            _thor,
+            _odin,
+            _loki
         }
 
     }
     
     _systems[string.format("%i.%i.%i", _sys.x, _sys.y, _sys.z)] = _sys
+end
+
+function SystemManager:initState()
+
+    self.state = {}
+
+    -- Player
+    local _player = {}
+    self.state.player = _player
+
+    _player.last_position = {}
+    _player.current_position = {
+        x = 0,
+        y = 0,
+        z = 0
+    }
+    _player.money = 1000
+    _player.inventory = {
+        items = List(),
+        capacity = 9
+    }
+
+    _player.ship = {
+        fuel_current = 100,
+        fuel_capacity = 100,
+        fuel_usage = 0.005
+    }
+
+    _player.map = {}
+
+    _player.cycle = 1
+
+    _player.inventory.items = {}
+    _player.inventory.items[#_player.inventory.items+1] = { className='FuelCell'}
+    _player.inventory.items[#_player.inventory.items+1] = { className='Radar'}
+    _player.inventory.items[#_player.inventory.items+1] = { className='Radio'}
+
+    _player.contracts = {}
 
     return self.state
 end
@@ -366,6 +374,9 @@ function SystemManager:save(file)
         file = self.autosave_filename
     end
 
+    local _current_system = self.current_system
+    self.current_system = nil
+
     -- Save item class names
     local _inventory_items = self.state.player.inventory.items
     local _save_inventory_items = {}
@@ -387,6 +398,7 @@ function SystemManager:save(file)
 
     self.state.player.contracts = _contracts
     self.state.player.inventory.items = _inventory_items
+    self.current_system = _current_system
 end
 
 function SystemManager:getPlayer()
@@ -398,7 +410,14 @@ end
 
 function SystemManager:getSystems()
     if self.state then
-        return self.state.systems
+        return self.static.systems
+    end
+    return nil
+end
+
+function SystemManager:getPlanets()
+    if self.state then
+        return self.static.planets
     end
     return nil
 end
@@ -415,8 +434,6 @@ end
 
 function Player:addContract(contract)
     self.contracts[#self.contracts+1] = contract
-
-    printTable(self.contracts)
     contract:onGain()
 
     return true
@@ -468,7 +485,20 @@ function Player:removeFromInventory(item)
     return false
 end
 
+
+function Player:setCurrentSystem(system)
+    self.current_system = system
+end
+
+function Player:getCurrentSystem()
+    return self.current_system 
+end
+
 function Player:chargeMoney(amount)
+
+    if amount == 0 or amount == nil then
+        return true
+    end
     
     if self.money >= amount then
         self.money -= amount
@@ -481,21 +511,29 @@ function Player:chargeMoney(amount)
 end
 
 function Player:gainMoney(amount)
+
+    if amount == 0 or amount == nil then
+        return true
+    end
     
     self.money += amount
     g_NotificationManager:notify(string.format("+%iC", amount))
+
+    return true
     
 end
 
 
 function Player:getContractByType(contract)
 
+    local _ret = {}
+
     for k,v in pairs(self.contracts) do
         if v.className == contract then
-            return v
+            _ret[#_ret+1] = v
         end
     end
 
-    return nil
+    return _ret
     
 end

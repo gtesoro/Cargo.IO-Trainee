@@ -37,7 +37,7 @@ local function loadGame()
 	local menuItem, error = menu:addMenuItem("Delete Save", function()
 		pd.datastore.delete(g_SystemManager.autosave_filename)
 		g_SceneManager:reset()
-		g_SceneManager:pushScene(Intro(), 'hwipe')
+		g_SceneManager:pushScene(Intro())
 	end)
 
 	once = true

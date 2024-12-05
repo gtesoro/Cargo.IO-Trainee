@@ -140,7 +140,66 @@ function getShadowSprite(spr)
     return _spr
 end
 
-function goTo(x, y, z)
+function getSignContractCallback(contract)
+    local _func = function ()
+        contract:generate()
+        g_SceneManager:pushScene(ImageViewer({image=contract:getContractImage(), a_callback=function (_image_viewer)
+
+            g_SceneManager:pushScene(Popup({text='Sign Contract?', options={
+                {
+                    name='Yes',
+                    callback= function ()
+                        if g_SystemManager:getPlayer():chargeMoney(contract:getSignPrice()) then
+                            
+                            local _timer = pd.timer.new(1000, _image_viewer.image_sprite.y,_image_viewer.image_sprite.height/2 - 240, pd.easingFunctions.outCubic)
+                            _timer.updateCallback = function (timer)
+                                _image_viewer.image_sprite:moveTo(200, timer.value)
+                                _image_viewer.image_sprite:markDirty()
+                            end
+                            _timer.timerEndedCallback = function ()
+
+                                inContext(_image_viewer.image_sprite:getImage(), function ()
+                                    gfx.image.new('assets/contracts/contract_stamp'):drawAnchored(_image_viewer.image_sprite.width*0.8, _image_viewer.image_sprite.height*0.9, 0.5, 0.5)
+                                end)
+                                
+                                _image_viewer.image_sprite:markDirty()
+
+                                local _timer2 = pd.timer.new(250)
+                                _timer2.updateCallback = function (timer)
+                                    pd.display.setOffset(math.random(-2,2), math.random(-2,2))
+                                end
+                                _timer2.timerEndedCallback = function ()
+
+                                    g_NotificationManager:notify('Contract Signed')
+                                    contract:onSign()
+                                    g_SystemManager:getPlayer():addContract(contract)
+                                    
+                                end
+                            end
+                        end
+                    end
+                },
+                {
+                    name='No'
+                }
+            }}), 'stack')
+            
+        end}), 'between menus')
+    end
+
+    return _func
+end
+
+function createPopup(data)
+    print('Here')
+    g_SceneManager:pushScene(Popup(data), 'stack')
+end
+
+function goTo(x, y, z, direction)
+
+    if not direction then
+        direction = 'down'
+    end
 
     
     local _label = string.format("%i.%i.%i", x, y, z)
@@ -157,16 +216,23 @@ function goTo(x, y, z)
 
     local _s = g_SystemManager:getSystems()[_label]
 
-    if _s then
-        g_SystemManager:getPlayer().map[_label] = _s
-        g_SceneManager:switchScene(_G[_s.class](_s), 'hwipe')
-    else
-        empty.x = x
-        empty.y = y
-        empty.z = z
+    local _system = nil
 
+    if _s then
+        _system = _G[_s.class](_s)
+        g_SystemManager:getPlayer().map[_label] = _s
+        g_SceneManager:switchScene(_system, string.format('wipe %s', direction))
+        g_SystemManager:getPlayer():setCurrentSystem(_system)
+    else
+        local _empty = g_SystemManager:getSystems()['empty']
+        _empty.x = x
+        _empty.y = y
+        _empty.z = z
+
+        _system = EmptySystem(_empty)
         g_SystemManager:getPlayer().map[_label] = {x = x, y = y, z = z, empty = true}
-        g_SceneManager:switchScene(EmptySystem(empty), 'hwipe')
+        g_SceneManager:switchScene(_system, string.format('wipe %s', direction))
+        g_SystemManager:getPlayer():setCurrentSystem(_system)
     end
 
     g_SystemManager:save()
@@ -204,29 +270,28 @@ function drawPauseMenu()
         gfx.setColor(gfx.kColorWhite)
         if g_SystemManager:getPlayer().current_position.x then
             local _label = "System"
-            local _data = string.format("%i.%i.%i", g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z)
+            local _data = g_SystemManager:getPlayer():getCurrentSystem().data.name
             
-            gfx.drawTextAligned(_label, img.width*0.05, img.height*0.3, kTextAlignment.left)
+            --gfx.drawTextAligned(_label, img.width*0.05, img.height*0.3, kTextAlignment.left)
             gfx.drawTextAligned(_data, img.width*0.45, img.height*0.3, kTextAlignment.right)
         end
 
         if g_SystemManager:getPlayer().cycle then
             local _label = "Cycle"
-            local _data = string.format("%i", g_SystemManager:getPlayer().cycle)
+            local _data = string.format("Cycle %i", g_SystemManager:getPlayer().cycle)
             
-            
-            gfx.drawTextAligned(_label, img.width*0.05, img.height*0.4, kTextAlignment.left)
+            --gfx.drawTextAligned(_label, img.width*0.05, img.height*0.4, kTextAlignment.left)
             gfx.drawTextAligned(_data, img.width*0.45, img.height*0.4, kTextAlignment.right)
 
         
         end
 
         if g_SystemManager:getPlayer().money then
-            local _label = "Money"
-            local _data = string.format("%i", g_SystemManager:getPlayer().money)
+            local _label = ""
+            local _data = string.format("%iC", g_SystemManager:getPlayer().money)
             
             
-            gfx.drawTextAligned(_label, img.width*0.05, img.height*0.5, kTextAlignment.left)
+            --gfx.drawTextAligned(_label, img.width*0.05, img.height*0.5, kTextAlignment.left)
             gfx.drawTextAligned(_data, img.width*0.45, img.height*0.5, kTextAlignment.right)
         end
 

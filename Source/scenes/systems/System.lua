@@ -5,7 +5,7 @@ class('System').extends(Scene)
 
 function System:startScene()
 
-    g_NotificationManager:notify(self.data.name)
+    g_NotificationManager:notify(string.format('System: %s', self.data.name))
 
     self.x_offset = 0
     self.y_offset = 0
@@ -107,6 +107,8 @@ function System:initShip()
     self.x_offset = _x - pd.display.getWidth()/2
     self.y_offset = _y - pd.display.getHeight()/2
 
+    --self.ship:moveTo(30, self.data.playfield_height/2)
+
     self.sprites:append(self.ship)
 end
 
@@ -173,44 +175,98 @@ end
 
 function System:handleBorders()
 
-    local margin = 40
+    local margin = 64
 
-    self.up:setVisible(false)
-    self.down:setVisible(false)
-    self.left:setVisible(false)
-    self.right:setVisible(false)
+    self.blackout_overlay:setVisible(true)
+    local margin = 64
+    if self.ship.x < 0 then
+        self.blackout_overlay:setVisible(true)
+        inContext(self.blackout_overlay:getImage(), function ()
+            gfx.clear(gfx.kColorWhite)
+            gfx.setColor(gfx.kColorClear)
+            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.x/margin))*466.48)
+            gfx.setColor(gfx.kColorWhite)
+            self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5 )
 
-    if self.ship.x < margin then
-        self.left:setVisible(true)
-        if pd.buttonJustPressed(pd.kButtonA) then
-            goTo(self.data.x-1, self.data.y , self.data.z)
-        end
+        end)
+        self.blackout_overlay:markDirty()
+    elseif self.ship.x > self.data.playfield_width then
+        self.blackout_overlay:setVisible(true)
+        inContext(self.blackout_overlay:getImage(), function ()
+            gfx.clear(gfx.kColorWhite)
+            gfx.setColor(gfx.kColorClear)
+            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.x - self.data.playfield_width)/margin)*466.48)
+            gfx.setColor(gfx.kColorWhite)
+            self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
+        end)
+        self.blackout_overlay:markDirty()
+    elseif self.ship.y < 0 then
+        self.blackout_overlay:setVisible(true)
+        inContext(self.blackout_overlay:getImage(), function ()
+            gfx.clear(gfx.kColorWhite)
+            gfx.setColor(gfx.kColorClear)
+            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.y/margin))*466.48)
+            gfx.setColor(gfx.kColorWhite)
+            self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
+        end)
+        self.blackout_overlay:markDirty()
+    elseif self.ship.y > self.data.playfield_height then
+        self.blackout_overlay:setVisible(true)
+        inContext(self.blackout_overlay:getImage(), function ()
+            gfx.clear(gfx.kColorWhite)
+            gfx.setColor(gfx.kColorClear)
+            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.y - self.data.playfield_height)/margin)*466.48)
+            gfx.setColor(gfx.kColorWhite)
+            self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
+        end)
+        self.blackout_overlay:markDirty()
+    else
+        self.blackout_overlay:setVisible(false)
     end
 
-    if self.ship.x > self.data.playfield_width - margin then
-        self.right:setVisible(true)
-        if pd.buttonJustPressed(pd.kButtonA) then
-            goTo(self.data.x+1, self.data.y , self.data.z)
-        end
+    if self.ship.x < -margin then
+        inContext(self.blackout_overlay:getImage(), function ()
+            gfx.clear(gfx.kColorWhite)
+        end)
+        self.blackout_overlay:markDirty()
+        goTo(self.data.x-1, self.data.y , self.data.z, 'left')
     end
 
-    if self.ship.y < margin then
-        self.up:setVisible(true)
-        if pd.buttonJustPressed(pd.kButtonA) then
-            goTo(self.data.x, self.data.y -1, self.data.z)
-        end
+    if self.ship.x > self.data.playfield_width + margin then
+        inContext(self.blackout_overlay:getImage(), function ()
+            gfx.clear(gfx.kColorWhite)
+        end)
+        self.blackout_overlay:markDirty()
+        goTo(self.data.x+1, self.data.y , self.data.z, 'right')
     end
 
-    if self.ship.y > self.data.playfield_height - margin then
-        self.down:setVisible(true)
-        if pd.buttonJustPressed(pd.kButtonA) then
-            goTo(self.data.x, self.data.y + 1, self.data.z)
-        end
+    if self.ship.y < -margin then
+        inContext(self.blackout_overlay:getImage(), function ()
+            gfx.clear(gfx.kColorWhite)
+        end)
+        self.blackout_overlay:markDirty()
+        goTo(self.data.x, self.data.y -1, self.data.z, 'up')
+    end
+
+    if self.ship.y > self.data.playfield_height + margin then
+        inContext(self.blackout_overlay:getImage(), function ()
+            gfx.clear(gfx.kColorWhite)
+        end)
+        self.blackout_overlay:markDirty()
+        goTo(self.data.x, self.data.y + 1, self.data.z, 'down')
     end
 
 end
 
 function System:initUI()
+
+    self.blackout_overlay = gfx.sprite.new(gfx.image.new(400,240))
+    self.blackout_overlay:moveTo(200, 120)
+    self.blackout_overlay:setIgnoresDrawOffset(true)
+    self.blackout_overlay:setZIndex(self.ship:getZIndex()+1)
+    self.blackout_overlay:add()
+
+    self.sprites:append(self.blackout_overlay)
 
     self.sprites:append(FuelUI(self.ship))
     
@@ -280,7 +336,7 @@ function System:initInputs()
 
         upButtonDown = function ()
             --self.ship.move_ship = not self.ship.move_ship 
-            g_SceneManager:pushScene(CloningFacility(), 'to menu')
+            g_SceneManager:pushScene(CargoHub(), 'to menu')
         end,
 
         downButtonDown = function ()
@@ -290,56 +346,6 @@ function System:initInputs()
     }
 end
 
-function System:checkBoundaries(spr, wrap)
-
-    local _s_x = spr.x
-    local _s_y = spr.y
-
-    local _bounce = 4
-
-    if wrap then
-		if _s_x < 0 then
-			_s_x = self.data.playfield_width
-		end
-		if _s_x > self.data.playfield_width then
-			_s_x  = 0
-		end
-	
-		if _s_y < 0 then
-			_s_y = self.data.playfield_height 
-		end
-		if _s_y > self.data.playfield_height then
-			_s_y = 0
-		end
-        spr:moveTo(_s_x, _s_y)
-	else
-        if _s_y < 0 or _s_y > self.data.playfield_height then
-            spr.speed_vector.y *= -1
-            spr.speed_vector /= _bounce
-        end
-
-        if _s_x < 0 or _s_x > self.data.playfield_width then
-            spr.speed_vector.x *= -1
-            spr.speed_vector /= _bounce
-        end
-
-        if _s_x < 0 then
-			_s_x = 0
-		end
-		if _s_x > self.data.playfield_width then
-			_s_x  = self.data.playfield_width
-		end
-	
-		if _s_y < 0 then
-			_s_y = 0
-		end
-		if _s_y > self.data.playfield_height then
-			_s_y = self.data.playfield_height 
-		end
-        spr:moveTo(_s_x, _s_y)
-
-    end
-end
 
 function System:doUpdate()
 
@@ -347,7 +353,6 @@ function System:doUpdate()
     self:moveCamera()
 
     self:handleBorders()
-    self:checkBoundaries(self.ship, self.wrap)
 
     self:updateSelectionSprite()
 

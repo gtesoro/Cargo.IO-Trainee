@@ -60,9 +60,7 @@ import "scenes/menus/TextViewer"
 import "scenes/menus/ImageViewer"
 import "scenes/menus/Intro"
 
-import "scenes/facilities/Shop"
-import "scenes/facilities/FuelStation"
-import "scenes/facilities/CloningFacility"
+import "scenes/facilities/Facilities"
 
 import "transitions/HorizontalWipe"
 import "transitions/Unstack"

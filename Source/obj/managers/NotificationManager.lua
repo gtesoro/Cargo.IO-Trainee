@@ -8,7 +8,7 @@ function NotificationManager:init()
     self.notifications = List()
     self.default_duration = 1500
 
-    self.y_pos = 10
+    self.y_pos = 240 * 0.1
 
     self.wait_timer = nil
 

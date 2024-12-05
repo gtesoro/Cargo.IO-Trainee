@@ -24,7 +24,7 @@ function Intro:initInputs()
 
         AButtonUp = function()
             g_SystemManager:load()
-            goTo(g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z, true)
+            goTo(g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z)
         end
     }
 
