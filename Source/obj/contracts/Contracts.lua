@@ -58,7 +58,7 @@ function Contract:getContractImage()
 
         gfx.drawTextAligned(string.format('%s, Cycle %i', _system_name, _cycle), img.width*0.90, img.height*0.15, kTextAlignment.right)
 
-        gfx.setFont(gfx.font.new('font/Full Circle/font-full-circle'))
+        gfx.setFont(g_font_text)
 
         gfx.setLineWidth(5)
         gfx.setColor(gfx.kColorBlack)
@@ -81,11 +81,35 @@ end
 
 function Contract:load(state)
     Contract.super.load(self, state)
-    self:onGain()
 end
 
 function Contract:onGain()
     
+end
+
+function Contract:onLose()
+
+end
+
+function Contract:onCancel()
+
+    if g_SystemManager:getPlayer():hasContract(self) then
+        g_SceneManager:pushScene(Popup({text='Sign Contract?', options={
+            {
+                name='Yes',
+                callback= function ()
+                    g_NotificationManager:notify(string.format("Contract Canceled: %s", self.name))
+                    g_SystemManager:getPlayer():removeContract(self)
+                    g_SceneManager:popScene('between menus')
+                end
+            },
+            {
+                name='No'
+            }
+        }}))
+        return true
+    end
+        return false
 end
 
 function Contract:onSign()
@@ -97,6 +121,24 @@ function Contract:onSign()
     self.state.sign_date = g_SystemManager:getPlayer().cycle
     self.state.signed = true
 
+end
+
+function Contract:getOptions()
+
+    return {
+        {
+            name = "Contract",
+            callback = function ()
+                g_SceneManager:pushScene(ImageViewer({image=gfx.sprite.new(self:getContractImage())}), "between menus")
+            end
+        },
+        {
+            name = "Cancel",
+            callback = function ()
+               self:onCancel()
+            end
+        }
+    }
 end
 
 class('CloningContract').extends(Contract)
@@ -117,6 +159,16 @@ function CloningContract:init()
     self.provider = "Namaste Cloning Inc."
 
     self.icon = gfx.sprite.new(gfx.image.new('assets/menus/cloning'))
+
+end
+
+function CloningContract:load(state)
+
+    CloningContract.super.load(self, state)
+
+    g_SystemManager.on_death[self.name] = function ()
+        self:onDeath()
+    end
 
 end
 
@@ -156,7 +208,14 @@ function DeliveryContract:init()
     self.name = "Delivery"
     self.provider = "Quick Lock Corporation"
 
-    self.contract_text = "Upon signing, the contractee commits to deliver the provided cargo to:\n  - %s, %s\nbefore Cycle %i in exchange for:\n  - %i Credits\nThis amount will be paid upon delivery of the cargo to its destination.\nDamaging, losing or stealing the provided cargo will be punished by law."
+    self.contract_text = [[
+Upon signing, the contractee commits to deliver the provided cargo to:
+  - %s, %s
+before the end of Cycle %i in exchange for:  
+  - %i Credits
+upon delivery. Delays will have penalties on this amount.
+Damaging, loosing or stealing the provided cargo will be consider a criminal offence.
+]]
                                         
 end
 
@@ -170,9 +229,19 @@ function DeliveryContract:generateLocalContract()
 
     self.state.destination_system = _current_system.data
     self.state.destination = _planets[math.random(1, #_planets)]
-    self.state.length = math.random(1,2)
+    while self.state.destination == g_SystemManager:getPlayer():getCurrentPlanet() do
+        self.state.destination = _planets[math.random(1, #_planets)]
+    end
+    self.state.length = 1
     self.state.reward = math.random(50, 100)
-
+    printTable(g_SystemManager:getGlobalState())
+    if g_SystemManager:getGlobalState().ql_number == nil then
+        g_SystemManager:getGlobalState().ql_number = 1
+    else
+        g_SystemManager:getGlobalState().ql_number += 1
+    end
+    self.state.number = g_SystemManager:getGlobalState().ql_number
+    self.name = string.format("%s #%i", self.name, self.state.number)
     self.contract_text = self:renderText()
 
     
@@ -188,10 +257,28 @@ function DeliveryContract:renderText()
 
 end
 
+function DeliveryContract:onGain()
+    g_SystemManager:getPlayer():addToInventory(QlCargo(self.state.destination))
+end
+
+function DeliveryContract:onComplete()
+    self.state.completed = true
+    
+    local _reward = self.state.reward
+    if self.state.sign_date + self.state.length < g_SystemManager:getPlayer().cycle then
+        local _diff = g_SystemManager:getPlayer().cycle - (self.state.sign_date + self.state.length)
+        g_NotificationManager:notify(string.format("Late Penalty: -%i", _reward - math.floor(_reward/(2 ^ _diff))))
+        _reward = math.floor(_reward/(2 ^ _diff))
+    end
+    g_NotificationManager:notify(string.format("Contract Completed: %s", self.name))
+    g_SystemManager:getPlayer():gainMoney(_reward)
+end
+
 function DeliveryContract:load(state)
     DeliveryContract.super.load(self, state)
 
     self.contract_text = self:renderText()
+    self.name = string.format("%s #%i", self.name, self.state.number)
 end
 
 function DeliveryContract:generate()

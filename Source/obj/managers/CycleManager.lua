@@ -11,7 +11,7 @@ function CycleManager:init()
         g_NotificationManager:notify(string.format("Cycle %i", cycle))
     end
 
-    self.cycle_length = 5
+    self.cycle_length = 0.1
 
     self.cycle_timer = pd.timer.new(self.cycle_length*60*1000)
     self.cycle_timer.repeats = true

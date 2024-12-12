@@ -451,7 +451,7 @@ function MiningLaser:initInputs()
         end,
 
         downButtonDown = function ()
-            g_SceneManager:pushScene(Inventory(), 'to menu')
+            g_SceneManager:pushScene(PlayerMenu(), 'to menu')
         end
 
     }

@@ -2,16 +2,16 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('GenericInventory').extends(Scene)
+class('LoadoutMenu').extends(Scene)
 
-function GenericInventory:startScene()
+function LoadoutMenu:startScene()
 
     self:initGrids()
     self:initBg()
     
 end
 
-function GenericInventory:generateContextMenu(grid)
+function LoadoutMenu:generateContextMenu(grid)
 
 
     local _options = {}
@@ -53,25 +53,59 @@ function GenericInventory:generateContextMenu(grid)
     self.context_menu:add()
 end
 
-function GenericInventory:initGrids()
+function LoadoutMenu:initGrids()
 
     local _grid_box_data = {
         items = self.data.items,
         parent = self
     }
 
-    self.item_grid = GridBox(_grid_box_data, math.sqrt(g_SystemManager:getPlayer().inventory.capacity), math.sqrt(g_SystemManager:getPlayer().inventory.capacity), 40, 40)
+    self.item_grid = GridBox(_grid_box_data, 1, 4)
     self.item_grid:setGridColor(gfx.kColorWhite)
-    self.item_grid:moveTo(100, 120)
+    self.item_grid:moveTo(playdate.display.getWidth()*.25, playdate.display.getHeight()*.7)
     self.item_grid:setZIndex(1)
     self.item_grid:drawGrid()
     self.item_grid.a_callback = function ()
-        self:generateContextMenu(self.item_grid)
+
+        local _items = {}
+        for k,v in pairs(g_SystemManager:getPlayer().inventory.items) do
+            if v.type == 'Equipment' then
+                table.insert(_items, v)
+            end
+        end
+
+        g_SceneManager:pushScene(InventoryPopup({
+            items=_items,
+            rows=3,
+            columns=3,
+            a_callback= function (_self)
+                local _item = _self:getSelection()
+                g_SystemManager:getPlayer():removeFromInventory(_item)
+                table.insert(self.data.items, _item)
+                self.item_grid:drawGrid()
+            end
+        }), "stack")
     end
 
     self.item_grid.b_callback = function ()
         g_SceneManager:popScene('between menus')
     end
+
+    
+
+    
+    self.sprites:append(self.item_grid)
+
+    self.item_panel = ItemPanel(180, 150)
+    self.item_panel:setVisible(false)
+    local _s = self.item_grid:getSelection()
+    if _s then
+        self.item_panel:setVisible(true)
+        self.item_panel:setItem(_s)
+    end
+    self.item_panel:setZIndex(2)
+    self.item_panel:add()
+    self.item_panel:moveTo(280, 120)
 
     self.item_grid.on_change = function (item)
         if item then
@@ -82,21 +116,11 @@ function GenericInventory:initGrids()
         end
     end
 
-    self.item_panel = self.data.item_panel
-    local _s = self.item_grid:getSelection()
-    if _s then
-        self.item_panel:setItem(_s)
-    end
-    self.item_panel:setZIndex(2)
-    self.item_panel:add()
-    self.item_panel:moveTo(280, 120)
-
-    self.sprites:append(self.item_grid)
     self.sprites:append(self.item_panel)
 
 end
 
-function GenericInventory:initBg()
+function LoadoutMenu:initBg()
 
     local img = gfx.image.new(400, 240, gfx.kColorBlack)
     gfx.pushContext(img)
@@ -121,22 +145,30 @@ function GenericInventory:initBg()
 
     self.sprites:append(self.ui_overlay)
 
+    self.ship = gfx.sprite.new(gfx.image.new('assets/iso_ship'))
+    self.ship:setIgnoresDrawOffset(true)
+    self.ship:moveTo(playdate.display.getWidth()*.25, playdate.display.getHeight()*.4)
+    self.ship:setZIndex(1)
+    self.ship:add()
+
+    self.sprites:append(self.ship)
+
 end
 
-function GenericInventory:focus()
+function LoadoutMenu:focus()
     if self.item_grid then
         self:unfocus()
         self.item_grid:focus()
     end
 end
 
-function GenericInventory:unfocus()
+function LoadoutMenu:unfocus()
     if self.item_grid then
         self.item_grid:unfocus()
     end
 end
 
-function GenericInventory:doUpdate()
+function LoadoutMenu:doUpdate()
     if not self.noise_timer then
         self.noise_timer = pd.timer.new(math.random(3000, 10000))
         self.noise_timer.updateCallback = function (timer)

@@ -4,6 +4,7 @@ local gfx <const> = pd.graphics
 class('Stack').extends(gfx.sprite)
 
 function Stack:init(duration, blur)
+    print('Stacking')
     self.base_img = gfx.getDisplayImage()
     self.scene = g_SceneManager:getCurrentScene()
 
@@ -13,7 +14,7 @@ function Stack:init(duration, blur)
     self:setIgnoresDrawOffset(true)
     gfx.setDrawOffset(0, 0)
 
-    self.timer = pd.timer.new(duration, 0, pd.display.getHeight(), pd.easingFunctions.outCubic)
+    self.timer = pd.timer.new(duration, 0, pd.display.getHeight(), pd.easingFunctions.linear)
 
     self.timer.updateCallback = function(timer)
         self.scene:moveTo(self.scene.x, -pd.display.getHeight()/2 + timer.value)

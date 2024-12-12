@@ -39,11 +39,13 @@ function GridBox:init(data, r, c, g_w, g_h, w, h, scale_icons)
     self.grid:setNumberOfColumns(c)
     self.grid:setNumberOfRows(r)
     self.grid:setCellPadding(self.cell_padding, self.cell_padding, self.cell_padding, self.cell_padding)
-    self.grid.backgroundImage = gfx.image.new(w, h, gfx.kColorBlack)
+    self.grid.backgroundImage = gfx.image.new(w, h, gfx.kColorClear)
 
     local _self = self
 
     function self.grid:drawCell(section, row, column, selected, x, y, width, height)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.fillRect(x, y, width, height)
         if data.items[((row-1)*c) + column] then
             local img = data.items[((row-1)*c) + column] :getImage()
             local _s =  1
@@ -52,7 +54,7 @@ function GridBox:init(data, r, c, g_w, g_h, w, h, scale_icons)
             end
             img:scaledImage(_s):drawAnchored(x+ width/2, y + height/2, 0.5, 0.5)
         end
-
+        gfx.setColor(gfx.kColorWhite)
         if selected and _self:hasFocus() then
             gfx.setLineWidth(3)
             gfx.drawRoundRect(x-1, y-1, width+1, height+1, 2)

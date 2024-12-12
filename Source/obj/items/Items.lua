@@ -4,7 +4,6 @@ local gfx <const> = pd.graphics
 class('Item').extends(Stateful)
 
 function Item:init()
-    print('Item Init', Item.super.className)
     Item.super.init(self)
 
     self.price_min = 0
@@ -17,6 +16,20 @@ function Item:init()
                 _self:remove()
                 g_SceneManager:pushScene(Popup({text=self.description}), 'stack')
             end
+        }
+    }
+end
+
+function Item:getAttrs()
+    return {
+        {
+            "Type",  self.type 
+        },
+        {
+            "Usage", self.usage
+        },
+        {
+            "Price", string.format("%s-%s", self.price_min, self.price_max)
         }
     }
 end
@@ -62,18 +75,6 @@ function FuelCell:init()
 
     self.name = "Fuel Cell"
 
-    self.attrs = {
-        {
-            "Type",  self.type 
-        },
-        {
-            "Usage", self.usage
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_max)
-        }
-    }
-
     self.description = "Fully replenishes the fuel on your ship.\nContains a whole ecosystem that produces carbon fuel at a steady pace. Nifty."
 
     local _options = {
@@ -110,18 +111,6 @@ function Radar:init()
     self.price_min = 800
 
     self.name = "Sonar"
-
-    self.attrs = {
-        {
-            "Type",  self.type 
-        },
-        {
-            "Usage", self.usage
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_max)
-        }
-    }
 
     self.description = "Locates objects in the current system.\nAn example of pre-leap technology that is still widely used."
 
@@ -162,18 +151,6 @@ function Radio:init()
 
     self.name = "Sonar"
 
-    self.attrs = {
-        {
-            "Type",  self.type 
-        },
-        {
-            "Usage", self.usage
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_max)
-        }
-    }
-
     self.description = "Plays music.\nThe universe is full of waves, this pre-leap device turns them into sound."
 
     local _options = {
@@ -199,6 +176,25 @@ function Radio:init()
 
 end
 
+class('Laser').extends(Item)
+
+function Laser:init()
+
+    Laser.super.init(self)
+
+    self.image = gfx.image.new("assets/items/Laser")
+
+    self.type = "Equipment"
+    self.usage = "Mining"
+    self.price_max = 100
+    self.price_min = 50
+
+    self.name = self.className
+
+    self.description = "TBD"
+
+end
+
 class('Neodymium').extends(Item)
 
 function Neodymium:init()
@@ -213,18 +209,6 @@ function Neodymium:init()
     self.price_min = 50
 
     self.name = self.className
-
-    self.attrs = {
-        {
-            "Type",  self.type 
-        },
-        {
-            "Usage", self.usage
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_max)
-        }
-    }
 
     self.description = "TBD"
 
@@ -245,18 +229,6 @@ function Yttrium:init()
 
     self.name = self.className
 
-    self.attrs = {
-        {
-            "Type",  self.type 
-        },
-        {
-            "Usage", self.usage
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_max)
-        }
-    }
-
     self.description = "TBD"
 
 end
@@ -276,7 +248,43 @@ function Scandium:init()
 
     self.name = self.className
 
-    self.attrs = {
+    self.description = "TBD"
+
+end
+
+class('QlCargo').extends(Item)
+
+function QlCargo:init(destination)
+
+    QlCargo.super.init(self)
+
+    self.image = gfx.image.new("assets/items/ql_cargo")
+
+    self.type = "Logistics"
+    self.usage = "Transport"
+    self.price_max = 1
+    self.price_min = 1
+
+    self.destination = destination
+
+    self.name = "Quick Lock Cargo"
+
+    self.description = "TBD"
+
+end
+
+function QlCargo:load(state)
+    QlCargo.super.load(self, state)
+    self.destination = self.state.destination
+end
+
+function QlCargo:save()
+    self.state.destination = self.destination
+    return QlCargo.super.save(self)
+end
+
+function QlCargo:getAttrs()
+    return {
         {
             "Type",  self.type 
         },
@@ -285,9 +293,50 @@ function Scandium:init()
         },
         {
             "Price", string.format("%s-%s", self.price_min, self.price_max)
+        },
+        {
+            "Destination", self.destination.name
+        }
+    }
+end
+
+class('YggdrasilAtlas').extends(Item)
+
+function YggdrasilAtlas:init()
+
+    YggdrasilAtlas.super.init(self)
+
+    self.image = gfx.image.new("assets/items/atlas")
+
+    self.type = "Data"
+    self.usage = "Codex"
+    self.price_max = 100
+    self.price_min = 50
+
+    self.name = "Yggdrasil Atlas"
+
+    self.description = "An atlas containing information about the Yggdrasil system. Very useful if one needs to get around and know what's where."
+
+    local _options = {
+        {
+            name="Use",
+            blacklist={
+                ShopInventory=true
+            },
+            callback = function (_self)
+                g_SystemManager:getPlayer().codex.systems[#g_SystemManager:getPlayer().codex.systems+1] = "Yggdrasil"
+                for k, v in pairs(g_SystemManager:getSystem("Yggdrasil").planets) do
+                    g_SystemManager:getPlayer().codex.planets[#g_SystemManager:getPlayer().codex.planets+1] = v.name
+                end
+                g_NotificationManager:notify('Codex Updated')
+                g_SystemManager:getPlayer():removeFromInventory(_self.data.parent.item_grid:getSelection())
+                _self.data.parent.item_grid:drawGrid()
+                _self.data.parent:focus()
+                _self:remove()
+            end
         }
     }
 
-    self.description = "TBD"
+    self.options = tableConcat(_options, self.options)
 
 end

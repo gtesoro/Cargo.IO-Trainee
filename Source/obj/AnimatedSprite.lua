@@ -26,8 +26,6 @@ function AnimatedSprite:init(image_table, delay, scale)
     else
         self:setImage(self.imageTable:getImage(1))
     end
-	self:setZIndex(1)
- 
 end
 
 function AnimatedSprite:update()

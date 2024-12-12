@@ -12,6 +12,7 @@ local function loadGame()
 	g_font_24 = gfx.font.new('font/BH93_24')
 	g_font_18 = gfx.font.new('font/BH93_18')
 	g_font_14 = gfx.font.new('font/BH93_14')
+	g_font_text = gfx.font.new('font/Full Circle/font-full-circle')
 	assert(g_font_24)
 	--gfx.setFont(g_font_24)
 
@@ -32,6 +33,12 @@ local function loadGame()
 	g_SoundManager = SoundManager()
 	g_NotificationManager = NotificationManager()
 	g_SceneManager = SceneManager()
+
+	--pd.setCollectsGarbage(false)
+
+	local menuItem, error = menu:addMenuItem("Save", function()
+		g_SystemManager:save()
+	end)
 	
 
 	local menuItem, error = menu:addMenuItem("Delete Save", function()
@@ -72,9 +79,8 @@ end
 loadGame()
 
 function playdate.update()
+	pd.timer.updateTimers()
 	gfx.sprite.update()
-
-	playdate.timer.updateTimers()
 	
 	if g_fps then
 		playdate.drawFPS(0, 0)

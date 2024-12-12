@@ -51,6 +51,7 @@ function SceneManager:switchSceneStack(scene, duration)
             self.scene_stack[#self.scene_stack]:remove()
         end
         self.scene_stack[#self.scene_stack] = scene
+        collectGarbage()
         scene:load()
         scene:focus()
         scene:add()
@@ -71,6 +72,7 @@ function SceneManager:switchSceneHWipe(scene, duration, dir)
             self.scene_stack[#self.scene_stack]:remove()
         end
         self.scene_stack[#self.scene_stack] = scene
+        collectGarbage()
         scene:load()
         scene:focus()
         scene:add()
@@ -123,8 +125,6 @@ function SceneManager:pushSceneUnstack(scene, duration)
         scene:load()
         scene:focus()
         scene:add()
-
-        print('Done')
 
     end
 
@@ -225,6 +225,8 @@ function SceneManager:popSceneOutMenu(duration)
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
         table.remove(self.scene_stack, #self.scene_stack)
+        
+        collectGarbage()
 
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:focus()
@@ -251,6 +253,8 @@ function SceneManager:popSceneBetweenMenus(duration)
         self.scene_stack[#self.scene_stack]:remove()
         table.remove(self.scene_stack, #self.scene_stack)
 
+        collectGarbage()
+
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
@@ -275,6 +279,8 @@ function SceneManager:popSceneUnstack(duration)
         self.scene_stack[#self.scene_stack]:remove()
         table.remove(self.scene_stack, #self.scene_stack)
 
+        collectGarbage()
+
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
@@ -295,6 +301,9 @@ function SceneManager:popSceneHWipe(duration, dir)
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
         table.remove(self.scene_stack, #self.scene_stack)
+
+        collectGarbage()
+
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
@@ -335,6 +344,9 @@ function SceneManager:popScene(transition, duration)
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
         table.remove(self.scene_stack, #self.scene_stack)
+
+        collectGarbage()
+
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
@@ -418,7 +430,6 @@ function SceneManager:switchScene(scene, transition, duration)
         elseif transition == 'wipe up' then
             self:switchSceneHWipe(scene, duration, 'up')
         else
-            print(transition)
             assert(false)
         end
         
@@ -429,6 +440,9 @@ function SceneManager:switchScene(scene, transition, duration)
             self.scene_stack[#self.scene_stack]:remove()
         end
         self.scene_stack[#self.scene_stack] = scene
+
+        collectGarbage()
+        
         scene:load()
         scene:focus()
         scene:add()

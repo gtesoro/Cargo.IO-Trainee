@@ -26,9 +26,16 @@ function Scene:moveTo(x , y)
     Scene.super.moveTo(self, x, y)
 end
 
+function Scene:moveBy(x , y)
+    for spr in self.sprites:iter() do
+        spr:moveBy(x, y)
+    end
+    Scene.super.moveBy(self, x, y)
+end
+
 function Scene:setZIndex(z)
     for spr in self.sprites:iter() do
-        spr:setZIndex(z - self.getZIndex() + spr:getZIndex())
+        spr:setZIndex(z - self:getZIndex() + spr:getZIndex())
     end
     Scene.super.setZIndex(self, z)
 end

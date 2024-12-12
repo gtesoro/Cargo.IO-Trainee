@@ -7,7 +7,7 @@ function Unstack:init(duration)
 
     self.scene = g_SceneManager:getCurrentScene()
 
-    self.timer = pd.timer.new(duration, 0, pd.display.getHeight(), pd.easingFunctions.inCubic)
+    self.timer = pd.timer.new(duration, 0, pd.display.getHeight(), pd.easingFunctions.linear)
     self.timer.updateCallback = function(timer)
         self.scene:moveTo(self.scene.x, pd.display.getHeight()/2 - timer.value)
     end

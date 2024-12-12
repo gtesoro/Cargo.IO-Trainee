@@ -6,7 +6,7 @@ class('NotificationManager').extends(gfx.sprite)
 function NotificationManager:init()
 
     self.notifications = List()
-    self.default_duration = 1500
+    self.base_duration = 1000
 
     self.y_pos = 240 * 0.1
 
@@ -16,34 +16,47 @@ function NotificationManager:init()
 
     self.in_out_duration = 300
 
+    self.active_notifications = {}
+
     self.easing = pd.easingFunctions.outBounce
 
     self:add()
     
 end
 
-function NotificationManager:notify(str, duration)
+function NotificationManager:notify(str, duration, log)
 
     if not duration then
-        duration = self.default_duration
+        duration = self.base_duration + str:len() * 80
     end
 
-    self.notifications:append({value = str, duration = duration})
+    if not log then
+        log = true
+    end
+
+    self.notifications:append({value = str, duration = duration, log = log})
     
 end
 
 function NotificationManager:update()
+
+    -- for k,v in pairs(self.active_notifications) do
+    --     v:setVisible(not g_SceneManager.transitioning)
+    -- end
+
     local _n = self.notifications:get(1)
     if not g_SceneManager.transitioning and _n and self.wait_timer == nil then
-        if self:_notify(_n.value, _n.duration) then
+        if self:_notify(_n.value, _n.duration, _n.log) then
             self.notifications:remove(_n)
         end
     end
 end
 
-function NotificationManager:_notify(str, duration)
+function NotificationManager:_notify(str, duration, log)
 
-    local _w, _h = gfx.getTextSize(string.format("*%s*",str))
+    gfx.setFont(g_font_18)
+
+    local _w, _h = gfx.getTextSize(string.format("%s",str))
 
     local _h_padding = 5
     local _w_padding = 10
@@ -73,7 +86,7 @@ function NotificationManager:_notify(str, duration)
         gfx.setColor(gfx.kColorBlack)
         gfx.setLineWidth(2)
         gfx.drawRoundRect(0, 0, img.width-_float, img.height-_float, 1)
-        gfx.drawTextInRect(string.format("*%s*",str), _w_padding, _h_padding, img.width - _w_padding -_float, img.height -_h_padding -_float, nil, nil, kTextAlignment.left)
+        gfx.drawTextInRect(string.format("%s",str), _w_padding, _h_padding, img.width - _w_padding -_float, img.height -_h_padding -_float, nil, nil, kTextAlignment.left)
     gfx.popContext()
     local spr = gfx.sprite.new(img)
     spr:setIgnoresDrawOffset(true)
@@ -83,12 +96,26 @@ function NotificationManager:_notify(str, duration)
 
     spr:moveTo(_x, _y)
 
+    self.active_notifications[#self.active_notifications+1] = spr
+
     local timer_in = pd.timer.new(self.in_out_duration, 0, _w - _float, self.easing)
     local timer_out = nil
     local timer_wait = nil
     local timer_global = pd.timer.new(self.in_out_duration *2 + duration)
     timer_global.timerEndedCallback = function ()
         spr:remove()
+        for k,v in pairs(self.active_notifications) do
+            if v ~= spr and v.y > spr.y then
+                local _move_timer = pd.timer.new(250, 0, _h + _y_spacing*2, self.easing)
+                local _s_y = v.y
+                _move_timer.updateCallback = function (timer)
+                    if v then
+                        v:moveTo(v.x, _s_y - timer.value)
+                    end
+                end
+            end
+        end
+        table_remove(self.active_notifications, spr)
         self.y_pos -= _h + _y_spacing*2
         table_remove(self.current, timer_global)
     end
@@ -96,7 +123,7 @@ function NotificationManager:_notify(str, duration)
     self.current[#self.current+1] = timer_global
 
     timer_in.updateCallback = function (timer)
-        spr:moveTo(_x - timer.value, _y)
+        spr:moveTo(_x - timer.value, spr.y)
     end
 
     timer_in.timerEndedCallback = function ()
@@ -104,7 +131,7 @@ function NotificationManager:_notify(str, duration)
         timer_wait.timerEndedCallback = function ()
             timer_out = pd.timer.new(self.in_out_duration, _w - _float, 0, self.easing)
             timer_out.updateCallback = function (timer)
-                spr:moveTo(_x - timer.value, _y)
+                spr:moveTo(_x - timer.value, spr.y)
             end
         end
     end
@@ -112,6 +139,10 @@ function NotificationManager:_notify(str, duration)
     self.wait_timer = pd.timer.new(500)
     self.wait_timer.timerEndedCallback = function ()
         self.wait_timer = nil
+    end
+
+    if log then
+        g_SystemManager:getPlayer():logNotification(str)
     end
 
     return true

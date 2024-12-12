@@ -16,15 +16,19 @@ function Popup:startScene()
 
         for k,v in pairs(self.data.options) do
 
+            
+
             local _func = nil
 
             _func = function ()
                 if v.callback then
                     v.callback()
                 end
-                self:unblur(function ()
-                    g_SceneManager:popScene('unstack')
-                end)
+                if not v.no_exit then
+                    self:unblur(function ()
+                        g_SceneManager:popScene('unstack')
+                    end)
+                end
             end
 
             _new_options[k] = {
@@ -131,7 +135,9 @@ function Popup:initDialog()
 
     if self.data.options then
         local _list_box_data = {
-            options = self.data.options,
+            options = function ()
+                return self.data.options
+            end,
             parent = self
         }
 
@@ -145,7 +151,7 @@ function Popup:initDialog()
         end
     end
 
-    gfx.setFont(g_font_18)
+    gfx.setFont(g_font_text)
 
     local _w, _h = gfx.getTextSizeForMaxWidth(self.data.text, 300)
 

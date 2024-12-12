@@ -18,14 +18,32 @@ function GenericMenu:initGrids()
         parent = self
     }
 
-    self.list_box = ListBox(_list_box_data, 150, 150)
-    self.list_box:moveTo(110, 120)
+    self.list_box_w = self.list_box_w or 150
+    self.list_box_h = self.list_box_h or 150
+
+    self.list_box_x = self.list_box_x or 35
+    self.list_box_y = self.list_box_y or 120
+
+    self.list_box_center_x = self.list_box_center_x or 0
+    self.list_box_center_y = self.list_box_center_y or 0.5
+
+    self.list_box = ListBox(_list_box_data, self.list_box_w, self.list_box_h)
+    self.list_box:setCenter(self.list_box_center_x, self.list_box_center_y)
+    self.list_box:moveTo(self.list_box_x, self.list_box_y)
     self.list_box:setZIndex(2)
+
+    self.list_box_shadow = getShadowSprite(self.list_box)
+
+    self.list_box_shadow:add()
+
+    self.sprites:append(self.list_box_shadow)
 
     self.list_box:add()
 
     self.list_box.b_callback = function ()
-        
+        if self.b_callback then
+            self.b_callback()     
+        end
         local _prev = g_SceneManager.scene_stack[#g_SceneManager.scene_stack -1]
         if _prev and _prev:isa(System) then
             g_SceneManager:popScene('out menu')
@@ -35,6 +53,7 @@ function GenericMenu:initGrids()
         
     end
 
+    
     self.sprites:append(self.list_box)
 
 end
@@ -76,7 +95,7 @@ function GenericMenu:setRightSide(spr)
 
     if spr then
         self.right_side = spr
-        self.right_side:moveTo(290, 120)
+        self.right_side:moveTo(self.data.right_sise_x or 290,self.data.right_sise_y or 120)
         self.right_side:setZIndex(0)
         self.right_side:add()
 
@@ -97,20 +116,29 @@ function GenericMenu:unfocus()
     end
 end
 
-function GenericMenu:remove()
-    GenericMenu.super.remove(self)
-    self.data.right_side = nil
-end
+-- function GenericMenu:remove()
+--     GenericMenu.super.remove(self)
+-- end
 
 function GenericMenu:doUpdate()
 
     if self.current_selected ~= self.list_box:getSelected() then
         self.current_selected = self.list_box:getSelected()
-        if self.current_selected.sprite then
-            self:setRightSide(self.current_selected.sprite)
+
+        if self.current_selected then
+            if self.current_selected.sprite then
+                if type(self.current_selected.sprite) == "function" then
+                    self:setRightSide(self.current_selected.sprite())
+                else
+                    self:setRightSide(self.current_selected.sprite)
+                end
+            else
+                self:setRightSide(self.data.right_side)
+            end
         else
-            self:setRightSide(self.data.right_side)
+            self:setRightSide(nil)
         end
+        
     end
 
     if not self.noise_timer then

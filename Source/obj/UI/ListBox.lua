@@ -11,34 +11,47 @@ function ListBox:init(data, width, height, item_height)
 
     self.data = data
 
+    self.padding = 2
+    self.text_offset = 5
+
     self.accumulated_crank = 0
 
-    local padding = 2
-
     local _w, _h = 0, 0
-    local text_offset = 5
+    
     local _item_height = 0
 
     local _min_width = 0
 
+
+    if type(self.data.options) ~= "function" then
+        local _options = self.data.options
+        self.data.options = function ()
+            return _options
+        end
+    end
+
+    self.options = self.data.options()
+
     gfx.setFont(g_font_18)
-        
-    for k,v in pairs(self.data.options) do
-        local __w, __h = gfx.getTextSize(v.name)
+
+    for k,v in pairs(self.options) do
+        local __w, __h = gfx.getTextSize(string.format("%s", v.name))
         if __w > _min_width then
             _min_width = __w
         end
-        _item_height = __h
+        if __h > _item_height then
+            _item_height = __h
+        end
     end
 
-    _item_height = text_offset*2 + _item_height
+    _item_height = self.text_offset*2 + _item_height
 
     if item_height then
         _item_height = item_height
     end
 
-    _w = _min_width + text_offset*2 + padding*2
-    _h = _item_height * #self.data.options + text_offset*2 + padding*2
+    _w = _min_width + self.text_offset*2 + self.padding*2
+    _h = _item_height * #self.options + self.padding*2
 
     if width and width > _w then
         _w = width
@@ -48,59 +61,86 @@ function ListBox:init(data, width, height, item_height)
         _h = height
     end
 
-    self.list_color = gfx.kColorBlack
-    self.listview = playdate.ui.gridview.new(0, _item_height)
-    self.listview:setNumberOfRows(#self.data.options)
-    self.listview:setCellPadding(padding,padding,padding,padding)
-    local img = gfx.image.new(_w, _h)
-    gfx.pushContext(img)
-        gfx.setColor(gfx.kColorWhite)
-        gfx.fillRoundRect(0, 0, _w, _h, 4)
-    gfx.popContext()
-    self.listview.backgroundImage = img
-
-    function self.listview:drawCell(section, row, column, selected, x, y, width, height)
-        if selected then
-            gfx.fillRoundRect(x, y, width, height, 4)
-            gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-        else
-            gfx.setImageDrawMode(gfx.kDrawModeCopy)
-        end
-        gfx.setFont(g_font)
-        --gfx.drawTextAligned(string.format("*%s*", data[row].name), x+text_offset , y+text_offset, kTextAlignment.left)
-        --gfx.drawTextInRect(string.format("%s", data[row].name), x+text_offset , y+text_offset, width, height, nil, nil, kTextAlignment.left, g_font)
-        gfx.drawText(string.format("%s", data.options[row].name), x + text_offset , y + text_offset)
-    end
-
     self:setImage(gfx.image.new(_w, _h))
 
-    self:drawList()
+    self.item_height = _item_height
+    self:initList(self.item_height, self.options)
 
+    self:drawList()
     self:initInputs()
     
 end
 
-function ListBox:drawList()
+function ListBox:initList(_item_height, _options)
 
+    self.listview = playdate.ui.gridview.new(0, _item_height)
+    self.listview:setNumberOfRows(#_options)
+    self.listview:setCellPadding(self.padding,self.padding,self.padding,self.padding)
+    local img = gfx.image.new(self.width, self.height)
+    gfx.pushContext(img)
+        gfx.setColor(gfx.kColorWhite)
+        gfx.fillRoundRect(0, 0, self.width, self.height, 4)
+    gfx.popContext()
+    self.listview.backgroundImage = img
+
+    self.listview:setScrollDuration(100)
+
+    local _self = self
+
+    function self.listview:drawCell(section, row, column, selected, x, y, width, height)
+        
+        if selected then
+            gfx.setFont(g_font_18)
+            gfx.setColor(gfx.kColorBlack)
+            gfx.fillRoundRect(x, y, width, height, 4)
+            gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+            local _text = string.format("%s", _options[row].name)
+            local __w, __h = gfx.getTextSize(_text)
+            gfx.drawText(_text, x + _self.text_offset/2, (y + height/2) - __h/2)
+        else
+            gfx.setFont(g_font_14)
+            gfx.setImageDrawMode(gfx.kDrawModeCopy)
+            local _text = string.format("%s", _options[row].name)
+            local __w, __h = gfx.getTextSize(_text)
+            gfx.drawText(_text, x + _self.text_offset/2, (y + height/2) - __h/2)
+        end
+        
+    end
+
+end
+
+function ListBox:drawList()
+    
     gfx.pushContext(self:getImage())
         gfx.clear()
-        gfx.setColor(self.list_color)
         self.listview:drawInRect(0, 0, self:getSize())
     gfx.popContext()
 
     self:markDirty()
 end
 
-function ListBox:setListColor(color)
-    self.list_color = color
-    self:drawGrid()
+function ListBox:update()
+    if #self.options ~= #self.data.options() then
+        self.options = self.data.options()
+        self:initList(self.item_height, self.options)
+        inContext(self:getImage(), function ()
+            self.listview:drawInRect(0, 0, self:getSize())
+        end)
+    end
+
+    if self.listview.needsDisplay == true then
+        inContext(self:getImage(), function ()
+            self.listview:drawInRect(0, 0, self:getSize())
+        end)
+        self:markDirty()
+    end
 end
 
 function ListBox:getSelected()
 
     local s, r, c = self.listview:getSelection()
 
-    return self.data.options[r]
+    return self.options[r]
 
 end
 
@@ -111,15 +151,14 @@ function ListBox:initInputs()
 
         cranked = function (change, acceleratedChange)
             local _sensitivity = g_SystemManager.crank_menu_sensitivity
-            self.accumulated_crank += acceleratedChange
+            self.accumulated_crank += change
 
             if math.abs(self.accumulated_crank) > _sensitivity then
                 if self.accumulated_crank < 0 then
-                    self.listview:selectPreviousRow(true)
+                    self.listview:selectPreviousRow(false)
                 else
-                    self.listview:selectNextRow(true)
+                    self.listview:selectNextRow(false)
                 end
-                self:drawList()
                 self.accumulated_crank = 0
             end
         end,
@@ -127,8 +166,8 @@ function ListBox:initInputs()
         AButtonUp = function ()
             local s, r, c = self.listview:getSelection()
 
-            if self.data.options[r].callback then
-                self.data.options[r].callback(self)
+            if self.options[r].callback then
+                self.options[r].callback(self)
             end
         end,
 
@@ -139,13 +178,11 @@ function ListBox:initInputs()
         end,
 
         upButtonDown = function ()
-            self.listview:selectPreviousRow(true)
-            self:drawList()
+            self.listview:selectPreviousRow(true, true, true)
         end,
 
         downButtonDown = function ()
-            self.listview:selectNextRow(true)
-            self:drawList()
+            self.listview:selectNextRow(true, true, true)
         end
 
     }

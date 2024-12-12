@@ -80,9 +80,13 @@ function Planet:doUpdate()
         self.animation:draw(0,0)
         if self.outline then
             gfx.setColor(playdate.graphics.kColorWhite)
-            gfx.setLineWidth(1)
-            gfx.drawCircleAtPoint(self.width/2, self.height/2, self.width/2 )
+            gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+            gfx.setLineWidth(2)
+            gfx.drawCircleAtPoint(self.width/2, self.height/2, self.width/2 - 1)
         end
+        
     gfx.popContext()
+
+    --self:setImage(self.animation:image())
 
 end

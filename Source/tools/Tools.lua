@@ -124,27 +124,39 @@ function printTable(table)
     end
 end
 
-function getShadowSprite(spr)
+
+function getShadowSprite(spr, hover)
 
     local img = gfx.image.new(spr:getSize())
 
     inContext(img, function ()
         gfx.setColor(gfx.kColorBlack)
-        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+        gfx.setDitherPattern(0.8, gfx.image.kDitherTypeBayer8x8)
         gfx.fillRoundRect(0,0, img.width,img.height, 4)
     end)
 
     local _spr = gfx.sprite.new(img)
-    _spr:setZIndex(spr:getZIndex()-1)
+    _spr:setZIndex(spr:getZIndex())
+    _spr:setCenter(spr:getCenter())
+    _spr:moveTo(spr.x + (hover or 5), spr.y + (hover or 5))
 
     return _spr
 end
 
+function collectGarbage()
+    
+    local _b = collectgarbage("count")
+    collectgarbage("collect")
+    local _a = collectgarbage("count")
+end
+
 function getSignContractCallback(contract)
     local _func = function ()
-        contract:generate()
-        g_SceneManager:pushScene(ImageViewer({image=contract:getContractImage(), a_callback=function (_image_viewer)
+        g_SceneManager:pushScene(ImageViewer({image=gfx.sprite.new(contract:getContractImage()), a_callback=function (_image_viewer)
 
+            if contract.state.signed then
+                return
+            end
             g_SceneManager:pushScene(Popup({text='Sign Contract?', options={
                 {
                     name='Yes',
@@ -191,7 +203,6 @@ function getSignContractCallback(contract)
 end
 
 function createPopup(data)
-    print('Here')
     g_SceneManager:pushScene(Popup(data), 'stack')
 end
 

@@ -6,33 +6,66 @@ class('CargoHub').extends(GenericMenu)
 function CargoHub:init()
 
     CargoHub.super.init(self)
+
+    
     
     self.data.options = {
         {
-            name = 'Delivery Contract',
+            name = 'Local Delivery Contract',
             callback = function ()
-                local _todays_contract = false
-
-                local _cycle = g_SystemManager:getPlayer().cycle
-                for k,v in pairs(g_SystemManager:getPlayer():getContractByType('DeliveryContract')) do
-                    print(k, v)
-                    printTable(v)
-                    if v.state.sign_date == _cycle then
-                        _todays_contract = true
-                    end
-                end
-                if _todays_contract then
-                    createPopup({text='You already have the current delivery contract for this cycle.\n\nCome back later!'})
+                if #g_SystemManager:getPlayer():getContractByType('DeliveryContract') > 0 then
+                    createPopup({text='You can only have one Quick Lock delivery contract at the same time.'})
                 else
-                    getSignContractCallback(DeliveryContract())()
+                    local _contract = DeliveryContract()
+                    _contract:generateLocalContract()
+                    getSignContractCallback(_contract)()
                 end
-
-                print('Done!')
             end
         },
+        {
+            name= "Deliver",
+            callback = function ()
+                g_SceneManager:pushScene(CargoHubDelivery(self.data), 'between menus')
+            end
+        }
     }
-
     self.data.right_side = gfx.sprite.new(gfx.image.new('assets/facilities/cargo_hub'))
+    
+end
+
+class('CargoHubDelivery').extends(GenericInventory)
+
+function CargoHubDelivery:init(data)
+
+    CargoHubDelivery.super.init(self, data)
+
+    self.data.items = g_SystemManager:getPlayer().inventory.items
+    self.data.item_panel = ItemPanel(180, 150)
+
+    self.data.context_options = {
+        {
+            name="Deliver",
+            callback = function (_self)
+                local item = _self.data.parent.item_grid:getSelection()
+                if not item:isa(QlCargo) then
+                    createPopup({text='This hub only accepts Quick Lock cargo'})
+                else
+                    if item.destination.name ~= g_SystemManager:getPlayer():getCurrentPlanet().name then
+                        createPopup({text='Wrong destination'})
+                    else
+                        g_SystemManager:getPlayer():removeFromInventory(item)
+                        for k,v in pairs(g_SystemManager:getPlayer():getContractByType("DeliveryContract")) do
+                            g_SystemManager:getPlayer():removeContract(v)
+                            v:onComplete()
+                        end
+                    end
+                end
+                _self.data.parent.item_grid:drawGrid()
+                _self.data.parent:focus()
+                _self:remove()
+            end
+        }
+    }
     
 end
 
@@ -79,8 +112,9 @@ function FuelStation:init()
             end
         },
     }
-
-    self.data.right_side = AnimatedSprite('assets/objects/fuel_station', 100)
+    self.data.right_sise_x = 200
+    self.data.right_sise_y = 120
+    self.data.right_side = gfx.sprite.new(gfx.image.new('assets/facilities/fuel_station'))
     
 end
 
@@ -117,7 +151,7 @@ function ShopInventory:init(data)
 
     self.data.items = self.data.shop_items
 
-    self.data.item_panel = ItemPanelShop(180, 150)
+    self.data.item_panel = ItemPanel(180, 150)
 
     self.data.context_options = {
         {

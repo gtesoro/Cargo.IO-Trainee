@@ -5,7 +5,7 @@ class('System').extends(Scene)
 
 function System:startScene()
 
-    g_NotificationManager:notify(string.format('System: %s', self.data.name))
+    g_NotificationManager:notify(string.format('Entering: %s', self.data.name))
 
     self.x_offset = 0
     self.y_offset = 0
@@ -18,7 +18,6 @@ function System:startScene()
 
     self:initBg()
     
-    self:initBorders()
     self:initShip()
     self:initInputs()
     self:moveCamera()
@@ -268,7 +267,7 @@ function System:initUI()
 
     self.sprites:append(self.blackout_overlay)
 
-    self.sprites:append(FuelUI(self.ship))
+    --self.sprites:append(FuelUI(self.ship))
     
 end
 
@@ -336,7 +335,6 @@ function System:initInputs()
 
         upButtonDown = function ()
             --self.ship.move_ship = not self.ship.move_ship 
-            g_SceneManager:pushScene(CargoHub(), 'to menu')
         end,
 
         downButtonDown = function ()

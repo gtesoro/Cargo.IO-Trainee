@@ -10,19 +10,21 @@ function Wipe:init(duration, dir, reversed)
     self:setIgnoresDrawOffset(true)
     self:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
 
-    if reversed then
-        self:setImage(self.imageTable:getImage(self.imageTable:getLength()))
-        local _animator = pd.timer.new(duration, self.imageTable:getLength(), 1, pd.easingFunctions.linear)
-        _animator.updateCallback = function (timer)
-            self:setImage(self.imageTable:getImage(clamp(math.floor(timer.value),1, self.imageTable:getLength())))
-        end
-    else
-        self:setImage(self.imageTable:getImage(1))
-        local _animator = pd.timer.new(duration, 1, self.imageTable:getLength(), pd.easingFunctions.linear)
-        _animator.updateCallback = function (timer)
-            self:setImage(self.imageTable:getImage(clamp(math.floor(timer.value),1, self.imageTable:getLength())))
-        end
-    end
+    self:setImage(self.imageTable:getImage(30))
+
+    -- if reversed then
+    --     self:setImage(self.imageTable:getImage(15))
+    --     local _animator = pd.timer.new(duration, self.imageTable:getLength(), 1, pd.easingFunctions.linear)
+    --     _animator.updateCallback = function (timer)
+    --         self:setImage(self.imageTable:getImage(clamp(math.floor(timer.value),1, self.imageTable:getLength())))
+    --     end
+    -- else
+    --     self:setImage(self.imageTable:getImage(15))
+    --     local _animator = pd.timer.new(duration, 1, self.imageTable:getLength(), pd.easingFunctions.linear)
+    --     _animator.updateCallback = function (timer)
+    --         self:setImage(self.imageTable:getImage(clamp(math.floor(timer.value),1, self.imageTable:getLength())))
+    --     end
+    -- end
     
 
     if dir == 'left' then
