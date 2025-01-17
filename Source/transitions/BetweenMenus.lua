@@ -39,6 +39,10 @@ function BetweenMenusIn:init(duration)
         self.overlay:remove()
         self:remove()
     end
+
+    g_SoundManager:playMenuSwitch()
+    
+
 end
 
 class('BetweenMenusOut').extends(gfx.sprite)
@@ -66,6 +70,8 @@ function BetweenMenusOut:init(duration)
         self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
         self.grid:markDirty()
     end
+
+    g_SoundManager:playClick()
 
     self.fade_timer.timerEndedCallback = function ()
         

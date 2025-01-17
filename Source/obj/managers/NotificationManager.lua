@@ -1,7 +1,7 @@
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
-class('NotificationManager').extends(gfx.sprite)
+class('NotificationManager').extends()
 
 function NotificationManager:init()
 
@@ -14,13 +14,11 @@ function NotificationManager:init()
 
     self.current = {}
 
-    self.in_out_duration = 300
+    self.in_out_duration = 500
 
     self.active_notifications = {}
 
     self.easing = pd.easingFunctions.outBounce
-
-    self:add()
     
 end
 
@@ -40,10 +38,6 @@ end
 
 function NotificationManager:update()
 
-    -- for k,v in pairs(self.active_notifications) do
-    --     v:setVisible(not g_SceneManager.transitioning)
-    -- end
-
     local _n = self.notifications:get(1)
     if not g_SceneManager.transitioning and _n and self.wait_timer == nil then
         if self:_notify(_n.value, _n.duration, _n.log) then
@@ -56,7 +50,7 @@ function NotificationManager:_notify(str, duration, log)
 
     gfx.setFont(g_font_18)
 
-    local _w, _h = gfx.getTextSize(string.format("%s",str))
+    local _w, _h = gfx.getTextSize(str)
 
     local _h_padding = 5
     local _w_padding = 10
@@ -127,8 +121,11 @@ function NotificationManager:_notify(str, duration, log)
     end
 
     timer_in.timerEndedCallback = function ()
+
+        g_SoundManager:playNotificationDing()
         timer_wait = pd.timer.new(duration)
         timer_wait.timerEndedCallback = function ()
+            g_SoundManager:playNotification(self.in_out_duration)
             timer_out = pd.timer.new(self.in_out_duration, _w - _float, 0, self.easing)
             timer_out.updateCallback = function (timer)
                 spr:moveTo(_x - timer.value, spr.y)
@@ -140,6 +137,8 @@ function NotificationManager:_notify(str, duration, log)
     self.wait_timer.timerEndedCallback = function ()
         self.wait_timer = nil
     end
+
+    g_SoundManager:playNotification(self.in_out_duration)
 
     if log then
         g_SystemManager:getPlayer():logNotification(str)

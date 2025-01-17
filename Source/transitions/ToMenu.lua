@@ -33,6 +33,11 @@ function ToMenu:init(duration)
         self.overlay:moveTo(pd.display.getWidth()*1.5 - timer.value, pd.display.getHeight()/2)
     end
 
+    g_SoundManager:getRadio():setVolume(g_SoundManager:getRadio():getVolume()/2)
+    g_SoundManager:playDegauss()
+    g_SoundManager:playMenuSwitch()
+    g_SoundManager:playComputerHum()
+
     self.fade_timer.updateCallback = function(timer)
         local value = clamp(math.ceil(timer.value*100), 1, 100)
         self.grid:setImage(self.grid_sheet:getImage(value))

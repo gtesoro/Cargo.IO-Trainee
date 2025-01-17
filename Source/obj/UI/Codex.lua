@@ -43,7 +43,7 @@ function PlanetDescription:initPlanet()
     self.planet_spr = AnimatedSprite(self.data.img, 100)
     self.planet_spr:moveTo(self.width*0.2, self.height*0.1)
     self.planet_spr:setZIndex(1)
-    self.sprites:append(self.planet_spr)
+    table.insert(self.sprites, self.planet_spr)
 
     gfx.setFont(g_font_24)
     local img = gfx.image.new(gfx.getTextSize(self.data.name))
@@ -56,6 +56,6 @@ function PlanetDescription:initPlanet()
     self.planet_label:setCenter(1, 0.5)
     self.planet_label:moveTo(self.width*0.8, self.height*0.1)
 
-    self.sprites:append(self.planet_label)
+    table.insert(self.sprites, self.planet_label)
 
 end

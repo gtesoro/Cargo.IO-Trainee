@@ -2,7 +2,9 @@ local gfx <const> = playdate.graphics
 
 class('Planet').extends(playdate.graphics.sprite)
 
-function Planet:init(image_table, orbit_size, tilt, speed, angle, playfield_width, playfield_height, outline)
+function Planet:init(planet_data, image_table, orbit_size, tilt, speed, angle, outline, playfield_width, playfield_height)
+
+    self.planet_data = planet_data
 
     self.MAX_DOTS = 10
     self.countdown = 3
@@ -16,6 +18,8 @@ function Planet:init(image_table, orbit_size, tilt, speed, angle, playfield_widt
     self.cy = playfield_height/2
     self.speed = speed
     self.angle = angle
+
+    self.interactuable = true
 
     self.collisionResponse = gfx.sprite.kCollisionTypeOverlap
 
@@ -47,6 +51,10 @@ function Planet:init(image_table, orbit_size, tilt, speed, angle, playfield_widt
 	self:setZIndex(y + 1000)
     self:setCollideRect( 0, 0, self:getSize() )
 
+end
+
+function Planet:interact()
+    g_SceneManager:pushScene(PlanetMenu(self.planet_data), 'to menu')
 end
 
 function Planet:add()

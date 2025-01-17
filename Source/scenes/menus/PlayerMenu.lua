@@ -9,11 +9,12 @@ function PlayerMenu:init()
     PlayerMenu.super.init(self)
 
     self.data.options = {
+
         {
-            name = 'Loadout',
-            --sprite = gfx.sprite.new(gfx.image.new('assets/menus/inventory')),
+            name = 'Status',
+            sprite = gfx.sprite.new(getStatusImg()),
             callback = function ()
-                g_SceneManager:pushScene(LoadoutMenu({items=g_SystemManager:getPlayer().ship.loadout.items}), 'between menus')
+                g_SceneManager:pushScene(LoadoutMenu({items=g_SystemManager:getPlayer().ship.loadout.items, read_only=true}), 'between menus')
             end
         },
         {
@@ -51,9 +52,11 @@ function PlayerMenu:init()
             end
         }
     }
-
-    self.data.right_side = gfx.sprite.new(gfx.image.new('assets/iso_ship'))
     
+end
+
+function PlayerMenu:clean()
+    PlayerMenu.super.clean(self)
 end
 
 class('FunctionsMenu').extends(GenericMenu)
@@ -72,7 +75,13 @@ function FunctionsMenu:init()
                             name='Yes',
                             no_exit=true,
                             callback= function ()
-                                g_SystemManager:death()
+                                g_SystemManager:disableControl()
+                                g_SceneManager:popToSystem()
+                                local _t = pd.timer.new(1000)
+                                _t.timerEndedCallback = function ()
+                                    g_SystemManager:enableControl()
+                                    g_SystemManager:death()
+                                end
                             end
                         },
                         {
@@ -169,7 +178,7 @@ function CodexSystemListMenu:init()
     local _list = {}
         
     for k, v in pairs(g_SystemManager:getPlayer().codex.systems) do
-        local _system = g_SystemManager:getSystem(v)
+        local _system = g_SystemManager:getSystemByName(v)
         _list[#_list+1] = {
             name = _system.name,
             sprite = function ()

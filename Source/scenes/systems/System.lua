@@ -5,7 +5,7 @@ class('System').extends(Scene)
 
 function System:startScene()
 
-    g_NotificationManager:notify(string.format('Entering: %s', self.data.name))
+    g_NotificationManager:notify(self.data.name)
 
     self.x_offset = 0
     self.y_offset = 0
@@ -14,6 +14,7 @@ function System:startScene()
     self.wrap = false
 
     self.selection_spr = gfx.sprite.new()
+    table.insert(self.sprites, self.selection_spr)
     self.selection_focus = nil
 
     self:initBg()
@@ -27,12 +28,14 @@ end
 function System:add()
     System.super.add(self)
     g_SystemManager:unpause()
+    g_SoundManager:playSpaceBg()
     gfx.setDrawOffset(-self.x_offset, -self.y_offset)
 end
 
 function System:remove()
     System.super.remove(self)
     g_SystemManager:pause()
+    g_SoundManager:stopSpaceBg()
 end
 
 function System:setSelectionSprite(spr)
@@ -73,34 +76,38 @@ end
 
 function System:initShip()
 
+    self.margin = 40
+
     self.ship = Ship(self)
     self.ship:setZIndex(self.data.playfield_height*2+1)
     self.ship:moveTo(self.data.playfield_width/2-100, self.data.playfield_height/2)
     if g_SystemManager:getPlayer().last_position.x then
+        self.spawn_point = pd.geometry.point.new(self.data.playfield_width/2-100, self.data.playfield_height/2)
         local dx, dy, dz = self.data.x - g_SystemManager:getPlayer().last_position.x, self.data.y - g_SystemManager:getPlayer().last_position.y, self.data.z - g_SystemManager:getPlayer().last_position.z
         if math.abs(dx) + math.abs(dy) + math.abs(dz) == 1 then
             if dx > 0 then
-                self.ship:moveTo(50, self.data.playfield_height/2)
+                self.spawn_point = pd.geometry.point.new(self.margin, self.data.playfield_height/2)
                 self.ship.angle = 90
-                self.ship:updateImg()
             end
 
             if dx < 0 then
-                self.ship:moveTo(self.data.playfield_width - 50, self.data.playfield_height/2)
+                self.spawn_point = pd.geometry.point.new(self.data.playfield_width - self.margin, self.data.playfield_height/2)
                 self.ship.angle = 270
-                self.ship:updateImg()
             end
 
             if dy > 0 then
-                self.ship:moveTo(self.data.playfield_width/2, 50)
+                self.spawn_point = pd.geometry.point.new(self.data.playfield_width/2, self.margin)
                 self.ship.angle = 180
-                self.ship:updateImg()
             end
 
             if dy < 0 then
                 self.ship:moveTo(self.data.playfield_width/2, self.data.playfield_height - 50)
+                self.spawn_point = pd.geometry.point.new(self.data.playfield_width/2, self.data.playfield_height - self.margin)
             end
         end
+
+        self.ship:moveTo(self.spawn_point.x, self.spawn_point.y)
+        self.ship:updateImg()
     end
     local _x, _y = self.ship:getPosition()
     self.x_offset = _x - pd.display.getWidth()/2
@@ -108,7 +115,7 @@ function System:initShip()
 
     --self.ship:moveTo(30, self.data.playfield_height/2)
 
-    self.sprites:append(self.ship)
+    table.insert(self.sprites, self.ship)
 end
 
 function System:initBg()
@@ -121,56 +128,56 @@ function System:initBg()
     self.bg_sprite:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)
     self.bg_sprite:setZIndex(0)
 
-    self.sprites:append(self.bg_sprite)
+    table.insert(self.sprites, self.bg_sprite)
 
 end
 
-function System:initBorders()
+-- function System:initBorders()
 
-    local speed = 50
-    self.arrow_y = 0
+--     local speed = 50
+--     self.arrow_y = 0
 
-    local spr = AnimatedSprite("assets/border",speed)
-    spr:moveTo(pd.display.getWidth()/2, spr.height/2)
-    spr:setIgnoresDrawOffset(true)
-    spr:setZIndex(2)
-    spr:setCollideRect( 0, 0, spr:getSize() )
-    self.sprites:append(spr)
-    self.up = spr
+--     local spr = AnimatedSprite("assets/border",speed)
+--     spr:moveTo(pd.display.getWidth()/2, spr.height/2)
+--     spr:setIgnoresDrawOffset(true)
+--     spr:setZIndex(2)
+--     spr:setCollideRect( 0, 0, spr:getSize() )
+--     table.insert(self.sprites, spr)
+--     self.up = spr
 
-    spr = AnimatedSprite("assets/border",speed)
-    spr:moveTo(pd.display.getWidth()/2, pd.display.getHeight() - spr.height/2)
-    spr:setRotation(180)
-    spr:setIgnoresDrawOffset(true)
-    spr:setZIndex(2)
-    spr:setCollideRect( 0, 0, spr:getSize() )
-    self.sprites:append(spr)
-    self.down = spr
+--     spr = AnimatedSprite("assets/border",speed)
+--     spr:moveTo(pd.display.getWidth()/2, pd.display.getHeight() - spr.height/2)
+--     spr:setRotation(180)
+--     spr:setIgnoresDrawOffset(true)
+--     spr:setZIndex(2)
+--     spr:setCollideRect( 0, 0, spr:getSize() )
+--     table.insert(self.sprites, spr)
+--     self.down = spr
 
-    spr = AnimatedSprite("assets/border",speed)
-    spr:moveTo(spr.height/2, pd.display.getHeight()/2)
-    spr:setRotation(270)
-    spr:setIgnoresDrawOffset(true)
-    spr:setZIndex(2)
-    spr:setCollideRect( 0, 0, spr:getSize() )
-    self.sprites:append(spr)
-    self.left = spr
+--     spr = AnimatedSprite("assets/border",speed)
+--     spr:moveTo(spr.height/2, pd.display.getHeight()/2)
+--     spr:setRotation(270)
+--     spr:setIgnoresDrawOffset(true)
+--     spr:setZIndex(2)
+--     spr:setCollideRect( 0, 0, spr:getSize() )
+--     table.insert(self.sprites, spr)
+--     self.left = spr
 
-    spr = AnimatedSprite("assets/border",speed)
-    spr:moveTo(pd.display.getWidth() - spr.height/2, pd.display.getHeight()/2)
-    spr:setRotation(90)
-    spr:setIgnoresDrawOffset(true)
-    spr:setZIndex(2)
-    spr:setCollideRect( 0, 0, spr:getSize() )
-    self.sprites:append(spr)
-    self.right = spr
+--     spr = AnimatedSprite("assets/border",speed)
+--     spr:moveTo(pd.display.getWidth() - spr.height/2, pd.display.getHeight()/2)
+--     spr:setRotation(90)
+--     spr:setIgnoresDrawOffset(true)
+--     spr:setZIndex(2)
+--     spr:setCollideRect( 0, 0, spr:getSize() )
+--     table.insert(self.sprites, spr)
+--     self.right = spr
 
-    self.up:setVisible(false)
-    self.down:setVisible(false)
-    self.left:setVisible(false)
-    self.right:setVisible(false)
+--     self.up:setVisible(false)
+--     self.down:setVisible(false)
+--     self.left:setVisible(false)
+--     self.right:setVisible(false)
 
-end
+-- end
 
 function System:handleBorders()
 
@@ -265,9 +272,9 @@ function System:initUI()
     self.blackout_overlay:setZIndex(self.ship:getZIndex()+1)
     self.blackout_overlay:add()
 
-    self.sprites:append(self.blackout_overlay)
+    table.insert(self.sprites, self.blackout_overlay)
 
-    --self.sprites:append(FuelUI(self.ship))
+    --table.insert(self.sprites, FuelUI(self.ship))
     
 end
 
@@ -304,9 +311,15 @@ function System:moveCamera()
 
 end
 
+function System:getCameraRect()
+
+    return pd.geometry.rect.new(self.x_offset, self.y_offset, 400, 240)
+
+end
+
 function System:getCurrentBg()
 
-    local img = gfx.image.new(pd.display.getWidth(), pd.display.getHeight())
+    local img = gfx.image.new(pd.display.getWidth(), pd.display.getHeight(), gfx.kColorBlack)
     local _offset_x, _offset_y = gfx.getDrawOffset()
     gfx.pushContext(img)
         self.bg_sprite:getImage():draw(_offset_x, _offset_y)
@@ -320,24 +333,41 @@ function System:initInputs()
     self.input_handlers = {
 
         cranked = function (change, acceleratedChange)
+            if not g_SystemManager:canControl() then
+                return
+            end
+
             local ship_angle = self.ship.angle
             ship_angle += change * self.ship.rotation_modifier
 		    self.ship:setAngle(ship_angle)
         end,
 
         BButtonDown = function ()
+            if not g_SystemManager:canControl() then
+                return
+            end
             self.ship.move_ship = true
+            g_SoundManager:playEngine()
         end,
 
         BButtonUp = function ()
+            if not g_SystemManager:canControl() then
+                return
+            end
             self.ship.move_ship = false
+            g_SoundManager:stopEngine()
         end,
 
         upButtonDown = function ()
             --self.ship.move_ship = not self.ship.move_ship 
+            --g_SoundManager:playNotification()
+            g_SceneManager:pushScene(Map(), 'to menu')
         end,
 
-        downButtonDown = function ()
+        leftButtonUp = function ()
+            if not g_SystemManager:canControl() then
+                return
+            end
             g_SceneManager:pushScene(PlayerMenu(), 'to menu')
         end
 
@@ -354,4 +384,23 @@ function System:doUpdate()
 
     self:updateSelectionSprite()
 
+    local collisions = self.ship:overlappingSprites()
+
+    if #collisions == 0 then
+        self.selection_spr:remove()
+        self.selection_focus = nil
+    end
+
+	for i = 1, #collisions do
+        if collisions[i].interactuable then
+            self:setSelectionSprite(collisions[i])
+            if pd.buttonJustReleased(playdate.kButtonA) then
+                self.selection_spr:remove()
+                self.selection_focus = nil
+                self.ship:stop()
+                collisions[i]:interact()
+                break
+            end
+        end
+	end
 end

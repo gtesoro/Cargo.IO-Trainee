@@ -12,7 +12,7 @@ function Scene:init(data)
     end
 
     self.loaded = false
-    self.sprites = List()
+    self.sprites = {}
 
     self:setZIndex(0)
 
@@ -20,34 +20,29 @@ function Scene:init(data)
 end
 
 function Scene:moveTo(x , y)
-    for spr in self.sprites:iter() do
+    for k, spr in pairs(self.sprites) do
         spr:moveBy(x - self.x, y - self.y)
     end
     Scene.super.moveTo(self, x, y)
 end
 
 function Scene:moveBy(x , y)
-    for spr in self.sprites:iter() do
+    for k, spr in pairs(self.sprites) do
         spr:moveBy(x, y)
     end
     Scene.super.moveBy(self, x, y)
 end
 
 function Scene:setZIndex(z)
-    for spr in self.sprites:iter() do
+    for k, spr in pairs(self.sprites) do
         spr:setZIndex(z - self:getZIndex() + spr:getZIndex())
     end
     Scene.super.setZIndex(self, z)
 end
 
-function Scene:preload()
-
-end
-
 function Scene:load()
     
     if not self.loaded then
-        self:preload()
         self:startScene()
     end
     self.loaded = true
@@ -65,7 +60,7 @@ function Scene:startScene()
 end
 
 function Scene:add()
-    for v in self.sprites:iter() do
+    for k, v in pairs(self.sprites) do
         v:add()
     end
     Scene.super.add(self)
@@ -73,9 +68,17 @@ function Scene:add()
 end
 
 function Scene:remove()
-    for v in self.sprites:iter() do
+    for k, v in pairs(self.sprites) do
         v:remove()
     end
     Scene.super.remove(self)
 
+end
+
+function Scene:clean()
+    for k, v in pairs(self.sprites) do
+        v:remove()
+        self.sprites[k] = nil
+    end
+    self.sprites = nil
 end

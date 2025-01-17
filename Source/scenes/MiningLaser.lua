@@ -37,14 +37,14 @@ function MiningLaser:initBg()
     self.bg_sprite:setIgnoresDrawOffset(true)
     self.bg_sprite:setZIndex(0)
 
-    self.sprites:append(self.bg_sprite)
+    table.insert(self.sprites, self.bg_sprite)
 
     self.ship_overlay = gfx.sprite.new(gfx.image.new("assets/backgrounds/asteroid_bg_overlay") )
     self.ship_overlay:moveTo(pd.display.getWidth()/2, pd.display.getHeight()*1.5)
     self.ship_overlay:setIgnoresDrawOffset(true)
     self.ship_overlay:setZIndex(5)
 
-    self.sprites:append(self.ship_overlay)
+    table.insert(self.sprites, self.ship_overlay)
 
 end
 
@@ -99,7 +99,7 @@ function MiningLaser:initMinerals()
             sprt:moveTo(_x + pd.display.getWidth()/2 - self.asteroid_img.width/2, _y + pd.display.getHeight()/2 - self.asteroid_img.height/2)
             sprt:setZIndex(4)
             self.minerals[#self.minerals+1] = {sprt, sprt.x, sprt.y}
-            self.sprites:append(sprt)
+            table.insert(self.sprites, sprt)
 
         end
     end
@@ -114,7 +114,7 @@ function MiningLaser:initMinerals()
     local sprt = gfx.sprite.new(img)
     sprt:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
     sprt:setZIndex(5)
-    self.sprites:append(sprt)
+    table.insert(self.sprites, sprt)
     self.trigger_point = sprt
     self:drawTrigger()
 end
@@ -173,7 +173,7 @@ function MiningLaser:initDoor()
 
     self.door_sprite = _line_sprite
     
-    self.sprites:append(_line_sprite)
+    table.insert(self.sprites, _line_sprite)
 
 end
 
@@ -233,7 +233,7 @@ end
 function MiningLaser:checkCore()
     local img = self.asteroid_canvas:getImage()
     local _arc = pd.geometry.arc.new(img.width/2, img.height/2, self.trigger_radius, 0, 360)
-    local _free = math.floor(_arc:length()*.75)
+    local _free = math.floor(_arc:length()*.25)
     for d=0,_arc:length() do
         local _p = _arc:pointOnArc(d)
         if img:sample(_p.x, _p.y) == gfx.kColorClear then
@@ -255,7 +255,7 @@ function MiningLaser:triggerExplosion()
     sprt:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
     sprt:setZIndex(6)
     sprt:add()
-    self.sprites:append(sprt)
+    table.insert(self.sprites, sprt)
     self.explosion = sprt
     self.exploding = true
     self.explosion_animator = gfx.animator.new(3000, 0, math.sqrt(pd.display.getWidth()^2 + pd.display.getHeight()^2)/2, playdate.easingFunctions.outCubic)
@@ -331,7 +331,7 @@ function MiningLaser:initAsteroid()
         self.asteroid_canvas:setImage(self.asteroid_cache[math.floor(self.asteroid_rotation)])
     end
 
-    self.sprites:append(self.asteroid_canvas)
+    table.insert(self.sprites, self.asteroid_canvas)
 
 end
 
@@ -349,12 +349,12 @@ function MiningLaser:initLaser()
     self.laser_target_x = 330
     self.laser_target_y = 120
 
-    img = gfx.image.new(pd.display.getWidth(), pd.display.getHeight(), gfx.kColorClear)
+    local img = gfx.image.new(pd.display.getWidth(), pd.display.getHeight(), gfx.kColorClear)
     self.laser_sprite = gfx.sprite.new(img)
     self.laser_sprite:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
     self.laser_sprite:setZIndex(3)
 
-    self.sprites:append(self.laser_sprite)
+    table.insert(self.sprites, self.laser_sprite)
 end
 
 function MiningLaser:castRay(img, _laser_line)
@@ -377,13 +377,15 @@ end
 
 function MiningLaser:applyLaser()
 
+    local _laser_line = pd.geometry.lineSegment.new(self.laser_origin_x, self.laser_origin_y, 400, 120)
+
+    _hit, self.laser_target_x, self.laser_target_y = self:castRay(self.asteroid_canvas:getImage(), _laser_line)
+
     if self.laser_counter == self.laser_update then
 
         self.remaining_beam -= self.beam_rate
 
-        local _l_x, _l_y = 330, 120
-
-        local _laser_line = pd.geometry.lineSegment.new(self.laser_origin_x, self.laser_origin_y, _l_x, _l_y)
+        _laser_line = pd.geometry.lineSegment.new(self.laser_origin_x, self.laser_origin_y, self.laser_target_x, self.laser_target_y)
         local _hit, _t_x, _t_y = self:castRay(self.asteroid_canvas:getImage(), _laser_line)
 
         if _hit then
@@ -427,11 +429,14 @@ function MiningLaser:initInputs()
 
         cranked = function (change, acceleratedChange)
             if math.abs(self.asteroid_angular_speed) < _max_speed then
-                self.asteroid_angular_speed += acceleratedChange * _acc_mod
-                if math.abs(self.asteroid_angular_speed) > _max_speed then
-                    self.asteroid_angular_speed = 2 * self.asteroid_angular_speed/math.abs(self.asteroid_angular_speed)
-                end
+                -- self.asteroid_angular_speed += acceleratedChange * _acc_mod
+                -- if math.abs(self.asteroid_angular_speed) > _max_speed then
+                --     self.asteroid_angular_speed = 2 * self.asteroid_angular_speed/math.abs(self.asteroid_angular_speed)
+                -- end
+                
             end
+            self.asteroid_angular_speed += acceleratedChange/1000
+            self.asteroid_angular_speed = clamp(self.asteroid_angular_speed, -_max_speed, _max_speed)
         end,
 
         AButtonDown = function ()
@@ -470,7 +475,7 @@ function MiningLaser:doUpdate()
 
     self:drawTrigger()
 
-    local _as_decay = 0.001
+    local _as_decay = 0.005
 
     if self.asteroid_angular_speed > 0 then
         self.asteroid_angular_speed -= _as_decay

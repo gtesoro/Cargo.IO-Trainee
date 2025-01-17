@@ -25,14 +25,14 @@ function ImageViewer:initBg()
     self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.bg_sprite:setZIndex(0)
     self.bg_sprite:add()
-    self.sprites:append(self.bg_sprite)
+    table.insert(self.sprites, self.bg_sprite)
 
     self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
     self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.ui_overlay:setZIndex(4)
     self.ui_overlay:add()
 
-    self.sprites:append(self.ui_overlay)
+    table.insert(self.sprites, self.ui_overlay)
 
 end
 
@@ -42,7 +42,7 @@ function ImageViewer:initImage()
     self.image_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()*0.2+ self.data.image.height/2)
     self.image_sprite:setZIndex(1)
     self.image_sprite:add()
-    self.sprites:append(self.image_sprite)
+    table.insert(self.sprites, self.image_sprite)
 
 end
 

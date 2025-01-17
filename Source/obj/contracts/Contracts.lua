@@ -46,17 +46,17 @@ function Contract:getContractImage()
         gfx.setFont(g_font_14)
 
         _system_name = g_SystemManager:getPlayer():getCurrentSystem().data.name
-        local _cycle = g_SystemManager:getPlayer().cycle
+        local _cycle, _time = g_SystemManager:getCycle()
 
         if self.state.sign_system then
             _system_name = self.state.sign_system
         end
 
-        if self.state.sign_cycle then
-            _cycle = self.state.sign_cycle
+        if self.state.sign_date then
+            _cycle = self.state.sign_date
         end
 
-        gfx.drawTextAligned(string.format('%s, Cycle %i', _system_name, _cycle), img.width*0.90, img.height*0.15, kTextAlignment.right)
+        gfx.drawTextAligned(table.concat({_system_name,' Cycle', _cycle}), img.width*0.90, img.height*0.15, kTextAlignment.right)
 
         gfx.setFont(g_font_text)
 
@@ -94,11 +94,12 @@ end
 function Contract:onCancel()
 
     if g_SystemManager:getPlayer():hasContract(self) then
-        g_SceneManager:pushScene(Popup({text='Sign Contract?', options={
+        g_SceneManager:pushScene(Popup({text='Cancel Contract?', options={
             {
                 name='Yes',
                 callback= function ()
                     g_NotificationManager:notify(string.format("Contract Canceled: %s", self.name))
+                    self:onLose()
                     g_SystemManager:getPlayer():removeContract(self)
                     g_SceneManager:popScene('between menus')
                 end
@@ -112,13 +113,14 @@ function Contract:onCancel()
         return false
 end
 
+function Contract:canSign()
+    return true
+end
+
 function Contract:onSign()
 
-    local _system_coords = string.format("%i.%i.%i", g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z)
-    local _system = g_SystemManager:getSystems()[_system_coords]
-
-    self.state.sign_system = _system.name
-    self.state.sign_date = g_SystemManager:getPlayer().cycle
+    self.state.sign_system = g_SystemManager:getPlayer():getCurrentSystem().name
+    self.state.sign_date, self.state.sign_time = g_SystemManager:getCycle()
     self.state.signed = true
 
 end
@@ -148,7 +150,7 @@ function CloningContract:init()
     CloningContract.super.init(self)
 
     self.name = "Cloning"
-    self.duration = 10
+    self.duration = 100
 
     self.save_name = 'clone'
 
@@ -162,14 +164,24 @@ function CloningContract:init()
 
 end
 
+function CloningContract:cycleCheck(cycle)
+    if cycle >= self.state.sign_date + self.duration then
+        g_NotificationManager:notify('Cloning Contract Expired')
+        g_SystemManager:getPlayer():removeContract(self)
+        self:onLose()
+    end
+end
+
 function CloningContract:load(state)
 
     CloningContract.super.load(self, state)
 
-    g_SystemManager.on_death[self.name] = function ()
-        self:onDeath()
-    end
+    self:onGain()
 
+end
+
+function CloningContract:canSign()
+    return g_SystemManager:getPlayer():chargeMoney(self:getSignPrice())
 end
 
 
@@ -179,11 +191,16 @@ function CloningContract:onGain()
         self:onDeath()
     end
 
+    g_SystemManager:addOnCycle(self.name, function (cycle)
+        self:cycleCheck(cycle)
+    end)
+
 end
 
 function CloningContract:onLose()
 
     g_SystemManager.on_death[self.name] = nil
+    g_SystemManager:removeOnCycle(self.name)
 
 end
 
@@ -255,6 +272,10 @@ function DeliveryContract:renderText()
                                                            self.state.reward 
                                       )
 
+end
+
+function DeliveryContract:canSign() 
+    return g_SystemManager:getPlayer():freeInventory() > 1
 end
 
 function DeliveryContract:onGain()

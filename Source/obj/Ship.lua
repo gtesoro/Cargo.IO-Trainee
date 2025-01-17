@@ -23,7 +23,7 @@ function Ship:init()
 	self.bosster_offset_x = 0
 	self.bosster_offset_y = 12
 	self.particle_tick = 2
-	self.collisionResponse = gfx.sprite.kCollisionTypeOverlap    
+	--self.collisionResponse = gfx.sprite.kCollisionTypeBounce  
 	self.speed_vector = playdate.geometry.vector2D.new(0,0)
 	self:setCollideRect( 0, 0, self:getSize() )
 
@@ -77,12 +77,19 @@ function Ship:doUpdate()
 		if self.speed_vector:magnitude() < self.max_speed then
         	self.speed_vector += pd.geometry.vector2D.newPolar(self.acceleration  , self.angle)
 		end
+		for _, breakpoint in  pairs({25, 50, 75}) do
+			if g_SystemManager:getPlayer().ship.fuel_current - self.fuel_usage < breakpoint and g_SystemManager:getPlayer().ship.fuel_current > breakpoint then 
+				g_NotificationManager:notify(string.format('Fuel <%i%%', breakpoint))
+			end
+		end
 		g_SystemManager:getPlayer().ship.fuel_current -= self.fuel_usage
     end
 
 	local shipX, shipY = self:getPosition()
 
-	self.speed_vector = self.speed_vector - (self.speed_vector * self.friction)
+	--self.speed_vector = self.speed_vector - (self.speed_vector * self.friction)
+	self.speed_vector *= (1 - self.friction)
+
 
 	shipX += self.speed_vector.x
 	shipY += self.speed_vector.y

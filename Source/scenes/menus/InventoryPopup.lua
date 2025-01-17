@@ -36,7 +36,7 @@ function InventoryPopup:initBg()
 
     self.bg_spr:moveTo(200,120)
 
-    self.sprites:append(self.bg_spr)
+    table.insert(self.sprites, self.bg_spr)
     
 end
 
@@ -47,9 +47,9 @@ function InventoryPopup:initGrids()
         parent = self
     }
 
-    self.item_grid = GridBox(_grid_box_data, self.data.rows, self.data.columns, 40, 40)
+    self.item_grid = GridBox(_grid_box_data, self.data.rows, self.data.columns, nil, nil, 180)
     self.item_grid:setGridColor(gfx.kColorWhite)
-    self.item_grid:moveTo(200, 120)
+    self.item_grid:moveTo(200, 200)
     self.item_grid:setZIndex(1)
     self.item_grid:drawGrid()
     self.item_grid.a_callback = function (_self)
@@ -70,7 +70,34 @@ function InventoryPopup:initGrids()
         end)
     end
 
-    self.sprites:append(self.item_grid)
+    self.item_panel = ItemPanel(300, 150)
+    self.item_panel:setVisible(false)
+    local _s = self.item_grid:getSelection()
+    if _s and _s:isa(Item) then
+        self.item_panel:setVisible(true)
+        self.item_panel:setItem(_s)
+    end
+    self.item_panel:setZIndex(3)
+    self.item_panel:add()
+    self.item_panel:moveTo(200, 90)
+
+    self.item_panel_shadow = getShadowSprite(self.item_panel)
+    self.item_panel_shadow:setZIndex(2)
+    self.item_panel_shadow:add()
+    table.insert(self.sprites, self.item_panel_shadow)
+
+    self.item_grid.on_change = function (item)
+        if item and item:isa(Item) then
+            self.item_panel:setVisible(true)
+            self.item_panel:setItem(item)
+        else
+            self.item_panel:setVisible(false)
+        end
+    end
+
+    table.insert(self.sprites, self.item_panel)
+
+    table.insert(self.sprites, self.item_grid)
 
 end
 

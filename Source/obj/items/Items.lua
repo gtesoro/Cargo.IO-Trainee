@@ -29,7 +29,7 @@ function Item:getAttrs()
             "Usage", self.usage
         },
         {
-            "Price", string.format("%s-%s", self.price_min, self.price_max)
+            "Price", table.concat({self.price_min,'-',self.price_max})
         }
     }
 end
@@ -44,11 +44,11 @@ function Item:getOptions()
 end
 
 function Item:onGain()
-    g_NotificationManager:notify(string.format("Item Gained: %s", self.name))
+    
 end
 
 function Item:onLose()
-    g_NotificationManager:notify(string.format("Item Lost: %s", self.name))
+
 end
 
 function Item:getOptions()
@@ -57,6 +57,21 @@ end
 
 function Item:getImage()
     return self.image
+end
+
+class('Cross').extends(Item)
+
+function Cross:init()
+    Cross.super.init(self)
+
+    self.image = gfx.image.new("assets/cross")
+    self.name = "Remove"
+
+end
+
+function Cross:getAttrs()
+    return {
+    }
 end
 
 
@@ -142,14 +157,12 @@ function Radio:init()
 
     self.image = gfx.image.new("assets/items/radio")
 
-    self.player = pd.sound.fileplayer.new("assets/music/Im_Gonna_Get_Me_A_Man_Thats_All", 10)
-
     self.type = "Utility"
     self.usage = "Entertaiment"
     self.price_max = 1000
     self.price_min = 800
 
-    self.name = "Sonar"
+    self.name = "Radio"
 
     self.description = "Plays music.\nThe universe is full of waves, this pre-leap device turns them into sound."
 
@@ -160,12 +173,7 @@ function Radio:init()
                 ShopInventory=true
             },
             callback = function (_self)
-                
-                if self.player:isPlaying() then
-                    self.player:stop()
-                else
-                    self.player:play(0)
-                end
+                g_SoundManager:switchRadio()
                 _self:remove()
                 _self.data.parent:focus()
             end
@@ -325,7 +333,7 @@ function YggdrasilAtlas:init()
             },
             callback = function (_self)
                 g_SystemManager:getPlayer().codex.systems[#g_SystemManager:getPlayer().codex.systems+1] = "Yggdrasil"
-                for k, v in pairs(g_SystemManager:getSystem("Yggdrasil").planets) do
+                for k, v in pairs(g_SystemManager:getSystemByName("Yggdrasil").planets) do
                     g_SystemManager:getPlayer().codex.planets[#g_SystemManager:getPlayer().codex.planets+1] = v.name
                 end
                 g_NotificationManager:notify('Codex Updated')

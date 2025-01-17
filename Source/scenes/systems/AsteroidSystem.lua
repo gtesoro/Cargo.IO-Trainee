@@ -29,71 +29,84 @@ function AsteroidSystem:initAsteroids()
             spr:setRotation(math.random(0, 359))
             spr:setCollideRect( 0, 0, spr:getSize() )
             
-            v.sprite = spr
-            v.linear_speed = math.random(20,100)/250
-            v.angular_speed = math.random(0,100)/1000
-            v.rotation = math.random(0,359)
-            spr:setRotation(v.rotation)
+            spr.linear_speed = math.random(20,100)/250
+            spr.angular_speed = math.random(0,100)/1000
+            spr.rotation = math.random(0,359)
+            spr:setRotation(spr.rotation)
 
-            self.asteroids[#self.asteroids+1] = v
-            self.sprites:append(spr)
+            spr.interactuable = true
+            local _self = self
+            function spr:interact()
+                g_SceneManager:pushScene(MiningLaser({bg_img = _self:getCurrentBg()}), 'wipe down')
+                        
+                table_remove(_self.sprites, spr)
+                table_remove(_self.asteroids, spr)
+                spr:remove()
+
+            end
+            table.insert(self.asteroids, spr)
+            table.insert(self.sprites, spr)
         end
     end
 end
 
 function AsteroidSystem:moveAsteroids()
     if self.asteroids then
-        for k,v in pairs(self.asteroids) do
-            local spr = v.sprite
+        for k,asteroid in pairs(self.asteroids) do
 
-            if spr.y < 0 or spr.y > self.data.playfield_height then
-                v.rotation = 180 - v.rotation
+            if asteroid.y < 0 or asteroid.y > self.data.playfield_height then
+                asteroid.rotation = 180 - asteroid.rotation
             end
     
-            if spr.x < 0 or spr.x > self.data.playfield_width then
-                v.rotation = 360 - v.rotation
+            if asteroid.x < 0 or asteroid.x > self.data.playfield_width then
+                asteroid.rotation = 360 - asteroid.rotation
             end
 
-            v.rotation += v.angular_speed
-            v.rotation = math.fmod(v.rotation, 360)
-            v.move_vector = pd.geometry.vector2D.newPolar(v.linear_speed, v.rotation)
-            spr:moveBy(v.move_vector.x, v.move_vector.y)
+            asteroid.rotation += asteroid.angular_speed
+            asteroid.rotation = math.fmod(asteroid.rotation, 360)
+            asteroid.move_vector = pd.geometry.vector2D.newPolar(asteroid.linear_speed, asteroid.rotation)
+            asteroid:moveBy(asteroid.move_vector.x, asteroid.move_vector.y)
         end
     end
 end
 
 function AsteroidSystem:doUpdate()
-
-    AsteroidSystem.super.doUpdate(self)
     
     self:moveAsteroids()
 
-    local collisions = self.ship:overlappingSprites()
+    AsteroidSystem.super.doUpdate(self)
+    
 
-    if #collisions == 0 then
-        self.selection_spr:remove()
-        self.selection_focus = nil
-    end
+    -- local collisions = self.ship:overlappingSprites()
 
-	for i = 1, #collisions do
-        self:setSelectionSprite(collisions[i])
-        if pd.buttonJustReleased(playdate.kButtonA) then
-            self.selection_spr:remove()
-            self.selection_focus = nil
-            if self.asteroids then
-                for k,v in pairs(self.asteroids) do
-                    if v.sprite == collisions[i] then
-                        g_SceneManager:pushScene(MiningLaser({bg_img = self:getCurrentBg()}), 'wipe down')
+    -- if #collisions == 0 then
+    --     self.selection_spr:remove()
+    --     self.selection_focus = nil
+    -- end
+    -- local _collided = false
+	-- for i = 1, #collisions do
+    --     if _collided then
+    --         break
+    --     end
+    --     self:setSelectionSprite(collisions[i])
+    --     if pd.buttonJustReleased(playdate.kButtonA) then
+    --         self.selection_spr:remove()
+    --         self.selection_focus = nil
+    --         if self.asteroids then
+    --             for k,v in pairs(self.asteroids) do
+    --                 if v.sprite == collisions[i] then
                         
-                        self.sprites:remove(v.sprite)
+    --                     g_SceneManager:pushScene(MiningLaser({bg_img = self:getCurrentBg()}), 'wipe down')
+                        
+    --                     table_remove(self.sprites, v.sprite)
 
-                        v.sprite:remove()
-                        self.asteroids[k] = nil
-
-                        break
-                    end
-                end
-            end
-        end
-	end   
+    --                     v.sprite:remove()
+    --                     self.asteroids[k] = nil
+    --                     _collided = true
+    --                     break
+    --                 end
+    --             end
+    --         end
+    --     end
+	-- end   
 end

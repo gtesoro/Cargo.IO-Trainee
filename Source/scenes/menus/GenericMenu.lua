@@ -30,17 +30,19 @@ function GenericMenu:initGrids()
     self.list_box = ListBox(_list_box_data, self.list_box_w, self.list_box_h)
     self.list_box:setCenter(self.list_box_center_x, self.list_box_center_y)
     self.list_box:moveTo(self.list_box_x, self.list_box_y)
-    self.list_box:setZIndex(2)
+    self.list_box:setZIndex(3)
 
     self.list_box_shadow = getShadowSprite(self.list_box)
+    self.list_box_shadow:setZIndex(2) 
 
     self.list_box_shadow:add()
 
-    self.sprites:append(self.list_box_shadow)
+    table.insert(self.sprites, self.list_box_shadow)
 
     self.list_box:add()
 
     self.list_box.b_callback = function ()
+
         if self.b_callback then
             self.b_callback()     
         end
@@ -54,7 +56,7 @@ function GenericMenu:initGrids()
     end
 
     
-    self.sprites:append(self.list_box)
+    table.insert(self.sprites, self.list_box)
 
 end
 
@@ -72,25 +74,29 @@ function GenericMenu:initBg()
     self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.bg_sprite:setZIndex(0)
     self.bg_sprite:add()
-    self.sprites:append(self.bg_sprite)
+    table.insert(self.sprites, self.bg_sprite)
 
     self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
     self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.ui_overlay:setZIndex(2)
+    self.ui_overlay:setZIndex(4)
     self.ui_overlay:add()
 
-    self.sprites:append(self.ui_overlay)
+    table.insert(self.sprites, self.ui_overlay)
 
     if self.data.right_side then
         self:setRightSide(self.data.right_side)
     end
+
+    print('Init right side', self.right_side)
 end
 
 function GenericMenu:setRightSide(spr)
 
+    print('Update right side', spr)
+
     if self.right_side then
         self.right_side:remove()
-        self.sprites:remove(self.right_side)
+        table_remove(self.sprites, self.right_side)
     end
 
     if spr then
@@ -99,7 +105,7 @@ function GenericMenu:setRightSide(spr)
         self.right_side:setZIndex(0)
         self.right_side:add()
 
-        self.sprites:append(self.right_side)
+        table.insert(self.sprites, self.right_side)
     end
 end
 
@@ -116,9 +122,13 @@ function GenericMenu:unfocus()
     end
 end
 
--- function GenericMenu:remove()
---     GenericMenu.super.remove(self)
--- end
+function GenericMenu:clean()
+    if self.right_side then
+        self.right_side:remove()
+        self.right_side = nil
+    end
+    GenericMenu.super.clean(self)
+end
 
 function GenericMenu:doUpdate()
 
@@ -132,7 +142,7 @@ function GenericMenu:doUpdate()
                 else
                     self:setRightSide(self.current_selected.sprite)
                 end
-            else
+            elseif self.data.right_side then
                 self:setRightSide(self.data.right_side)
             end
         else

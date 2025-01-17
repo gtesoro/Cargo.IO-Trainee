@@ -1,14 +1,16 @@
 local gfx <const> = playdate.graphics
 local pd <const> = playdate
 
-class('SceneManager').extends(playdate.graphics.sprite)
+class('SceneManager').extends()
 
 function SceneManager:init()
 
     self.scene_stack = {}
 
-    self.transition_duration = 500
+    self.transition_duration = 600
     self.transitioning = false
+
+    self.stack_unstack_duration = 700
 
     local _initial_scene = Intro() --MiningLaser({bg_img = gfx.image.new(400, 240, gfx.kColorBlack)}) --
     _initial_scene:load()
@@ -18,7 +20,7 @@ function SceneManager:init()
     
     _initial_scene:add()
 
-    self:add()
+    local _initial_scene = nil
 
 end
 
@@ -49,6 +51,7 @@ function SceneManager:switchSceneStack(scene, duration)
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
+            self.scene_stack[#self.scene_stack]:clean()
         end
         self.scene_stack[#self.scene_stack] = scene
         collectGarbage()
@@ -70,6 +73,7 @@ function SceneManager:switchSceneHWipe(scene, duration, dir)
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
+            self.scene_stack[#self.scene_stack]:clean()
         end
         self.scene_stack[#self.scene_stack] = scene
         collectGarbage()
@@ -214,16 +218,16 @@ function SceneManager:pushSceneBetweenMenus(scene, duration, blur)
 end
 
 function SceneManager:popSceneOutMenu(duration)
+
     local _t1 = BetweenMenusOut(duration/2)
 
     _t1.endCallback = function ()
 
         local _t2 = OutMenu(duration)
 
-        self.transitioning = false
-
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
+        self.scene_stack[#self.scene_stack]:clean()
         table.remove(self.scene_stack, #self.scene_stack)
         
         collectGarbage()
@@ -251,6 +255,7 @@ function SceneManager:popSceneBetweenMenus(duration)
 
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
+        self.scene_stack[#self.scene_stack]:clean()
         table.remove(self.scene_stack, #self.scene_stack)
 
         collectGarbage()
@@ -277,6 +282,7 @@ function SceneManager:popSceneUnstack(duration)
 
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
+        self.scene_stack[#self.scene_stack]:clean()
         table.remove(self.scene_stack, #self.scene_stack)
 
         collectGarbage()
@@ -300,6 +306,7 @@ function SceneManager:popSceneHWipe(duration, dir)
     _t_in.endCallback = function ()
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
+        self.scene_stack[#self.scene_stack]:clean()
         table.remove(self.scene_stack, #self.scene_stack)
 
         collectGarbage()
@@ -333,7 +340,7 @@ function SceneManager:popScene(transition, duration)
         elseif transition == 'wipe down' then
             self:popSceneHWipe(duration, 'down')
         elseif transition == 'unstack' then
-            self:popSceneUnstack(100)   
+            self:popSceneUnstack(self.stack_unstack_duration)   
         elseif transition == 'out menu' then
             self:popSceneOutMenu(duration)
         elseif transition == 'between menus' then
@@ -343,6 +350,7 @@ function SceneManager:popScene(transition, duration)
 
         self.scene_stack[#self.scene_stack]:unfocus()
         self.scene_stack[#self.scene_stack]:remove()
+        self.scene_stack[#self.scene_stack]:clean()
         table.remove(self.scene_stack, #self.scene_stack)
 
         collectGarbage()
@@ -353,6 +361,8 @@ function SceneManager:popScene(transition, duration)
         end
         self.transitioning = false
     end
+
+    print('Pop Scene Ends:',transition, #self.scene_stack)
 
 end
 
@@ -381,7 +391,7 @@ function SceneManager:pushScene(scene, transition, duration)
 
     if transition then
         if transition == 'stack' then
-            self:pushSceneStack(scene, 100)
+            self:pushSceneStack(scene, self.stack_unstack_duration)
         elseif transition == 'wipe down' then
             self:pushSceneHWipe(scene, duration, 'down')
         elseif transition == 'unstack' then
@@ -404,7 +414,7 @@ function SceneManager:pushScene(scene, transition, duration)
         self.transitioning = false
     end
 
-    
+    print('Push Scene Ends:', #self.scene_stack)
 
 end
 
@@ -438,6 +448,7 @@ function SceneManager:switchScene(scene, transition, duration)
         if #self.scene_stack > 0 then
             self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
+            self.scene_stack[#self.scene_stack]:clean()
         end
         self.scene_stack[#self.scene_stack] = scene
 
@@ -449,8 +460,7 @@ function SceneManager:switchScene(scene, transition, duration)
         self.transitioning = false
     end
 
-
-
+    print('Switch Scene Ends:', #self.scene_stack)
 end
 
 function SceneManager:reset(scene)

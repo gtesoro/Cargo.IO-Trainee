@@ -25,14 +25,14 @@ function TextViewer:initBg()
     self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.bg_sprite:setZIndex(0)
     self.bg_sprite:add()
-    self.sprites:append(self.bg_sprite)
+    table.insert(self.sprites, self.bg_sprite)
 
     self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
     self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.ui_overlay:setZIndex(2)
     self.ui_overlay:add()
 
-    self.sprites:append(self.ui_overlay)
+    table.insert(self.sprites, self.ui_overlay)
 
 end
 
@@ -58,7 +58,7 @@ function TextViewer:initText()
     self.text_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()*0.2+ img.height/2)
     self.text_sprite:setZIndex(1)
     self.text_sprite:add()
-    self.sprites:append(self.text_sprite)
+    table.insert(self.sprites, self.text_sprite)
 
 end
 

@@ -7,8 +7,6 @@ function CargoHub:init()
 
     CargoHub.super.init(self)
 
-    
-    
     self.data.options = {
         {
             name = 'Local Delivery Contract',
@@ -25,12 +23,42 @@ function CargoHub:init()
         {
             name= "Deliver",
             callback = function ()
-                g_SceneManager:pushScene(CargoHubDelivery(self.data), 'between menus')
+                --g_SceneManager:pushScene(CargoHubDelivery(self.data), 'between menus')
+
+                local _items = {}
+                for k,v in pairs(g_SystemManager:getPlayer().inventory.items) do
+                    if v:isa(QlCargo) then
+                        table.insert(_items, v)
+                    end
+                end
+
+                if #_items == 0 then
+                    createPopup({text="No cargo avaialble in inventory."})
+                else
+
+                    g_SceneManager:pushScene(InventoryPopup({
+                        items=_items,
+                        rows=1,
+                        columns=#_items,
+                        a_callback= function (_self)
+                            local _item = _self:getSelection()
+                            if _item.destination.name ~= g_SystemManager:getPlayer():getCurrentPlanet().name then
+                                createPopup({text='Wrong destination'})
+                            else
+                                g_SystemManager:getPlayer():removeFromInventory(_item)
+                                for k,v in pairs(g_SystemManager:getPlayer():getContractByType("DeliveryContract")) do
+                                    g_SystemManager:getPlayer():removeContract(v)
+                                    v:onComplete()
+                                end
+                            end
+                        end
+                    }), "stack")
+                end
+
             end
         }
     }
-    self.data.right_side = gfx.sprite.new(gfx.image.new('assets/facilities/cargo_hub'))
-    
+    self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/cargo_hub'))
 end
 
 class('CargoHubDelivery').extends(GenericInventory)
@@ -92,16 +120,27 @@ function CloningFacility:init()
                 end
             end
         }
-    } 
+    }
+
+    self.data.right_sise_x = 200
+    self.data.right_sise_y = 120
+
+    self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/namaste', true))
 end
 
-class('FuelStation').extends(GenericMenu)
+class('Starport').extends(GenericMenu)
 
-function FuelStation:init()
+function Starport:init()
 
-    FuelStation.super.init(self)
+    Starport.super.init(self)
     
     self.data.options = {
+        {
+            name = 'Garage',
+            callback = function ()
+                g_SceneManager:pushScene(LoadoutMenu({items=g_SystemManager:getPlayer().ship.loadout.items, read_only=false}), 'between menus')
+            end
+        },
         {
             name = 'Refuel - 10C',
             callback = function ()
@@ -111,18 +150,32 @@ function FuelStation:init()
                 end
             end
         },
+        {
+            name = 'Repair Hull - 100C',
+            callback = function ()
+                if g_SystemManager:getPlayer().ship.hull_current == g_SystemManager:getPlayer().ship.hull_total then
+                    g_NotificationManager:notify("Hull does not need repair")
+                else
+                    if g_SystemManager:getPlayer():chargeMoney(100) then
+                        g_SystemManager:getPlayer().ship.hull_current = g_SystemManager:getPlayer().ship.hull_total
+                        g_NotificationManager:notify("Hull Repaired")
+                    end
+                end
+            end
+        },
     }
     self.data.right_sise_x = 200
     self.data.right_sise_y = 120
-    self.data.right_side = gfx.sprite.new(gfx.image.new('assets/facilities/fuel_station'))
+
+    self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/starport'))
     
 end
 
-class('Shop').extends(GenericMenu)
+class('Market').extends(GenericMenu)
 
-function Shop:init(data)
+function Market:init(data)
 
-    Shop.super.init(self, data)
+    Market.super.init(self, data)
 
     self.data.options = {
         {
@@ -139,7 +192,10 @@ function Shop:init(data)
         }
     }
 
-    self.data.right_side = gfx.sprite.new(gfx.image.new('assets/backgrounds/facilities/shop'))
+    self.data.right_sise_x = 200
+    self.data.right_sise_y = 120
+
+    self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/market_2', true)) --gfx.sprite.new(gfx.image.new('assets/facilities/market'))
     
 end
 
@@ -162,7 +218,7 @@ function ShopInventory:init(data)
                 if g_SystemManager:getPlayer():chargeMoney(item:getCurrentPrice()) then
                     g_SystemManager:getPlayer():addToInventory(item)
 
-                    table.remove(self.data.items, _self.data.parent.item_grid:getSelectionIndex())
+                    --table.remove(self.data.items, _self.data.parent.item_grid:getSelectionIndex())
                     _self.data.parent.item_grid:drawGrid()
                     _self.data.parent.item_grid:focus()
                     _self:remove()

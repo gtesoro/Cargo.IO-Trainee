@@ -18,15 +18,22 @@ function ItemPanel:setItem(item)
         local padding = 6
         local _l = 5
 
+
+        
+
         gfx.setColor(gfx.kColorWhite)
         gfx.fillRoundRect(0, 0, self._w, self._h, 2)
+
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setLineWidth(3)
+        gfx.drawRoundRect(0, 0, self._w, self._h, 2)
 
         -- gfx.setColor(gfx.kColorBlack)
         -- gfx.setLineWidth(_l)
         -- gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
         -- gfx.drawRect(_l/2, _l/2, item_img.width + padding + _l, item_img.height + padding + _l)
 
-        gfx.drawTextInRect(item.name, 0, self._h*0.02, self._w, self._h*0.2, nil, nil, kTextAlignment.center, g_font_18)
+        gfx.drawTextInRect(item.name, 0, self._h*0.05, self._w, self._h*0.2, nil, nil, kTextAlignment.center, g_font_18)
 
         -- gfx.setImageDrawMode(gfx.kDrawModeXOR)
         -- item_img:draw(_l + padding/2, _l + padding/2)
@@ -36,7 +43,7 @@ function ItemPanel:setItem(item)
 
         local _attrs = item:getAttrs()
 
-        self.grid = pd.ui.gridview.new((self._w)/2 - 2*cell_padding,  20)
+        self.grid = pd.ui.gridview.new((self._w-10)/2 - 2*cell_padding,  20)
         self.grid:setNumberOfColumns(2)
         self.grid:setNumberOfRows(#_attrs)
         self.grid:setCellPadding(cell_padding, cell_padding, 2, 2)
@@ -63,7 +70,7 @@ function ItemPanel:setItem(item)
             
         end
 
-        self.grid:drawInRect(0, self._h*0.25,  self._w, self._h*0.98)
+        self.grid:drawInRect(5, self._h*0.2,  self._w - 10, self._h*0.98)
 
     gfx.popContext()
 

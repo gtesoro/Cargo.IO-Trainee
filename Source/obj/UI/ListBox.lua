@@ -35,7 +35,7 @@ function ListBox:init(data, width, height, item_height)
     gfx.setFont(g_font_18)
 
     for k,v in pairs(self.options) do
-        local __w, __h = gfx.getTextSize(string.format("%s", v.name))
+        local __w, __h = gfx.getTextSize(v.name)
         if __w > _min_width then
             _min_width = __w
         end
@@ -80,6 +80,9 @@ function ListBox:initList(_item_height, _options)
     gfx.pushContext(img)
         gfx.setColor(gfx.kColorWhite)
         gfx.fillRoundRect(0, 0, self.width, self.height, 4)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setLineWidth(1)
+        gfx.drawRoundRect(0, 0, self.width, self.height, 4)
     gfx.popContext()
     self.listview.backgroundImage = img
 
@@ -94,13 +97,13 @@ function ListBox:initList(_item_height, _options)
             gfx.setColor(gfx.kColorBlack)
             gfx.fillRoundRect(x, y, width, height, 4)
             gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-            local _text = string.format("%s", _options[row].name)
+            local _text = _options[row].name
             local __w, __h = gfx.getTextSize(_text)
             gfx.drawText(_text, x + _self.text_offset/2, (y + height/2) - __h/2)
         else
             gfx.setFont(g_font_14)
             gfx.setImageDrawMode(gfx.kDrawModeCopy)
-            local _text = string.format("%s", _options[row].name)
+            local _text = _options[row].name
             local __w, __h = gfx.getTextSize(_text)
             gfx.drawText(_text, x + _self.text_offset/2, (y + height/2) - __h/2)
         end
@@ -155,8 +158,10 @@ function ListBox:initInputs()
 
             if math.abs(self.accumulated_crank) > _sensitivity then
                 if self.accumulated_crank < 0 then
+                    g_SoundManager:playMenuListChange()
                     self.listview:selectPreviousRow(false)
                 else
+                    g_SoundManager:playMenuListChange()
                     self.listview:selectNextRow(false)
                 end
                 self.accumulated_crank = 0
@@ -164,6 +169,10 @@ function ListBox:initInputs()
         end,
 
         AButtonUp = function ()
+            if #self.options == 0 then
+                return
+            end
+
             local s, r, c = self.listview:getSelection()
 
             if self.options[r].callback then
@@ -178,10 +187,12 @@ function ListBox:initInputs()
         end,
 
         upButtonDown = function ()
+            g_SoundManager:playMenuListChange()
             self.listview:selectPreviousRow(true, true, true)
         end,
 
         downButtonDown = function ()
+            g_SoundManager:playMenuListChange()
             self.listview:selectNextRow(true, true, true)
         end
 

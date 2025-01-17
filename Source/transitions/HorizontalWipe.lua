@@ -4,13 +4,26 @@ local gfx <const> = pd.graphics
 class('Wipe').extends(gfx.sprite)
 
 function Wipe:init(duration, dir, reversed)
-    self.imageTable = gfx.imagetable.new('assets/loading')
+
+    if g_SceneManager:getCurrentScene():isa(System) then
+        self.image = g_SceneManager:getCurrentScene():getCurrentBg()
+        print(self.image:getSize())
+        inContext(self.image, function ()
+
+            gfx.image.new('assets/loading'):draw(0,0)
+            
+        end)
+    else
+        self.image = gfx.image.new('assets/loading')
+    end
+
+    
     
     self:setZIndex(TRANSITIONS_Z_INDEX)
     self:setIgnoresDrawOffset(true)
     self:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
 
-    self:setImage(self.imageTable:getImage(30))
+    self:setImage(self.image)
 
     -- if reversed then
     --     self:setImage(self.imageTable:getImage(15))

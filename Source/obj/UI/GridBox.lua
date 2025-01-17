@@ -40,6 +40,7 @@ function GridBox:init(data, r, c, g_w, g_h, w, h, scale_icons)
     self.grid:setNumberOfRows(r)
     self.grid:setCellPadding(self.cell_padding, self.cell_padding, self.cell_padding, self.cell_padding)
     self.grid.backgroundImage = gfx.image.new(w, h, gfx.kColorClear)
+    self.grid:setScrollDuration(100)
 
     local _self = self
 
@@ -57,6 +58,7 @@ function GridBox:init(data, r, c, g_w, g_h, w, h, scale_icons)
         gfx.setColor(gfx.kColorWhite)
         if selected and _self:hasFocus() then
             gfx.setLineWidth(3)
+            --gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer4x4)
             gfx.drawRoundRect(x-1, y-1, width+1, height+1, 2)
         else
             gfx.setLineWidth(0)
@@ -87,14 +89,10 @@ end
 
 function GridBox:drawGrid()
 
-    local _w, _h = self:getSize()
-
-    gfx.pushContext(self:getImage())
+    inContext(self:getImage(), function ()
         gfx.clear()
-        gfx.setColor(self.grid_color)
         self.grid:drawInRect(0, 0, self:getSize())
-    gfx.popContext()
-
+    end)
     self:markDirty()
 end
 
@@ -105,6 +103,12 @@ function GridBox:remove()
 
     GridBox.super.remove(self)
 
+end
+
+function GridBox:update()
+    if self.grid.needsDisplay == true then
+        self:drawGrid()
+    end
 end
 
 function GridBox:initInputs()
@@ -118,14 +122,15 @@ function GridBox:initInputs()
 
             if math.abs(self.accumulated_crank) > _sensitivity then
                 if self.accumulated_crank > 0 then
+                    g_SoundManager:playMenuListChange()
                     self.grid:selectNextColumn(true)
                 else
+                    g_SoundManager:playMenuListChange()
                     self.grid:selectPreviousColumn(true)
                 end
                 if self.on_change then
                     self.on_change(self:getSelection())
                 end
-                self:drawGrid()
                 self.accumulated_crank = 0
             end
         end,
@@ -143,35 +148,35 @@ function GridBox:initInputs()
         end,
 
         upButtonDown = function ()
+            g_SoundManager:playMenuListChange()
             self.grid:selectPreviousRow(true)
             if self.on_change then
                 self.on_change(self:getSelection())
             end
-            self:drawGrid()
         end,
 
         downButtonDown = function ()
+            g_SoundManager:playMenuListChange()
             self.grid:selectNextRow(true)
             if self.on_change then
                 self.on_change(self:getSelection())
             end
-            self:drawGrid()
         end,
 
         leftButtonDown = function ()
+            g_SoundManager:playMenuListChange()
             self.grid:selectPreviousColumn(true)
             if self.on_change then
                 self.on_change(self:getSelection())
             end
-            self:drawGrid()
         end,
 
         rightButtonDown = function ()
+            g_SoundManager:playMenuListChange()
             self.grid:selectNextColumn(true)
             if self.on_change then
                 self.on_change(self:getSelection())
             end
-            self:drawGrid()
         end
 
     }

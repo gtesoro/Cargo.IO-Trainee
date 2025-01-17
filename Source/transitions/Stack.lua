@@ -14,7 +14,7 @@ function Stack:init(duration, blur)
     self:setIgnoresDrawOffset(true)
     gfx.setDrawOffset(0, 0)
 
-    self.timer = pd.timer.new(duration, 0, pd.display.getHeight(), pd.easingFunctions.linear)
+    self.timer = pd.timer.new(duration, 0, pd.display.getHeight(), pd.easingFunctions.outQuint)
 
     self.timer.updateCallback = function(timer)
         self.scene:moveTo(self.scene.x, -pd.display.getHeight()/2 + timer.value)

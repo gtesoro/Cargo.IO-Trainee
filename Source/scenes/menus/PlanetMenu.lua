@@ -10,17 +10,17 @@ facility_v_options['CloningFacility'] = {
     end
 }
 
-facility_v_options['FuelStation'] = {
-    name = 'Fuel Station',
+facility_v_options['Starport'] = {
+    name = 'Starport',
     callback = function ()
-        g_SceneManager:pushScene(FuelStation(), 'between menus')
+        g_SceneManager:pushScene(Starport(), 'between menus')
     end
 }
 
 facility_v_options['Market'] = {
     name = 'Market',
     callback = function ()
-        g_SceneManager:pushScene(Shop(
+        g_SceneManager:pushScene(Market(
             {
                 shop_items = {
                     Radar(),
@@ -41,8 +41,6 @@ facility_v_options['CargoHub'] = {
 }
 
 
-
-
 class('PlanetMenu').extends(GenericMenu)
 
 function PlanetMenu:init(data)
@@ -56,6 +54,7 @@ function PlanetMenu:init(data)
     self.data = data
 
     self.data.options = function ()
+        
         return self:getOptions(self.data.facilities)
     end
 
@@ -65,6 +64,10 @@ end
 function PlanetMenu:startScene()
 
     PlanetMenu.super.startScene(self)
+
+    local _delay = self.data.img_hd_delay or 100
+
+    self:setRightSide( AnimatedSprite(self.data.img_hd, _delay))
     
     self.label = TextBox(self.data.name, self.list_box.width, 10)
     self.label:setCenter(0.5, 1)
@@ -75,21 +78,15 @@ function PlanetMenu:startScene()
     self.label_shadow:setZIndex(2)
     self.label_shadow:add()
     self.label:add()
-    self.sprites:append(self.label)
-    self.sprites:append(self.label_shadow)
+    table.insert(self.sprites, self.label)
+    table.insert(self.sprites, self.label_shadow)
+
 
 end
 
 function PlanetMenu:add()
-
     PlanetMenu.super.add(self)
     g_SystemManager:getPlayer():setCurrentPlanet(self.data)
-    
-end
-
-function PlanetMenu:remove()
-    PlanetMenu.super.remove(self)
-    collectgarbage('collect')
 end
 
 function PlanetMenu:getOptions(facilities)
@@ -102,8 +99,4 @@ function PlanetMenu:getOptions(facilities)
 
     return _ret
 
-end
-
-function PlanetMenu:preload()
-    self.data.right_side = AnimatedSprite(self.data.img_hd, 100)
 end

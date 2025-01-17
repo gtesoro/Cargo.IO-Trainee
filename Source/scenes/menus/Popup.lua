@@ -6,18 +6,19 @@ class('Popup').extends(Scene)
 function Popup:init(data)
     Popup.super.init(self, data)
     self.previous_scene_img = gfx.getDisplayImage()
+    self:setZIndex(1000)
+    self.blur_duration = 100
 end
 
 function Popup:startScene()
 
     local _new_options = {}
 
+    g_SoundManager:playPopupIn()
+
     if self.data.options then
 
         for k,v in pairs(self.data.options) do
-
-            
-
             local _func = nil
 
             _func = function ()
@@ -26,6 +27,7 @@ function Popup:startScene()
                 end
                 if not v.no_exit then
                     self:unblur(function ()
+                        g_SoundManager:playPopupOut()
                         g_SceneManager:popScene('unstack')
                     end)
                 end
@@ -70,7 +72,7 @@ function Popup:initBg()
 
     self.bg_spr:moveTo(200,120)
 
-    self.sprites:append(self.bg_spr)
+    table.insert(self.sprites, self.bg_spr)
     
 end
 
@@ -106,7 +108,7 @@ function Popup:animateIn()
 end
 
 function Popup:unblur(callback)
-    local unblur_timer = pd.timer.new(250, 4, 0, pd.easingFunctions.inLinear)
+    local unblur_timer = pd.timer.new(self.blur_duration, 4, 0, pd.easingFunctions.inLinear)
     unblur_timer.updateCallback = function(timer)
         self:setImage(self.previous_scene_img:blurredImage(timer.value, 2, gfx.image.kDitherTypeBayer8x8))
         self:markDirty()
@@ -114,6 +116,7 @@ function Popup:unblur(callback)
 
     unblur_timer.timerEndedCallback = function ()
         self:setImage(nil)
+        self.ui_overlay:remove()
         callback()
     end
 end
@@ -123,6 +126,7 @@ function Popup:initInputs()
 
         BButtonUp = function ()
             self:unblur(function ()
+                g_SoundManager:playPopupOut()
                 g_SceneManager:popScene('unstack')
             end)
         end
@@ -167,8 +171,13 @@ function Popup:initDialog()
 
     local box = gfx.image.new(_w, _h)
     inContext(box, function ()
+        
         gfx.setColor(gfx.kColorWhite)
         gfx.fillRoundRect(0,0, _w,_h, 4)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setLineWidth(1)
+        gfx.drawRoundRect(0,0, _w,_h, 4)
+
         gfx.drawTextInRect(self.data.text, padding, padding, _w-padding, _h-padding)
     end)
 
@@ -179,22 +188,30 @@ function Popup:initDialog()
     self.box_spr_x = 200
 
     if self.list_box then
+        self.list_box:setZIndex(1002)
+        
+
         self.list_box_shadow = getShadowSprite(self.list_box)
-        self.sprites:append(self.list_box_shadow)
+        self.list_box_shadow:setZIndex(1002)
+        table.insert(self.sprites, self.list_box_shadow)
         self.list_box_x = (200 + _w/2) + padding/2
         self.list_box:moveTo(self.list_box_x, 120)
         self.list_box_shadow:moveTo(self.list_box_x + self.shdow_float, 120 + self.shdow_float)
-        self.sprites:append(self.list_box)
+        table.insert(self.sprites, self.list_box)
         self.box_spr_x = 200 - self.list_box.width/2 - padding/2
     end
 
     self.box_spr = gfx.sprite.new(box)
     self.box_spr:setZIndex(2)
     self.box_spr_shadow = getShadowSprite(self.box_spr)
-    self.sprites:append(self.box_spr_shadow)
+
+    self.box_spr:setZIndex(1002)
+    self.box_spr_shadow:setZIndex(1002)
+
+    table.insert(self.sprites, self.box_spr_shadow)
     self.box_spr:moveTo(self.box_spr_x, 120)
     self.box_spr_shadow:moveTo(self.box_spr_x + self.shdow_float, 120 + self.shdow_float)
-    self.sprites:append(self.box_spr)
+    table.insert(self.sprites, self.box_spr)
     
 end
 
@@ -224,10 +241,18 @@ function Popup:animateOut()
 
 end 
 
-function Popup:doUpdate()
+function Popup:doUpdate()   
 
     if not self.blur_timer_in then
-        self.blur_timer_in = pd.timer.new(250, 0, 4, pd.easingFunctions.inLinear)
+
+        self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
+        self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
+        self.ui_overlay:setZIndex(1005)
+        self.ui_overlay:add()
+
+        table.insert(self.sprites, self.ui_overlay)
+
+        self.blur_timer_in = pd.timer.new(self.blur_duration, 0, 4, pd.easingFunctions.inLinear)
         self.blur_timer_in.updateCallback = function(timer)
             self:setImage(self.previous_scene_img:blurredImage(timer.value, 2, gfx.image.kDitherTypeBayer8x8))
             self:markDirty()

@@ -79,8 +79,15 @@ end
 loadGame()
 
 function playdate.update()
-	pd.timer.updateTimers()
+	
+	
+
+	g_SystemManager:update()
+	g_NotificationManager:update()
+
 	gfx.sprite.update()
+
+	pd.timer.updateTimers()
 	
 	if g_fps then
 		playdate.drawFPS(0, 0)

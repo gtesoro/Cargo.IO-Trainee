@@ -47,6 +47,7 @@ function GenericInventory:generateContextMenu(grid)
     self.context_menu:setZIndex(2)
     self.context_menu.b_callback = function ()
         grid:focus()
+        g_SoundManager:playMenuListChange()
         self.context_menu:remove()
     end
     self.context_menu:focus()
@@ -60,12 +61,13 @@ function GenericInventory:initGrids()
         parent = self
     }
 
-    self.item_grid = GridBox(_grid_box_data, math.sqrt(g_SystemManager:getPlayer().inventory.capacity), math.sqrt(g_SystemManager:getPlayer().inventory.capacity), 40, 40)
+    self.item_grid = GridBox(_grid_box_data, math.max(math.ceil(#self.data.items/3),3), 3, 40, 40, 132, 132)
     self.item_grid:setGridColor(gfx.kColorWhite)
     self.item_grid:moveTo(100, 120)
     self.item_grid:setZIndex(1)
     self.item_grid:drawGrid()
     self.item_grid.a_callback = function ()
+        g_SoundManager:playMenuListChange()
         self:generateContextMenu(self.item_grid)
     end
 
@@ -91,8 +93,8 @@ function GenericInventory:initGrids()
     self.item_panel:add()
     self.item_panel:moveTo(280, 120)
 
-    self.sprites:append(self.item_grid)
-    self.sprites:append(self.item_panel)
+    table.insert(self.sprites, self.item_grid)
+    table.insert(self.sprites, self.item_panel)
 
 end
 
@@ -111,7 +113,7 @@ function GenericInventory:initBg()
     self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.bg_sprite:setZIndex(0)
     self.bg_sprite:add()
-    self.sprites:append(self.bg_sprite)
+    table.insert(self.sprites, self.bg_sprite)
 
     self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
     self.ui_overlay:setIgnoresDrawOffset(true)
@@ -119,7 +121,7 @@ function GenericInventory:initBg()
     self.ui_overlay:setZIndex(2)
     self.ui_overlay:add()
 
-    self.sprites:append(self.ui_overlay)
+    table.insert(self.sprites, self.ui_overlay)
 
 end
 

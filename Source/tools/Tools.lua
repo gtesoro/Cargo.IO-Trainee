@@ -45,6 +45,7 @@ function drawDottedEllipse(centerX, centerY, a, b, dotCount, dotRadius, rotation
         local y = centerY + b * math.sin(rotatedAngle)
         
         -- Draw a small circle (dot) at the calculated position
+        gfx.setColor(gfx.kColorWhite)
         playdate.graphics.fillCircleAtPoint(x, y, dotRadius)
     end
 end
@@ -125,13 +126,54 @@ function printTable(table)
 end
 
 
+function getFacilityImage(img, fixed)
+    local _flip = nil
+    if math.random(0, 1) > 0 then
+        --_flip = gfx.kImageFlippedX
+    end
+
+    local _base = gfx.image.new(img)
+    
+    local _scale = math.random(100, 150)/100
+    
+    local _x = math.random(200,300)
+    local _y = math.random(120,180)
+
+    if fixed then
+        _scale = 1
+        _x = _base.width/2
+        _y = _base.height/2
+        _flip = nil
+    end
+
+    local _right_side = _base:scaledImage(_scale)
+    
+
+    local dither_image = gfx.image.new(_base:getSize())
+    gfx.pushContext(dither_image)
+        _right_side:drawAnchored(_x, _y, 0.5, 0.5, _flip)
+    gfx.popContext()
+
+    dither_image:setMaskImage(gfx.image.new('assets/dither_mask'))
+
+    local _outline = gfx.image.new(string.format("%s_outline", img))
+    if _outline then
+        inContext(dither_image, function ()
+            _outline:scaledImage(_scale):drawAnchored(_x, _y, 0.5, 0.5, _flip)
+        end)
+    end
+
+    return dither_image
+    
+end
+
 function getShadowSprite(spr, hover)
 
     local img = gfx.image.new(spr:getSize())
 
     inContext(img, function ()
         gfx.setColor(gfx.kColorBlack)
-        gfx.setDitherPattern(0.8, gfx.image.kDitherTypeBayer8x8)
+        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
         gfx.fillRoundRect(0,0, img.width,img.height, 4)
     end)
 
@@ -144,10 +186,59 @@ function getShadowSprite(spr, hover)
 end
 
 function collectGarbage()
-    
-    local _b = collectgarbage("count")
-    collectgarbage("collect")
-    local _a = collectgarbage("count")
+    for i=0,5 do
+        local _b = collectgarbage("count")
+        collectgarbage("collect")
+        local _a = collectgarbage("count")
+        print(string.format('Garbage Collected %i %f Kb', i, _b - _a))
+    end
+end
+
+
+function arcInRect(arc, rect, samples)
+     samples = samples or 3
+
+     if (arc.x + arc.radius < rect.x) or (arc.x - arc.radius > rect.x + rect.width) then
+        return false
+     end
+
+     if (arc.y + arc.radius < rect.y) or (arc.y - arc.radius > rect.y + rect.height) then
+        return false
+     end
+
+    for d=0,samples-1  do
+        local _p = arc:pointOnArc(d*arc:length()/(samples-1))
+        if rect:containsPoint(_p) then
+            return true
+        end
+    end
+    return false
+end
+
+function systemNameFromCoords(x, y, z)
+
+    local z_name = 'N/A'
+
+    if z == 0 then
+        z_name = 'GEN'
+    end
+
+    local x_name = 'N/A'
+    if x >= 0 then
+        x_name = string.format('+%03d', x)
+    else
+        x_name = string.format('-%03d', math.abs(x))
+    end
+
+    local y_name = 'N/A'
+    if y >= 0 then
+        y_name = string.format('+%03d', y)
+    else
+        y_name = string.format('-%03d', math.abs(y))
+    end
+
+    return string.format('%s%s%s', z_name, x_name, y_name)
+
 end
 
 function getSignContractCallback(contract)
@@ -161,7 +252,7 @@ function getSignContractCallback(contract)
                 {
                     name='Yes',
                     callback= function ()
-                        if g_SystemManager:getPlayer():chargeMoney(contract:getSignPrice()) then
+                        if contract:canSign() then
                             
                             local _timer = pd.timer.new(1000, _image_viewer.image_sprite.y,_image_viewer.image_sprite.height/2 - 240, pd.easingFunctions.outCubic)
                             _timer.updateCallback = function (timer)
@@ -173,6 +264,8 @@ function getSignContractCallback(contract)
                                 inContext(_image_viewer.image_sprite:getImage(), function ()
                                     gfx.image.new('assets/contracts/contract_stamp'):drawAnchored(_image_viewer.image_sprite.width*0.8, _image_viewer.image_sprite.height*0.9, 0.5, 0.5)
                                 end)
+
+                                g_SoundManager:playStamp()
                                 
                                 _image_viewer.image_sprite:markDirty()
 
@@ -206,47 +299,78 @@ function createPopup(data)
     g_SceneManager:pushScene(Popup(data), 'stack')
 end
 
-function goTo(x, y, z, direction)
+function goTo(x, y, z, direction, no_last_position_update)
+
+    local _player = g_SystemManager:getPlayer()
 
     if not direction then
         direction = 'down'
     end
 
-    
-    local _label = string.format("%i.%i.%i", x, y, z)
-
-    if g_SystemManager:getPlayer().current_position then
-        g_SystemManager:getPlayer().last_position.x = g_SystemManager:getPlayer().current_position.x
-        g_SystemManager:getPlayer().last_position.y = g_SystemManager:getPlayer().current_position.y
-        g_SystemManager:getPlayer().last_position.z = g_SystemManager:getPlayer().current_position.z
+    if not no_last_position_update then
+        if _player.current_position then
+            _player.last_position.x = _player.current_position.x
+            _player.last_position.y = _player.current_position.y
+            _player.last_position.z = _player.current_position.z
+        end
     end
 
-    g_SystemManager:getPlayer().current_position.x = x
-    g_SystemManager:getPlayer().current_position.y = y
-    g_SystemManager:getPlayer().current_position.z = z
+    _player.current_position.x = x
+    _player.current_position.y = y
+    _player.current_position.z = z
 
-    local _s = g_SystemManager:getSystems()[_label]
+    local _s = g_SystemManager:getSystem(x, y, z)
 
     local _system = nil
 
+    _player.map[string.format("%i.%i.%i", x, y, z)] = {x,y,z}
+
     if _s then
         _system = _G[_s.class](_s)
-        g_SystemManager:getPlayer().map[_label] = _s
-        g_SceneManager:switchScene(_system, string.format('wipe %s', direction))
-        g_SystemManager:getPlayer():setCurrentSystem(_system)
+        --_player.map[_label] = _s
+        g_SceneManager:switchScene(_system, table.concat({'wipe ', direction}))
+        _player:setCurrentSystem(_system)
     else
-        local _empty = g_SystemManager:getSystems()['empty']
-        _empty.x = x
-        _empty.y = y
-        _empty.z = z
 
-        _system = EmptySystem(_empty)
-        g_SystemManager:getPlayer().map[_label] = {x = x, y = y, z = z, empty = true}
-        g_SceneManager:switchScene(_system, string.format('wipe %s', direction))
-        g_SystemManager:getPlayer():setCurrentSystem(_system)
+        _system = EmptySystem({
+            x = x,
+            y = y,
+            z = z
+        })
+        --_player.map[_label] = {x = x, y = y, z = z, empty = true}
+        g_SceneManager:switchScene(_system, table.concat({'wipe ', direction}))
+        _player:setCurrentSystem(_system)
     end
 
     g_SystemManager:save()
+
+end
+
+function isometricProjection(x, y, z, scale)
+
+    -- Angles to rotate around the X and Z axes
+    local angleX = math.rad(-35.264)  -- Convert to radians
+    local angleZ = math.rad(45)
+
+    -- Rotate around X-axis
+    local cosX = math.cos(angleX)
+    local sinX = math.sin(angleX)
+    local x1 = x
+    local y1 = y * cosX - z * sinX
+    local z1 = y * sinX + z * cosX
+
+    -- Rotate around Z-axis
+    local cosZ = math.cos(angleZ)
+    local sinZ = math.sin(angleZ)
+    local x2 = x1 * cosZ - y1 * sinZ
+    local y2 = x1 * sinZ + y1 * cosZ
+
+    -- Apply scaling
+    x2 = x2 * scale
+    y2 = y2 * scale
+
+    -- Return the isometrically projected and scaled x and y coordinates
+    return x2, y2
 
 end
 
@@ -270,6 +394,64 @@ function tableConcat(t1,t2)
         t1[#t1+1] = t2[i]
     end
     return t1
+end
+
+function getStatusImg()
+    
+    local img = gfx.image.new(180, 150)
+
+    gfx.setFont(g_font_text)
+
+    inContext(img, function ()
+        gfx.setColor(gfx.kColorBlack)
+        gfx.fillRoundRect(0,0,img.width, img.height, 2)
+
+        gfx.setColor(gfx.kColorWhite)
+        gfx.drawRoundRect(0,0,img.width, img.height, 2)
+
+        gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+
+        local _system_data = g_SystemManager:getPlayer():getCurrentSystem().data
+
+        local _data = "System."
+        gfx.drawTextAligned(_data, img.width*0.05, img.height*0.05, kTextAlignment.left)
+
+        _data = string.format("%s", _system_data.name) 
+        gfx.drawTextAligned(_data, img.width*0.95, img.height*0.05, kTextAlignment.right)
+
+        _data = "Loc."
+        gfx.drawTextAligned(_data, img.width*0.05, img.height*0.2, kTextAlignment.left)
+
+        _data = systemNameFromCoords(_system_data.x, _system_data.y, _system_data.z)
+        gfx.drawTextAligned(_data, img.width*0.95, img.height*0.2, kTextAlignment.right)
+
+        _data = "Cycle."
+        gfx.drawTextAligned(_data, img.width*0.05, img.height*0.35, kTextAlignment.left)
+
+        _data = string.format("%i.%02i", g_SystemManager:getCycle())
+        gfx.drawTextAligned(_data, img.width*0.95, img.height*0.35, kTextAlignment.right)
+
+        _data = "Credits."
+        gfx.drawTextAligned(_data, img.width*0.05, img.height*0.5, kTextAlignment.left)
+
+        _data = string.format("%iC", g_SystemManager:getPlayer().money)
+        gfx.drawTextAligned(_data, img.width*0.95, img.height*0.5, kTextAlignment.right)
+
+        gfx.drawTextAligned("Hull.", img.width*0.05, img.height*0.65, kTextAlignment.left)
+
+        _data = string.format("%i%%", 100)
+        gfx.drawTextAligned(_data, img.width*0.95, img.height*0.65, kTextAlignment.right)
+
+
+        gfx.drawTextAligned("Fuel.", img.width*0.05, img.height*0.80, kTextAlignment.left)
+        
+        _data = string.format("%i%%", math.floor(g_SystemManager:getPlayer().ship.fuel_current/g_SystemManager:getPlayer().ship.fuel_capacity*100 + 0.5))
+        gfx.drawTextAligned(_data, img.width*0.95, img.height*0.80, kTextAlignment.right)
+
+
+        gfx.setImageDrawMode(gfx.kDrawModeCopy)
+    end)
+    return img
 end
 
 function drawPauseMenu()
@@ -316,19 +498,19 @@ function drawPauseMenu()
     
 end
 
-function getRelativePoint(x, y, offsetX, offsetY, angle)
-    -- Convert the angle from degrees to radians
-    local radians = math.rad(angle)
+function getRelativePoint(cx, cy, offsetX, offsetY, angle)
+
+    local rad = angle * math.pi / 180
     
-    -- Rotate the offset vector by the given angle
-    local rotatedOffsetX = offsetX * math.cos(radians) - offsetY * math.sin(radians)
-    local rotatedOffsetY = offsetX * math.sin(radians) + offsetY * math.cos(radians)
+    -- Apply the rotation matrix to the offset
+    local rotatedX = offsetX * math.cos(rad) - offsetY * math.sin(rad)
+    local rotatedY = offsetX * math.sin(rad) + offsetY * math.cos(rad)
     
-    -- Calculate the new coordinates
-    local newX = x + rotatedOffsetX
-    local newY = y + rotatedOffsetY
+    -- Translate back to world coordinates by adding the center coordinates
+    local worldX = rotatedX + cx
+    local worldY = rotatedY + cy
     
-    return newX, newY
+    return worldX, worldY
 end
 
 function scaleAndCenterImage(image, canvas)
