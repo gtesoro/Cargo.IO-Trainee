@@ -6,7 +6,7 @@ class('EmptySystem').extends(System)
 function EmptySystem:startScene()
 
     self.data.background = self:getRandomBackground()
-    self.data.name = "Unknown"
+    self.data.bg_random_flip = true
     self.data.playfield_width = 2000
     self.data.playfield_height = 2000
     

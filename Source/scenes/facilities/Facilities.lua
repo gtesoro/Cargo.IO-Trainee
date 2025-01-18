@@ -9,21 +9,8 @@ function CargoHub:init()
 
     self.data.options = {
         {
-            name = 'Local Delivery Contract',
-            callback = function ()
-                if #g_SystemManager:getPlayer():getContractByType('DeliveryContract') > 0 then
-                    createPopup({text='You can only have one Quick Lock delivery contract at the same time.'})
-                else
-                    local _contract = DeliveryContract()
-                    _contract:generateLocalContract()
-                    getSignContractCallback(_contract)()
-                end
-            end
-        },
-        {
             name= "Deliver",
             callback = function ()
-                --g_SceneManager:pushScene(CargoHubDelivery(self.data), 'between menus')
 
                 local _items = {}
                 for k,v in pairs(g_SystemManager:getPlayer().inventory.items) do
@@ -42,7 +29,7 @@ function CargoHub:init()
                         columns=#_items,
                         a_callback= function (_self)
                             local _item = _self:getSelection()
-                            if _item.destination.name ~= g_SystemManager:getPlayer():getCurrentPlanet().name then
+                            if _item.destination.name ~= g_SystemManager:getPlayer():getCurrentLocation().name then
                                 createPopup({text='Wrong destination'})
                             else
                                 g_SystemManager:getPlayer():removeFromInventory(_item)
@@ -58,6 +45,23 @@ function CargoHub:init()
             end
         }
     }
+    local _locations = g_SystemManager:getPlayer():getCurrentSystem().locations
+    if _locations and #_locations > 1 then
+        table.insert(self.data.options, {
+            name = 'Local Delivery Contract',
+            callback = function ()
+                if #g_SystemManager:getPlayer():getContractByType('DeliveryContract') > 0 then
+                    createPopup({text='You can only have one Quick Lock delivery contract at the same time.'})
+                else
+                    local _contract = DeliveryContract()
+                    _contract:generateLocalContract()
+                    getSignContractCallback(_contract)()
+                end
+                
+            end
+        })
+    end
+
     self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/cargo_hub'))
 end
 
@@ -78,7 +82,7 @@ function CargoHubDelivery:init(data)
                 if not item:isa(QlCargo) then
                     createPopup({text='This hub only accepts Quick Lock cargo'})
                 else
-                    if item.destination.name ~= g_SystemManager:getPlayer():getCurrentPlanet().name then
+                    if item.destination.name ~= g_SystemManager:getPlayer():getCurrentLocation().name then
                         createPopup({text='Wrong destination'})
                     else
                         g_SystemManager:getPlayer():removeFromInventory(item)

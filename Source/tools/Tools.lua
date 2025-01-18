@@ -119,11 +119,11 @@ function stringToSeed(str)
     return hash
 end
 
-function printTable(table)
-    for k,v in pairs(table) do
-        print(k,v)
-    end
-end
+-- function printTable(table)
+--     for k,v in pairs(table) do
+--         print(k,v)
+--     end
+-- end
 
 
 function getFacilityImage(img, fixed)
@@ -411,12 +411,13 @@ function getStatusImg()
 
         gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 
-        local _system_data = g_SystemManager:getPlayer():getCurrentSystem().data
+        local _system = g_SystemManager:getPlayer():getCurrentSystem()
+        local _system_data = _system.data
 
         local _data = "System."
         gfx.drawTextAligned(_data, img.width*0.05, img.height*0.05, kTextAlignment.left)
 
-        _data = string.format("%s", _system_data.name) 
+        _data = string.format("%s", _system:getName()) 
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.05, kTextAlignment.right)
 
         _data = "Loc."
@@ -463,7 +464,7 @@ function drawPauseMenu()
         gfx.setColor(gfx.kColorWhite)
         if g_SystemManager:getPlayer().current_position.x then
             local _label = "System"
-            local _data = g_SystemManager:getPlayer():getCurrentSystem().data.name
+            local _data = g_SystemManager:getPlayer():getCurrentSystem():getName()
             
             --gfx.drawTextAligned(_label, img.width*0.05, img.height*0.3, kTextAlignment.left)
             gfx.drawTextAligned(_data, img.width*0.45, img.height*0.3, kTextAlignment.right)
@@ -513,7 +514,7 @@ function getRelativePoint(cx, cy, offsetX, offsetY, angle)
     return worldX, worldY
 end
 
-function scaleAndCenterImage(image, canvas)
+function scaleAndCenterImage(image, canvas, rand)
     -- Get the original image dimensions
     local imageWidth, imageHeight = image:getSize()
     
@@ -532,7 +533,32 @@ function scaleAndCenterImage(image, canvas)
 
     -- Draw the scaled image at the calculated position
     gfx.pushContext(canvas)
-        image:drawScaled(x, y, scale)
+        local _img = image
+        
+        if scale ~= 1 then
+            _img = image:scaledImage(scale)
+        end
+
+        local _flip = gfx.kImageUnflipped
+
+        if rand then
+            local _rand = math.random(0,3)
+
+            if _rand == 1 then
+                _flip = gfx.kImageFlippedX
+            end
+            if _rand == 2 then
+                _flip = gfx.kImageFlippedY
+            end
+            if _rand == 3 then
+                _flip = gfx.kImageFlippedY
+            end
+
+        end
+
+        _img:draw(x, x, _flip)
+
+
     gfx.popContext()
 end
 

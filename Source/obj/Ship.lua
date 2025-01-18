@@ -23,9 +23,16 @@ function Ship:init()
 	self.bosster_offset_x = 0
 	self.bosster_offset_y = 12
 	self.particle_tick = 2
-	--self.collisionResponse = gfx.sprite.kCollisionTypeBounce  
+	function self:collisionResponse(other)
+		print('Colliding with solid response', self.className, other.className)
+		if other.solid then
+			return gfx.sprite.kCollisionTypeBounce
+		else
+			return gfx.sprite.kCollisionTypeOverlap
+		end
+	end
 	self.speed_vector = playdate.geometry.vector2D.new(0,0)
-	self:setCollideRect( 0, 0, self:getSize() )
+	self:setCollideRect( self.width*0.35, self.height*0.35, self.width*0.25, self.height*0.25 )
 
 end
 
@@ -39,10 +46,7 @@ function Ship:remove()
 end
 
 function Ship:setZIndex(z)
-	Ship.super.setZIndex(self, z)
-
-
-	
+	Ship.super.setZIndex(self, z)	
 end
 
 function Ship:stop()
@@ -97,7 +101,16 @@ function Ship:doUpdate()
 	x = playdate.math.lerp(self.x, shipX, 0.5)
     y = playdate.math.lerp(self.y, shipY, 0.5)
 
-	self:moveTo(x, y)
+	local _a_x, _a_y, _collisions, _len = self:moveWithCollisions(x, y)
+	if _len > 0 then
+		for k,col in pairs(_collisions) do
+			print('Colliding with solid', col.other.solid)
+			if col.other.solid then
+				self.speed_vector = (self.speed_vector - (col.normal * (2*(self.speed_vector*col.normal)))) * 0.5
+				break
+			end
+		end
+	end
 
 	if self.move_ship then
 		local _x, _y = getRelativePoint(self.x, self.y, self.bosster_offset_x, self.bosster_offset_y, self.angle)

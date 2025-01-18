@@ -3,21 +3,21 @@ local gfx <const> = pd.graphics
 
 facility_v_options = {}
 
-facility_v_options['CloningFacility'] = {
+facility_v_options[FACILITY_CLONING] = {
     name = 'Namaste Cloning',
     callback = function ()
         g_SceneManager:pushScene(CloningFacility(), 'between menus')
     end
 }
 
-facility_v_options['Starport'] = {
+facility_v_options[FACILITY_STARPORT] = {
     name = 'Starport',
     callback = function ()
         g_SceneManager:pushScene(Starport(), 'between menus')
     end
 }
 
-facility_v_options['Market'] = {
+facility_v_options[FACILITY_MARKET] = {
     name = 'Market',
     callback = function ()
         g_SceneManager:pushScene(Market(
@@ -33,7 +33,7 @@ facility_v_options['Market'] = {
     end
 }
 
-facility_v_options['CargoHub'] = {
+facility_v_options[FACILITY_CARGO] = {
     name = 'Quick Lock Hub',
     callback = function ()
         g_SceneManager:pushScene(CargoHub(), 'between menus')
@@ -41,15 +41,15 @@ facility_v_options['CargoHub'] = {
 }
 
 
-class('PlanetMenu').extends(GenericMenu)
+class('LocationMenu').extends(GenericMenu)
 
-function PlanetMenu:init(data)
+function LocationMenu:init(data)
 
     self.b_callback = function ()
-        g_SystemManager:getPlayer():setCurrentPlanet(nil)
+        g_SystemManager:getPlayer():setCurrentLocation(nil)
     end
 
-    PlanetMenu.super.init(self)
+    LocationMenu.super.init(self)
 
     self.data = data
 
@@ -61,11 +61,11 @@ function PlanetMenu:init(data)
     
 end
 
-function PlanetMenu:startScene()
+function LocationMenu:startScene()
 
-    PlanetMenu.super.startScene(self)
+    LocationMenu.super.startScene(self)
 
-    local _delay = self.data.img_hd_delay or 100
+    local _delay = self.data.img_delay or 100
 
     self:setRightSide( AnimatedSprite(self.data.img_hd, _delay))
     
@@ -84,12 +84,12 @@ function PlanetMenu:startScene()
 
 end
 
-function PlanetMenu:add()
-    PlanetMenu.super.add(self)
-    g_SystemManager:getPlayer():setCurrentPlanet(self.data)
+function LocationMenu:add()
+    LocationMenu.super.add(self)
+    g_SystemManager:getPlayer():setCurrentLocation(self.data)
 end
 
-function PlanetMenu:getOptions(facilities)
+function LocationMenu:getOptions(facilities)
 
     local _ret = {}
 

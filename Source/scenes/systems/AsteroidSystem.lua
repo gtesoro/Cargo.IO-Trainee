@@ -27,6 +27,7 @@ function AsteroidSystem:initAsteroids()
             spr:setZIndex(1900)
             
             spr:setRotation(math.random(0, 359))
+            spr.collisionResponse = gfx.sprite.kCollisionTypeOverlap
             spr:setCollideRect( 0, 0, spr:getSize() )
             
             spr.linear_speed = math.random(20,100)/250

@@ -4,7 +4,7 @@ class('Planet').extends(playdate.graphics.sprite)
 
 function Planet:init(planet_data, image_table, orbit_size, tilt, speed, angle, outline, playfield_width, playfield_height)
 
-    self.planet_data = planet_data
+    self.location_data = planet_data
 
     self.MAX_DOTS = 10
     self.countdown = 3
@@ -54,7 +54,7 @@ function Planet:init(planet_data, image_table, orbit_size, tilt, speed, angle, o
 end
 
 function Planet:interact()
-    g_SceneManager:pushScene(PlanetMenu(self.planet_data), 'to menu')
+    g_SceneManager:pushScene(LocationMenu(self.location_data), 'to menu')
 end
 
 function Planet:add()

@@ -47,17 +47,6 @@ function SystemManager:unpause()
     self.cycle_timer:start()
 end
 
-function SystemManager:nextCycle()
-    
-    self.state.player.cycle += 1
-
-    for k, v in pairs(self.on_cycle) do
-        if v then
-            v(self.state.player.cycle)
-        end
-    end
-end
-
 function SystemManager:getCycle()
     return self.state.player.cycle, math.floor((self.cycle_timer.currentTime + self.cycle_compensation)*100/(self.cycle_length*60*1000))
 end
@@ -71,12 +60,8 @@ function SystemManager:update()
 end
 
 function SystemManager:death()
-    for k,f in pairs(self.on_death) do
-        f()
-        return
-    end
 
-    playdate.datastore.delete(self.autosave_filename)
+    pd.datastore.delete(self.autosave_filename)
     g_SceneManager:reset()
     g_SceneManager:pushScene(GameOver())
 
@@ -89,257 +74,8 @@ end
 
 
 function SystemManager:initStatic()
-    self.static = {}
+    self.static = getStaticData()
 
-    -- Planets
-    self.static.planets = {}
-
-    local _freja = {
-        img="assets/planets/planet3",
-        img_hd="assets/planets/placeholder_hd",
-        name="Freja",
-        orbit_size=300,
-        speed=1,
-        outline=true,
-        description=lorem_ipsum,
-        facilities= {
-            'Starport',
-            'CargoHub'
-        }
-    }
-
-    self.static.planets[#self.static.planets+1] = _freja
-    
-    local _thor = {
-        img="assets/planets/thor/thor",
-        img_hd="assets/planets/thor/thor_hd",
-        name="Thor",
-        orbit_size=500,
-        speed=1,
-        outline=true,
-        description=lorem_ipsum,
-        facilities= {
-            'Market',
-            'CargoHub'
-        }
-    }
-
-    self.static.planets[#self.static.planets+1] = _thor
-    
-    local _loki = {
-        img="assets/planets/loki/sd",
-        img_hd="assets/planets/loki/hd",
-        name="Loki",
-        orbit_size=600,
-        description=lorem_ipsum,
-        speed=0.5,
-        outline=true,
-        facilities= {
-            'CloningFacility',
-            'CargoHub'
-        }
-    }
-
-    self.static.planets[#self.static.planets+1] = _loki
-    
-    local _odin = {
-        img="assets/planets/planet1",
-        name="Odin",
-        img_hd="assets/planets/placeholder_hd",
-        orbit_size=900,
-        description=lorem_ipsum,
-        speed=0.3,
-        outline=true,
-        facilities= {
-            'CargoHub'
-        }
-    }
-
-    self.static.planets[#self.static.planets+1] = _odin
-
-    -- Systems
-    local _systems = {{{}}}
-    self.static.systems = _systems
-
-    local _sys = {
-        class = 'ValhallaStation',
-        name = "Valhalla Station",
-        x = 2,
-        y = 3,
-        z = 0,
-        playfield_width = 800,
-        playfield_height = 480,
-        background = "assets/backgrounds/space/empty_1",
-        thumbnail = function ()
-            return AnimatedSprite('assets/space/cylinder_station_thumb', 250)  
-        end
-    }
-    
-    
-    table.insert(_systems, _sys)
-    
-    local _sys = {
-        class = 'AsteroidSystem',
-        name = "Asteroid Belt",
-        x = 1,
-        y = 1,
-        z = 0,
-        playfield_width = 3200,
-        playfield_height = 1920,
-        background = "assets/backgrounds/space/asteroid_belt",
-        asteroid_count = 10,
-        thumbnail = function ()
-            return AnimatedSprite("assets/asteroids/thumbnail", 100)  
-        end
-    }
-    
-    
-    table.insert(_systems, _sys)
-    
-    _sys = {
-        class = 'AsteroidSystem',
-        name = "Asteroid Belt",
-        x = 1,
-        y = -1,
-        z = 0,
-        playfield_width = 3200,
-        playfield_height = 1920,
-        background = "assets/backgrounds/space/asteroid_belt",
-        asteroid_count = 10,
-        thumbnail = function ()
-            return AnimatedSprite("assets/asteroids/thumbnail", 100)  
-        end,
-    }
-    
-    table.insert(_systems, _sys)
-    
-    _sys = {
-        class = 'AsteroidSystem',
-        name = "Asteroid Belt",
-        x = 0,
-        y = -2,
-        z = 0,
-        playfield_width = 3200,
-        playfield_height = 1920,
-        background = "assets/backgrounds/space/asteroid_belt",
-        asteroid_count = 10,
-        thumbnail = function ()
-            return AnimatedSprite("assets/asteroids/thumbnail", 100)  
-        end,
-    }
-    
-    table.insert(_systems, _sys)
-    
-    _sys = {
-        class = 'AsteroidSystem',
-        name = "Asteroid Belt",
-        x = -1,
-        y = -1,
-        z = 0,
-        playfield_width = 3200,
-        playfield_height = 1920,
-        background = "assets/backgrounds/space/asteroid_belt",
-        asteroid_count = 10,
-        thumbnail = function ()
-            return AnimatedSprite("assets/asteroids/thumbnail", 100)  
-        end,
-    }
-    
-    table.insert(_systems, _sys)
-    
-    _sys = {
-        class = 'AsteroidSystem',
-        name = "Asteroid Belt",
-        x = -2,
-        y = 0,
-        z = 0,
-        playfield_width = 3200,
-        playfield_height = 1920,
-        background = "assets/backgrounds/space/asteroid_belt",
-        asteroid_count = 10,
-        thumbnail = function ()
-            return AnimatedSprite("assets/asteroids/thumbnail", 100)  
-        end,
-    }
-    
-    table.insert(_systems, _sys)
-    
-    _sys = {
-        class = 'AsteroidSystem',
-        name = "Asteroid Belt",
-        x = -1,
-        y = 1,
-        z = 0,
-        playfield_width = 3200,
-        playfield_height = 1920,
-        background = "assets/backgrounds/space/asteroid_belt",
-        asteroid_count = 10,
-        thumbnail = function ()
-            return AnimatedSprite("assets/asteroids/thumbnail", 100)  
-        end,
-    }
-    
-    table.insert(_systems, _sys)
-    
-    _sys = {
-        class = 'AsteroidSystem',
-        name = "Asteroid Belt",
-        x = 0,
-        y = 2,
-        z = 0,
-        playfield_width = 3200,
-        playfield_height = 1920,
-        background = "assets/backgrounds/space/asteroid_belt",
-        asteroid_count = 10,
-        thumbnail = function ()
-            return AnimatedSprite("assets/asteroids/thumbnail", 100)  
-        end,
-    }
-    
-    table.insert(_systems, _sys)
-    
-    _sys = {
-        class = 'AsteroidSystem',
-        name = "Asteroid Belt",
-        x = 2,
-        y = 0,
-        z = 0,
-        playfield_width = 3200,
-        playfield_height = 1920,
-        background = "assets/backgrounds/space/asteroid_belt",
-        asteroid_count = 10,
-        thumbnail = function ()
-            return AnimatedSprite("assets/asteroids/thumbnail", 100)  
-        end,
-    }
-    
-    
-    table.insert(_systems, _sys)
-    
-    _sys = {
-        class = 'PlanetSystem',
-        name = "Yggdrasil",
-        x = 0,
-        y = 0,
-        z = 0,
-        playfield_width = 2000,
-        playfield_height = 2000,
-        background = "assets/backgrounds/space/yggdrasil",
-        sun = "assets/planets/star",
-        angle = 0.6,
-        planets = {
-            _freja, 
-            _thor,
-            _odin,
-            _loki
-        },
-        thumbnail = function ()
-            return AnimatedSprite("assets/planets/star", 100, 1)  
-        end
-
-    }
-    
-    table.insert(_systems, _sys)
 end
 
 function SystemManager:initState()
@@ -396,15 +132,55 @@ function SystemManager:initState()
     return self.state
 end
 
-function SystemManager:addOnCycle(id, func)
-    self.on_cycle[id] = func
-end
+function SystemManager:initCycleManagement()
 
-function SystemManager:removeOnCycle(id)
-    self.on_cycle[id] = nil
+    g_EventManager:subscribe('notify', EVENT_NEXT_CYCLE, function (cycle)
+        g_NotificationManager:notify(string.format("Cycle %i", cycle), nil, false)
+    end)
+
+    if self.cycle_timer then
+        self.cycle_timer:pause()
+        self.cycle_timer:remove()
+    end
+
+    if self.state.player.cycle_time ~= 0 then
+        self.cycle_timer = pd.timer.new(self.cycle_length*60*1000 - self.state.player.cycle_time)
+        self.cycle_compensation = self.state.player.cycle_time
+
+        self.cycle_timer.timerEndedCallback = function ()
+            print('Cycle Finished')
+            g_SystemManager:getPlayer().cycle += 1
+            g_EventManager:trigger(EVENT_NEXT_CYCLE, g_SystemManager:getCycle())
+            self.cycle_compensation = 0
+            self.cycle_timer = pd.timer.new(self.cycle_length*60*1000)
+            self.cycle_timer.repeats = true
+
+            self.cycle_timer.timerEndedCallback = function ()
+                g_SystemManager:getPlayer().cycle += 1
+                g_EventManager:trigger(EVENT_NEXT_CYCLE, g_SystemManager:getCycle())
+            end
+        end
+
+    else
+        self.cycle_compensation = 0
+        self.cycle_timer = pd.timer.new(self.cycle_length*60*1000)
+        self.cycle_timer.repeats = true
+
+        self.cycle_timer.timerEndedCallback = function ()
+            g_SystemManager:getPlayer().cycle += 1
+            g_EventManager:trigger(EVENT_NEXT_CYCLE, g_SystemManager:getCycle())
+        end
+
+    end
+    
+
+    self.cycle_timer:pause()
+    
 end
 
 function SystemManager:load(file)
+
+    g_EventManager:reset()
 
     if not file then
         file = self.autosave_filename
@@ -417,41 +193,12 @@ function SystemManager:load(file)
         self.state = self:initState()
     end
 
-    -- Cycle Control --
-    self.on_cycle = {}
-
-    self.on_cycle['notify'] = function (cycle)
-        g_NotificationManager:notify(string.format("Cycle %i", cycle), nil, false)
-    end
-
-    if self.state.player.cycle_time ~= 0 then
-        self.cycle_timer = pd.timer.new(self.cycle_length*60*1000 - self.state.player.cycle_time)
-        self.cycle_compensation = self.state.player.cycle_time
-
-        self.cycle_timer.timerEndedCallback = function ()
-            self:nextCycle()
-            self.cycle_compensation = 0
-            self.cycle_timer = pd.timer.new(self.cycle_length*60*1000)
-            self.cycle_timer.repeats = true
-
-            self.cycle_timer.timerEndedCallback = function ()
-                self:nextCycle()
-            end
-        end
-
-    else
-        self.cycle_compensation = 0
-        self.cycle_timer = pd.timer.new(self.cycle_length*60*1000)
-        self.cycle_timer.repeats = true
-
-        self.cycle_timer.timerEndedCallback = function ()
-            self:nextCycle()
-        end
-
-    end
+    self:initCycleManagement()
     
 
-    self.cycle_timer:pause()
+    g_EventManager:subscribe('death', EVENT_DEATH, function ()
+        g_SystemManager:death()
+    end)
 
     -- Load Sateful objects
     for _, table in pairs({ self.state.player.inventory.items, self.state.player.contracts, self.state.player.ship.loadout.items}) do
@@ -550,17 +297,17 @@ function SystemManager:getSystemByName(system)
     return nil
 end
 
-function SystemManager:getPlanet(planet)
-    for k,v in pairs(self.static.planets) do
-        if v.name == planet then
+function SystemManager:getLocation(location)
+    for k,v in pairs(self.static.locations) do
+        if v.name == location then
             return v
         end
     end
 end
 
-function SystemManager:getPlanets()
+function SystemManager:getLocations()
     if self.state then
-        return self.static.planets
+        return self.static.locations
     end
     return nil
 end
@@ -670,12 +417,12 @@ function Player:getCurrentSystem()
     return self.current_system 
 end
 
-function Player:setCurrentPlanet(planet)
-    self.current_planet = planet
+function Player:setCurrentLocation(location)
+    self.current_location = location
 end
 
-function Player:getCurrentPlanet()
-    return self.current_planet 
+function Player:getCurrentLocation()
+    return self.current_location 
 end
 
 function Player:doHullDamage(amount)

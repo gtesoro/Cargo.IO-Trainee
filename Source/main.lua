@@ -29,6 +29,7 @@ local function loadGame()
 	playdate.display.setRefreshRate(50)
 	gfx.setBackgroundColor(playdate.graphics.kColorClear)
 
+	g_EventManager = EventManager()
 	g_SystemManager = SystemManager()
 	g_SoundManager = SoundManager()
 	g_NotificationManager = NotificationManager()
@@ -48,6 +49,8 @@ local function loadGame()
 	end)
 
 	once = true
+
+	LDtk.load( "stages/test.ldtk" )
 
 end
 

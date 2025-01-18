@@ -47,6 +47,7 @@ function PlayerMenu:init()
         },
         {
             name = 'Functions',
+            sprite = gfx.sprite.new(gfx.image.new('assets/menus/functions')),
             callback = function ()
                 g_SceneManager:pushScene(FunctionsMenu(), 'between menus')
             end
@@ -75,12 +76,14 @@ function FunctionsMenu:init()
                             name='Yes',
                             no_exit=true,
                             callback= function ()
+                                g_SoundManager:stopComputerHum()
                                 g_SystemManager:disableControl()
                                 g_SceneManager:popToSystem()
-                                local _t = pd.timer.new(1000)
+                                g_SoundManager:playChoking()
+                                local _t = pd.timer.new(3000)
                                 _t.timerEndedCallback = function ()
                                     g_SystemManager:enableControl()
-                                    g_SystemManager:death()
+                                    g_EventManager:trigger(EVENT_DEATH)
                                 end
                             end
                         },
@@ -204,7 +207,6 @@ function CodexPlanetListMenu:init()
 
     CodexPlanetListMenu.super.init(self)
 
-
     local _list = {}
         
     for k, v in pairs(g_SystemManager:getPlayer().codex.planets) do
@@ -227,11 +229,11 @@ function CodexPlanetListMenu:init()
     self.data.options = _list
 end
 
-class('CodexPlanetMenu').extends(GenericMenu)
+class('CodexLocationMenu').extends(GenericMenu)
 
-function CodexPlanetMenu:init()
+function CodexLocationMenu:init()
 
-    CodexPlanetMenu.super.init(self)
+    CodexLocationMenu.super.init(self)
     self.data.options = {}
 end
 

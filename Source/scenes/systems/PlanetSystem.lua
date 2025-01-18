@@ -7,18 +7,18 @@ function PlanetSystem:startScene()
 
     PlanetSystem.super.startScene(self)
 
-    self:initPlanets()
     self:initOrbits()
     
 end
 
-function PlanetSystem:initPlanets() 
+function PlanetSystem:initLocations() 
     self.planets = {}
 
-    if self.data.planets then
-        for k,v in pairs(self.data.planets) do
+    if self.data.locations then
+        for k,v in pairs(self.data.locations) do
             local p = Planet(v, v.img, v.orbit_size, self.data.angle, v.speed, math.random(0, 360), v.outline, self.data.playfield_width, self.data.playfield_height)
             self.planets[#self.planets+1] = p
+            table.insert(self.locations, p)
             table.insert(self.sprites, p)
         end
     end

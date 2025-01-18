@@ -5,7 +5,13 @@ class('System').extends(Scene)
 
 function System:startScene()
 
-    g_NotificationManager:notify(self.data.name)
+    self.locations = {}
+
+    if self.data.name then
+        g_NotificationManager:notify(self.data.name)
+    else
+        g_NotificationManager:notify(systemNameFromCoords(self.data.x, self.data.y, self.data.z))
+    end
 
     self.x_offset = 0
     self.y_offset = 0
@@ -23,6 +29,7 @@ function System:startScene()
     self:initInputs()
     self:moveCamera()
     self:initUI()
+    self:initLocations()
 end
 
 function System:add()
@@ -64,6 +71,38 @@ function System:setSelectionSprite(spr)
 
     self.selection_spr:add()
 
+end
+
+function System:getName()
+
+    if self.data.name then
+        return self.data.name
+    else
+        return "Unknown"
+    end
+end
+
+function System:initLocations()
+
+    if not self.data.locations then
+        return 
+    end
+    
+    for k,loc in pairs(self.data.locations) do
+        local _loc = AnimatedSprite(loc.img, loc.img_delay or 100)
+        _loc:moveTo(loc.x, loc.y)
+        _loc:setZIndex(loc.z_index or 1)
+        _loc:add()
+        _loc.collisionResponse = gfx.sprite.kCollisionTypeOverlap
+        _loc:setCollideRect( 0, 0, _loc:getSize() )
+        _loc.interactuable = true
+        function _loc:interact()
+            g_SceneManager:pushScene(LocationMenu(loc), 'to menu')
+        end
+        table.insert(self.locations, _loc)
+        table.insert(self.sprites, _loc)
+    end
+    
 end
 
 function System:updateSelectionSprite()
@@ -121,8 +160,19 @@ end
 function System:initBg()
 
     local img = gfx.image.new(self.data.playfield_width, self.data.playfield_height)
-    local bg = gfx.image.new(self.data.background)--:blurredImage(1, 2, gfx.image.kDitherTypeBayer8x8) 
-    scaleAndCenterImage(bg, img)
+    local bg = nil
+    if not self.data.background then
+        bg = gfx.image.new(self.data.playfield_width, self.data.playfield_height, gfx.kColorBlack)
+    else
+        bg = gfx.image.new(self.data.background)
+    end
+
+    if self.data.blur_bg then
+        print('Blurring')
+        bg = bg:blurredImage(5, 2, gfx.image.kDitherTypeBayer8x8) 
+    end
+    
+    scaleAndCenterImage(bg, img, self.data.bg_random_flip)
 
     self.bg_sprite = gfx.sprite.new(img)
     self.bg_sprite:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)

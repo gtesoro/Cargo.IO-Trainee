@@ -5,17 +5,15 @@ class('Wipe').extends(gfx.sprite)
 
 function Wipe:init(duration, dir, reversed)
 
-    if g_SceneManager:getCurrentScene():isa(System) then
+    if g_SceneManager:getCurrentScene() and g_SceneManager:getCurrentScene():isa(System) then
         self.image = g_SceneManager:getCurrentScene():getCurrentBg()
-        print(self.image:getSize())
-        inContext(self.image, function ()
-
-            gfx.image.new('assets/loading'):draw(0,0)
-            
-        end)
     else
-        self.image = gfx.image.new('assets/loading')
+        self.image = gfx.image.new(400, 240, gfx.kColorBlack)
     end
+
+    inContext(self.image, function ()
+        gfx.image.new('assets/loading'):draw(0,0)
+    end)
 
     
     

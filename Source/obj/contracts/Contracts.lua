@@ -45,7 +45,7 @@ function Contract:getContractImage()
         
         gfx.setFont(g_font_14)
 
-        _system_name = g_SystemManager:getPlayer():getCurrentSystem().data.name
+        _system_name = g_SystemManager:getPlayer():getCurrentSystem():getName()
         local _cycle, _time = g_SystemManager:getCycle()
 
         if self.state.sign_system then
@@ -187,11 +187,12 @@ end
 
 function CloningContract:onGain()
 
-    g_SystemManager.on_death[self.name] = function ()
+    g_EventManager:subscribe(self.name, EVENT_DEATH, function ()
         self:onDeath()
-    end
+    end, 0, true)
 
-    g_SystemManager:addOnCycle(self.name, function (cycle)
+
+    g_EventManager:subscribe(self.name, EVENT_NEXT_CYCLE, function (cycle)
         self:cycleCheck(cycle)
     end)
 
@@ -199,8 +200,8 @@ end
 
 function CloningContract:onLose()
 
-    g_SystemManager.on_death[self.name] = nil
-    g_SystemManager:removeOnCycle(self.name)
+    g_EventManager:unsubscribe(self.name, EVENT_DEATH)
+    g_EventManager:unsubscribe(self.name, EVENT_NEXT_CYCLE)
 
 end
 
@@ -242,16 +243,15 @@ function DeliveryContract:generateLocalContract()
 
     math.randomseed(g_SystemManager:getPlayer().cycle + stringToSeed(_current_system.data.name))
 
-    local _planets = _current_system.data.planets
+    local _locations = _current_system.locations
 
     self.state.destination_system = _current_system.data
-    self.state.destination = _planets[math.random(1, #_planets)]
-    while self.state.destination == g_SystemManager:getPlayer():getCurrentPlanet() do
-        self.state.destination = _planets[math.random(1, #_planets)]
+    self.state.destination = _locations[math.random(1, #_locations)].location_data
+    while self.state.destination == g_SystemManager:getPlayer():getCurrentLocation() do
+        self.state.destination = _planets[math.random(1, #_locations)]
     end
     self.state.length = 1
     self.state.reward = math.random(50, 100)
-    printTable(g_SystemManager:getGlobalState())
     if g_SystemManager:getGlobalState().ql_number == nil then
         g_SystemManager:getGlobalState().ql_number = 1
     else

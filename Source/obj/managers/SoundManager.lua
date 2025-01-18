@@ -42,6 +42,9 @@ function SoundManager:init()
     self.computer_hum = pd.sound.fileplayer.new('assets/sounds/cassete_hum')
     self.computer_hum:setVolume(0.2)
 
+    self.choking = pd.sound.fileplayer.new('assets/sounds/choking')
+    self.choking:setVolume(1)
+
 
 end
 
@@ -122,6 +125,10 @@ end
 
 function SoundManager:stopComputerHum()
     self.computer_hum:stop()
+end
+
+function SoundManager:playChoking()
+    self.choking:play(1)
 end
 
 function SoundManager:playDegauss()
