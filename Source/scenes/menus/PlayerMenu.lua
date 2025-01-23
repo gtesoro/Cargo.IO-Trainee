@@ -146,9 +146,9 @@ function CodexListMenu:init()
             end
         },
         {
-            name = "Planets",
+            name = "Locations",
             callback = function ()
-                g_SceneManager:pushScene(CodexPlanetListMenu(), 'between menus')
+                g_SceneManager:pushScene(CodexLocationListMenu(), 'between menus')
             end
         }
     }
@@ -165,9 +165,11 @@ function NotificationsMenu:init()
     local _table = g_SystemManager:getPlayer().notifications
     for i = #_table, 1, -1 do
         _list[#_list+1] = {
-            name = string.format("Cycle %i - %s", _table[i].cycle, _table[i].text)
+            name = string.format("Cycle %i.%02d - %s", _table[i].cycle, _table[i].time, _table[i].text)
         }
     end
+
+    self.list_box_w = 330
 
     self.data.options = _list
 end
@@ -176,7 +178,7 @@ class('CodexSystemListMenu').extends(GenericMenu)
 
 function CodexSystemListMenu:init()
 
-    CodexPlanetListMenu.super.init(self)
+    CodexLocationListMenu.super.init(self)
 
     local _list = {}
         
@@ -201,23 +203,23 @@ function CodexSystemListMenu:init()
 end
 
 
-class('CodexPlanetListMenu').extends(GenericMenu)
+class('CodexLocationListMenu').extends(GenericMenu)
 
-function CodexPlanetListMenu:init()
+function CodexLocationListMenu:init()
 
-    CodexPlanetListMenu.super.init(self)
+    CodexLocationListMenu.super.init(self)
 
     local _list = {}
         
-    for k, v in pairs(g_SystemManager:getPlayer().codex.planets) do
-        local _planet = g_SystemManager:getPlanet(v)
+    for k, v in pairs(g_SystemManager:getPlayer().codex.locations) do
+        local _location = g_SystemManager:getLocation(v)
         _list[#_list+1] = {
-            name = _planet.name,
+            name = _location.name,
             sprite = function ()
-                return AnimatedSprite(_planet.img, 100)
+                return AnimatedSprite(_location.img, 100)
             end,
             callback = function ()
-                g_SceneManager:pushScene(ImageViewer({image=PlanetDescription(_planet)}), 'between menus')
+                g_SceneManager:pushScene(ImageViewer({image=PlanetDescription(_location)}), 'between menus')
             end
         }
     end

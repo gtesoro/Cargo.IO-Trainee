@@ -62,7 +62,8 @@ function CargoHub:init()
         })
     end
 
-    self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/cargo_hub'))
+    self.data.right_side = gfx.sprite.new(getImageWithDitherMask('assets/facilities/cargo_hub'))
+
 end
 
 class('CargoHubDelivery').extends(GenericInventory)
@@ -129,7 +130,7 @@ function CloningFacility:init()
     self.data.right_sise_x = 200
     self.data.right_sise_y = 120
 
-    self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/namaste', true))
+    self.data.right_side = gfx.sprite.new(getImageWithDitherMask('assets/facilities/namaste', true))
 end
 
 class('Starport').extends(GenericMenu)
@@ -171,7 +172,7 @@ function Starport:init()
     self.data.right_sise_x = 200
     self.data.right_sise_y = 120
 
-    self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/starport'))
+    self.data.right_side = gfx.sprite.new(getImageWithDitherMask('assets/facilities/starport'))
     
 end
 
@@ -199,7 +200,7 @@ function Market:init(data)
     self.data.right_sise_x = 200
     self.data.right_sise_y = 120
 
-    self.data.right_side = gfx.sprite.new(getFacilityImage('assets/facilities/market_2', true)) --gfx.sprite.new(gfx.image.new('assets/facilities/market'))
+    self.data.right_side = gfx.sprite.new(getImageWithDitherMask('assets/facilities/market_2', true)) --gfx.sprite.new(gfx.image.new('assets/facilities/market'))
     
 end
 

@@ -247,8 +247,9 @@ function DeliveryContract:generateLocalContract()
 
     self.state.destination_system = _current_system.data
     self.state.destination = _locations[math.random(1, #_locations)].location_data
+
     while self.state.destination == g_SystemManager:getPlayer():getCurrentLocation() do
-        self.state.destination = _planets[math.random(1, #_locations)]
+        self.state.destination = _locations[math.random(1, #_locations)].location_data
     end
     self.state.length = 1
     self.state.reward = math.random(50, 100)
@@ -266,11 +267,11 @@ end
 
 function DeliveryContract:renderText()
 
-    return string.format(self.contract_text, self.state.destination.name, 
-                                                           self.state.destination_system.name,
-                                                           g_SystemManager:getPlayer().cycle+self.state.length,
-                                                           self.state.reward 
-                                      )
+    return string.format(self.contract_text, 
+                         self.state.destination.name, 
+                         self.state.destination_system.name,
+                         g_SystemManager:getPlayer().cycle+self.state.length,
+                         self.state.reward)
 
 end
 

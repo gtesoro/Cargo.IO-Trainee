@@ -126,29 +126,25 @@ end
 -- end
 
 
-function getFacilityImage(img, fixed)
+function getImageWithDitherMask(img, blurred)
     local _flip = nil
     if math.random(0, 1) > 0 then
         --_flip = gfx.kImageFlippedX
     end
 
     local _base = gfx.image.new(img)
-    
-    local _scale = math.random(100, 150)/100
-    
-    local _x = math.random(200,300)
-    local _y = math.random(120,180)
 
-    if fixed then
-        _scale = 1
-        _x = _base.width/2
-        _y = _base.height/2
-        _flip = nil
+    if blurred then
+        _base = _base:blurredImage(1, 2, gfx.image.kDitherTypeScreen)
     end
+
+    local _scale = 1
+    local _x = _base.width/2
+    local _y = _base.height/2
+    local _flip = nil
 
     local _right_side = _base:scaledImage(_scale)
     
-
     local dither_image = gfx.image.new(_base:getSize())
     gfx.pushContext(dither_image)
         _right_side:drawAnchored(_x, _y, 0.5, 0.5, _flip)
@@ -164,6 +160,59 @@ function getFacilityImage(img, fixed)
     end
 
     return dither_image
+    
+end
+
+function applyDistortionVCR(sprite)
+    local _spr_img_orig = sprite:getImage():copy()
+    local _timer = pd.timer.new(math.random(5000, 8000))
+    _timer.flicker_duration = math.random(100, 300)
+    _timer.repeats = true
+    _timer.updateCallback = function (timer)
+        if timer.timeLeft < timer.flicker_duration then
+            if g_SystemManager:isTick(2) then
+                sprite:setImage(_spr_img_orig:vcrPauseFilterImage())
+            else
+                sprite:setImage(_spr_img_orig)
+            end
+            sprite:markDirty()
+        end
+        sprite:markDirty()
+        
+    end
+    _timer.timerEndedCallback = function (timer)
+        sprite:setImage(_spr_img_orig)
+        sprite:markDirty()
+        timer.duration = math.random(5000, 8000)
+        timer.flicker_duration = math.random(150, 300)
+    end
+
+    return _timer
+end
+
+function rumbleSprite(spr, duration, distance, delay)
+
+    if spr.rumbling then
+        return
+    end
+    
+    local _duration = duration or 999999999999
+    local _distance = distance or 2
+    local _delay = delay or 0
+
+    local _t = pd.timer.new(_duration)
+    local _x, _y = spr.x, spr.y
+    _t.delay = _delay
+    spr.rumbling = true
+    _t.updateCallback = function (timer)
+        spr:moveTo(_x + math.random(-_distance, _distance), _y + math.random(-_distance, _distance))
+    end
+    _t.timerEndedCallback = function (timer)
+        spr.rumbling = false
+        spr:moveTo(_x, _y)
+    end
+
+    return _t
     
 end
 

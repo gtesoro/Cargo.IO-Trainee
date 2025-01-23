@@ -24,7 +24,6 @@ function Ship:init()
 	self.bosster_offset_y = 12
 	self.particle_tick = 2
 	function self:collisionResponse(other)
-		print('Colliding with solid response', self.className, other.className)
 		if other.solid then
 			return gfx.sprite.kCollisionTypeBounce
 		else
@@ -104,7 +103,6 @@ function Ship:doUpdate()
 	local _a_x, _a_y, _collisions, _len = self:moveWithCollisions(x, y)
 	if _len > 0 then
 		for k,col in pairs(_collisions) do
-			print('Colliding with solid', col.other.solid)
 			if col.other.solid then
 				self.speed_vector = (self.speed_vector - (col.normal * (2*(self.speed_vector*col.normal)))) * 0.5
 				break
@@ -115,7 +113,9 @@ function Ship:doUpdate()
 	if self.move_ship then
 		local _x, _y = getRelativePoint(self.x, self.y, self.bosster_offset_x, self.bosster_offset_y, self.angle)
 		if g_SystemManager:isTick(self.particle_tick) then
-			Particle(self.booster_table, _x, _y, 100)
+			local _p = Particle(self.booster_table, _x, _y, 100)
+			_p:setZIndex(self:getZIndex())
+			
 		end
 	end
 

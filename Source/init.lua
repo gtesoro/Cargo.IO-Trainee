@@ -16,6 +16,10 @@ import "data/Static"
 import "tools/List"
 import "tools/Map"
 
+import "obj/AnimatedSprite"
+import "obj/Masker"
+
+
 import "obj/managers/EventManager"
 import "obj/managers/SceneManager"
 import "obj/managers/NotificationManager"
@@ -25,9 +29,9 @@ import "obj/managers/SoundManager"
 import "obj/Stateful"
 import "obj/items/Items"
 
-import "obj/AnimatedSprite"
-import "obj/Masker"
 import "obj/TextBox"
+
+
 
 import "obj/contracts/contracts"
 
@@ -44,9 +48,10 @@ import "scenes/Scene"
 import "obj/UI/ItemPanel"
 import "obj/UI/ItemPanelShop"
 import "obj/UI/ListBox"
+import "obj/UI/TextBubble"
+import "obj/UI/TextSelectionBox"
 import "obj/UI/GridBox"
 import "obj/UI/Codex"
-
 
 import "scenes/tools/Snapshot"
 import "scenes/MiningLaser"
@@ -60,6 +65,7 @@ import "scenes/menus/GenericMenu"
 import "scenes/menus/GenericInventory"
 import "scenes/menus/PlayerMenu"
 import "scenes/menus/Map"
+import "scenes/menus/Dialogue"
 import "scenes/menus/LocationMenu"
 import "scenes/menus/Popup"
 import "scenes/menus/TextViewer"

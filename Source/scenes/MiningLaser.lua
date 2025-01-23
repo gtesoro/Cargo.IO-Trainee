@@ -477,13 +477,15 @@ function MiningLaser:doUpdate()
 
     local _as_decay = 0.005
 
-    if self.asteroid_angular_speed > 0 then
-        self.asteroid_angular_speed -= _as_decay
-    end
+    -- if self.asteroid_angular_speed > 0 then
+    --     self.asteroid_angular_speed -= _as_decay
+    -- end
 
-    if self.asteroid_angular_speed < 0 then
-        self.asteroid_angular_speed += _as_decay
-    end
+    -- if self.asteroid_angular_speed < 0 then
+    --     self.asteroid_angular_speed += _as_decay
+    -- end
+
+    self.asteroid_angular_speed *= 0.99
 
     self.asteroid_rotation += self.asteroid_angular_speed
 

@@ -138,18 +138,13 @@ function GenericInventory:unfocus()
     end
 end
 
-function GenericInventory:doUpdate()
-    if not self.noise_timer then
-        self.noise_timer = pd.timer.new(math.random(3000, 10000))
-        self.noise_timer.updateCallback = function (timer)
-            if timer.timeLeft < 200 then
-                self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100):vcrPauseFilterImage())
-            end
-        end
-        self.noise_timer.timerEndedCallback = function ()
-            self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100))
-            self.bg_sprite:markDirty()
-            self.noise_timer = nil
-        end
-    end
+function GenericInventory:add()
+    GenericInventory.super.add(self)
+    self.distort_timer = applyDistortionVCR(self.bg_sprite)
+end
+
+function GenericInventory:remove()
+    GenericInventory.super.remove(self)
+    self.distort_timer:remove()
+    self.distort_timer = nil
 end

@@ -20,6 +20,7 @@ function System:startScene()
     self.wrap = false
 
     self.selection_spr = gfx.sprite.new()
+    self.selection_spr:add()
     table.insert(self.sprites, self.selection_spr)
     self.selection_focus = nil
 
@@ -69,7 +70,7 @@ function System:setSelectionSprite(spr)
     self.selection_spr:setZIndex(self.data.playfield_height*2)
     self.selection_spr:moveTo(self.selection_focus:getPosition())
 
-    self.selection_spr:add()
+    self.selection_spr:setVisible(true)
 
 end
 
@@ -168,7 +169,6 @@ function System:initBg()
     end
 
     if self.data.blur_bg then
-        print('Blurring')
         bg = bg:blurredImage(5, 2, gfx.image.kDitherTypeBayer8x8) 
     end
     
@@ -411,7 +411,7 @@ function System:initInputs()
         upButtonDown = function ()
             --self.ship.move_ship = not self.ship.move_ship 
             --g_SoundManager:playNotification()
-            g_SceneManager:pushScene(Map(), 'to menu')
+            g_SceneManager:pushScene(Dialogue(), 'to menu')
         end,
 
         leftButtonUp = function ()
@@ -437,7 +437,7 @@ function System:doUpdate()
     local collisions = self.ship:overlappingSprites()
 
     if #collisions == 0 then
-        self.selection_spr:remove()
+        self.selection_spr:setVisible(false)
         self.selection_focus = nil
     end
 
@@ -445,7 +445,7 @@ function System:doUpdate()
         if collisions[i].interactuable then
             self:setSelectionSprite(collisions[i])
             if pd.buttonJustReleased(playdate.kButtonA) then
-                self.selection_spr:remove()
+                self.selection_spr:setVisible(false)
                 self.selection_focus = nil
                 self.ship:stop()
                 collisions[i]:interact()

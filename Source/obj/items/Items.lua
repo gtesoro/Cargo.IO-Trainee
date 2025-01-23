@@ -1,6 +1,24 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
+class('ItemContainer').extends(AnimatedSprite)
+
+function ItemContainer:init(item)
+
+    ItemContainer.super.init(self, 'assets/items/container')
+    self:setCollideRect(0,0, self:getSize())
+    self.interactuable = true
+    
+    self.item = item
+
+end
+
+function ItemContainer:interact(data)
+    if g_SystemManager:getPlayer():addToInventory(self.item) then
+        self:remove()
+    end
+end
+
 class('Item').extends(Stateful)
 
 function Item:init()
@@ -125,7 +143,7 @@ function Radar:init()
     self.price_max = 1000
     self.price_min = 800
 
-    self.name = "Sonar"
+    self.name = "Radar"
 
     self.description = "Locates objects in the current system.\nAn example of pre-leap technology that is still widely used."
 
@@ -332,9 +350,9 @@ function YggdrasilAtlas:init()
                 ShopInventory=true
             },
             callback = function (_self)
-                g_SystemManager:getPlayer().codex.systems[#g_SystemManager:getPlayer().codex.systems+1] = "Yggdrasil"
-                for k, v in pairs(g_SystemManager:getSystemByName("Yggdrasil").planets) do
-                    g_SystemManager:getPlayer().codex.planets[#g_SystemManager:getPlayer().codex.planets+1] = v.name
+                table.insert(g_SystemManager:getPlayer().codex.systems, "Yggdrasil")
+                for k, v in pairs(g_SystemManager:getSystemByName("Yggdrasil").locations) do
+                    table.insert(g_SystemManager:getPlayer().codex.locations, v.name)
                 end
                 g_NotificationManager:notify('Codex Updated')
                 g_SystemManager:getPlayer():removeFromInventory(_self.data.parent.item_grid:getSelection())

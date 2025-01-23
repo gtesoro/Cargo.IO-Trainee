@@ -54,7 +54,6 @@ function GenericMenu:initGrids()
         end
         
     end
-
     
     table.insert(self.sprites, self.list_box)
 
@@ -76,6 +75,8 @@ function GenericMenu:initBg()
     self.bg_sprite:add()
     table.insert(self.sprites, self.bg_sprite)
 
+    
+
     self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
     self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.ui_overlay:setZIndex(4)
@@ -87,12 +88,21 @@ function GenericMenu:initBg()
         self:setRightSide(self.data.right_side)
     end
 
-    print('Init right side', self.right_side)
 end
 
-function GenericMenu:setRightSide(spr)
+function GenericMenu:add()
+    GenericMenu.super.add(self)
+    self.distort_timer = applyDistortionVCR(self.bg_sprite)
+end
 
-    print('Update right side', spr)
+function GenericMenu:remove()
+    GenericMenu.super.remove(self)
+    self.distort_timer:remove()
+    self.distort_timer = nil
+end
+
+
+function GenericMenu:setRightSide(spr)
 
     if self.right_side then
         self.right_side:remove()
@@ -123,11 +133,11 @@ function GenericMenu:unfocus()
 end
 
 function GenericMenu:clean()
+    GenericMenu.super.clean(self)
     if self.right_side then
         self.right_side:remove()
         self.right_side = nil
     end
-    GenericMenu.super.clean(self)
 end
 
 function GenericMenu:doUpdate()
@@ -149,21 +159,6 @@ function GenericMenu:doUpdate()
             self:setRightSide(nil)
         end
         
-    end
-
-    if not self.noise_timer then
-        self.noise_timer = pd.timer.new(math.random(3000, 10000))
-        self.noise_timer.delay = 1000
-        self.noise_timer.updateCallback = function (timer)
-            if timer.timeLeft < 200 then
-                self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100):vcrPauseFilterImage())
-            end
-        end
-        self.noise_timer.timerEndedCallback = function ()
-            self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100))
-            self.bg_sprite:markDirty()
-            self.noise_timer = nil
-        end
     end
     
 end

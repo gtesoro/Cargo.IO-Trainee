@@ -124,7 +124,7 @@ function SystemManager:initState()
     _player.contracts = {}
 
     _player.codex = {
-        planets={},
+        locations={},
         systems={},
         terms={}
     }
@@ -327,7 +327,8 @@ function Player:logNotification(str)
         self.notifications = {}
     end
 
-    table.insert(self.notifications, {text=str, cycle=self.cycle})
+    local _c, _t = g_SystemManager:getCycle()
+    table.insert(self.notifications, {text=str, cycle=_c, time=_t})
 
     if #self.notifications > 100 then
         table.remove(self.notifications, 1)

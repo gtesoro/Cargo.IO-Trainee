@@ -96,7 +96,6 @@ function Map:getMapSize()
         _h = math.max((_y*self.separation+64)*2, _h)
 
     end
-    print(_w, _h)
     return _w, _h
 
 end

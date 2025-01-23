@@ -3,6 +3,8 @@ local gfx <const> = pd.graphics
 
 class('BetweenMenusIn').extends(gfx.sprite)
 
+local _ticks = 4
+
 function BetweenMenusIn:init(duration)
 
     gfx.setDrawOffset(0, 0)
@@ -23,7 +25,12 @@ function BetweenMenusIn:init(duration)
 
     self.fade_timer.updateCallback = function(timer)
         local value = clamp(math.ceil(timer.value*100), 1, 100)
-        self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
+        if g_SystemManager:isTick(_ticks) then
+            self.grid:setImage(self.grid_sheet:getImage(1))
+        else
+            self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
+        end
+        
         self.grid:markDirty()
     end
 
@@ -67,7 +74,11 @@ function BetweenMenusOut:init(duration)
 
     self.fade_timer.updateCallback = function(timer)
         local value = clamp(math.ceil(timer.value*100), 1, 100)
-        self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
+        if g_SystemManager:isTick(_ticks) then
+            self.grid:setImage(self.grid_sheet:getImage(1))
+        else
+            self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
+        end
         self.grid:markDirty()
     end
 

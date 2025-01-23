@@ -4,7 +4,6 @@ local gfx <const> = pd.graphics
 class('Stack').extends(gfx.sprite)
 
 function Stack:init(duration, blur)
-    print('Stacking')
     self.base_img = gfx.getDisplayImage()
     self.scene = g_SceneManager:getCurrentScene()
 

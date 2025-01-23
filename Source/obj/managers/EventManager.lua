@@ -11,7 +11,6 @@ end
 
 function EventManager:trigger(event, data)
     for k, subscriber in pairs(self.events[event]) do
-        print('Trigger event', event, subscriber.id, subscriber.priority, subscriber.consume)
         subscriber.callback(data)
         if subscriber.consume then
             break

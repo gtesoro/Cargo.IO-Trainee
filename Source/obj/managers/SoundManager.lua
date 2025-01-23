@@ -39,13 +39,54 @@ function SoundManager:init()
     self.notification_ding = pd.sound.sampleplayer.new('assets/sounds/notification_ding')
     self.notification_ding:setVolume(0.5)
 
-    self.computer_hum = pd.sound.fileplayer.new('assets/sounds/cassete_hum')
+    self.computer_hum = pd.sound.sampleplayer.new('assets/sounds/cassete_hum')
     self.computer_hum:setVolume(0.2)
 
-    self.choking = pd.sound.fileplayer.new('assets/sounds/choking')
+    self.choking = pd.sound.sampleplayer.new('assets/sounds/choking')
     self.choking:setVolume(1)
+    
+    self.spacebar = pd.sound.sampleplayer.new('assets/sounds/spacebar')
+    self.spacebar:setVolume(0.1)
 
+    self.gears = pd.sound.sampleplayer.new('assets/sounds/gears')
+    self.gears:setVolume(1)
 
+    self.key_presses = {}
+    table.insert(self.key_presses, pd.sound.sampleplayer.new(string.format('assets/sounds/key_press_01')))
+    table.insert(self.key_presses, pd.sound.sampleplayer.new(string.format('assets/sounds/key_press_02')))
+    table.insert(self.key_presses, pd.sound.sampleplayer.new(string.format('assets/sounds/key_press_03')))
+
+end
+
+function SoundManager:playGears()
+    self.gears:play()
+end
+
+function SoundManager:playSpacebar()
+    self.spacebar:setVolume(math.random(5, 30)/100)
+    self.spacebar:play()
+end
+
+function SoundManager:playKeyPress()
+    local _k = self.key_presses[math.random(1,3)]
+    _k:setVolume(math.random(50, 100)/100)
+    _k:play()
+end
+
+function SoundManager:playBeginTransmission()
+
+    local _s = pd.sound.sampleplayer.new(string.format('assets/sounds/begin_transmission'))
+    _s:setVolume(1)
+
+    _s:play()
+end
+
+function SoundManager:playEndTransmission()
+
+    local _s = pd.sound.sampleplayer.new(string.format('assets/sounds/end_transmission'))
+    _s:setVolume(0.5)
+
+    _s:play()
 end
 
 function SoundManager:playNotificationDing(duration)

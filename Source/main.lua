@@ -13,7 +13,8 @@ local function loadGame()
 	g_font_18 = gfx.font.new('font/BH93_18')
 	g_font_14 = gfx.font.new('font/BH93_14')
 	g_font_text = gfx.font.new('font/Full Circle/font-full-circle')
-	assert(g_font_24)
+	g_font_desc = gfx.font.new('font/Oklahoma/Oklahoma-Bold-Italic')
+	assert(g_font_desc)
 	--gfx.setFont(g_font_24)
 
 	g_inverted = false
