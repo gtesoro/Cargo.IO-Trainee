@@ -64,14 +64,14 @@ function LoadoutMenu:initGrids()
 
     self.item_grid:setGridColor(gfx.kColorWhite)
     self.item_grid:moveTo(playdate.display.getWidth()*.25, 195 - self.item_grid.height/2)
-    self.item_grid:setZIndex(1)
+    self.item_grid:setZIndex(2)
     self.item_grid:drawGrid()
     self.item_grid.a_callback = function ()
 
         local _source = self.item_grid:getSelection()
 
         if self.data.read_only then
-            return
+            --return
         end
 
         local _items = {}
@@ -89,36 +89,59 @@ function LoadoutMenu:initGrids()
         if #_items == 0 then
             createPopup({text="No equipment avaialble in inventory."})
         else
-            g_SceneManager:pushScene(InventoryPopup({
+            local _myself = self
+            g_SceneManager:pushScene(GenericInventory({
                 items=_items,
                 rows=1,
                 columns=#_items,
                 a_callback= function (_self)
                     local _item = _self:getSelection()
-                    if _item == _cross then
-                        if g_SystemManager:getPlayer():addToInventory(_source, false) then
-                            table.remove(self.data.items, self.item_grid:getSelectionIndex())
-                            g_NotificationManager:notify(string.format("%s Unequiped", _source.name))
-                            self.item_grid:drawGrid()
+                    if _item then
+                        if _item == _cross then
+                            if g_SystemManager:getPlayer():addToInventory(_source, false) then
+                                table.remove(_myself.data.items, _myself.item_grid:getSelectionIndex())
+                                g_NotificationManager:notify(string.format("%s Unequiped", _source.name))
+                                _source:onUnequip()
+                                _myself.item_grid:drawGrid()
+                            end
+                        else
+                            if _source then
+                                table.remove(_myself.data.items, _myself.item_grid:getSelectionIndex())
+                                g_NotificationManager:notify(string.format("%s Unequiped", _source.name))
+                                _source:onUnequip()
+    
+                                g_SystemManager:getPlayer():removeFromInventory(_item, false)
+                                table.insert(_myself.data.items, _item)
+                                _myself.item_grid:drawGrid()
+                                _item:onEquip()
+                                g_NotificationManager:notify(string.format("%s Equiped", _item.name))
+    
+                                g_SystemManager:getPlayer():addToInventory(_source, false)
+    
+                                
+                                
+                            else
+                                g_SystemManager:getPlayer():removeFromInventory(_item, false)
+                                table.insert(_myself.data.items, _item)
+                                _myself.item_grid:drawGrid()
+                                _item:onEquip()
+                                g_NotificationManager:notify(string.format("%s Equiped", _item.name))
+
+                                _myself.item_grid:drawGrid()
+    
+                            end
                         end
-                    else
-                        g_SystemManager:getPlayer():removeFromInventory(_item, false)
-                        table.insert(self.data.items, _item)
-                        self.item_grid:drawGrid()
-                        g_NotificationManager:notify(string.format("%s Equiped", _item.name))
+                        if _myself.item_grid:getSelection() then
+                            _myself:setItem(_myself.item_grid:getSelection())
+                        end
+                        g_SceneManager:popScene('between menus')
                     end
-                    if self.item_grid:getSelection() then
-                        self.item_panel:setVisible(true)
-                        self.item_panel:setItem(self.item_grid:getSelection())
-                    else
-                        self.item_panel:setVisible(false)
-                    end
+                    
                 end
-            }), "stack")
+            }), "between menus")
 
         end
 
-        
     end
 
     self.item_grid.b_callback = function ()
@@ -127,29 +150,93 @@ function LoadoutMenu:initGrids()
 
     table.insert(self.sprites, self.item_grid)
 
-    self.item_panel = ItemPanel(180, 150)
-    self.item_panel:setVisible(false)
-    self.item_panel:setZIndex(2)
-    self.item_panel:add()
-    self.item_panel:moveTo(280, 120)
+    self.item_grid.on_change = function (item)
+        self:setItem(item)
+    end
+
+    local _img = gfx.image.new(190, 180)
+    
+    gfx.pushContext(_img)
+        gfx.clear(gfx.kColorWhite)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setDitherPattern(0.2, gfx.image.kDitherTypeScreen)
+        gfx.fillRoundRect(0, 0, _img.width, _img.height, 4)
+
+        gfx.setColor(gfx.kColorWhite)
+        gfx.setLineWidth(4)
+        gfx.drawRoundRect(-2, 0, _img.width+2, _img.height, 4)
+        
+    gfx.popContext()
+
+    self.item_grid_bg = gfx.sprite.new(_img)
+    self.item_grid_bg:setCenter(0, 0.5)
+    self.item_grid_bg:moveTo(0,120)
+    self.item_grid_bg:setZIndex(1)
+    self.item_grid_bg:add()
+
+    table.insert(self.sprites, self.item_grid_bg)
+
+    self.item_panel_underlays = {}
+    self.scrolled = 0
+
+    img = gfx.image.new('assets/ui/item_box_bg')--gfx.image.new(180, 240, gfx.kColorBlack)
+
+    self.item_panel_underlay_1 = gfx.sprite.new(img)
+    self.item_panel_underlay_1:setCenter(0, 0.5)
+    self.item_panel_underlay_1:moveTo(playdate.display.getWidth()*0.5, playdate.display.getHeight()/2-img.height)
+    self.item_panel_underlay_1:setZIndex(1)
+    self.item_panel_underlay_1:add()
+
+    table.insert(self.item_panel_underlays, self.item_panel_underlay_1)
+
+    table.insert(self.sprites, self.item_panel_underlay_1)
+
+    self.item_panel_underlay_2 = gfx.sprite.new(img)
+    self.item_panel_underlay_2:setCenter(0, 0.5)
+    self.item_panel_underlay_2:moveTo(playdate.display.getWidth()*0.5, playdate.display.getHeight()/2)
+    self.item_panel_underlay_2:setZIndex(1)
+    self.item_panel_underlay_2:add()
+
+    table.insert(self.item_panel_underlays, self.item_panel_underlay_2)
+    table.insert(self.sprites, self.item_panel_underlay_2)
+
+    self.item_panel_underlay_3 = gfx.sprite.new(img)
+    self.item_panel_underlay_3:setCenter(0, 0.5)
+    self.item_panel_underlay_3:moveTo(playdate.display.getWidth()*0.5, playdate.display.getHeight()/2 + img.height)
+    self.item_panel_underlay_3:setZIndex(1)
+    self.item_panel_underlay_3:add()
+
+    table.insert(self.item_panel_underlays, self.item_panel_underlay_3)
+    table.insert(self.sprites, self.item_panel_underlay_3)
 
     local _s = self.item_grid:getSelection()
     if _s then
-        self.item_panel:setVisible(true)
-        self.item_panel:setItem(_s)
+        self:setItem(_s)
     end
-
-    self.item_grid.on_change = function (item)
-        self.item_panel:setVisible(false)
-        if item then
-            self.item_panel:setVisible(true)
-            self.item_panel:setItem(item)
-        end
-    end
-
-    table.insert(self.sprites, self.item_panel)
 
 end
+
+function LoadoutMenu:setItem(_s)
+
+    if self.item_panel then
+        self.item_panel:remove()
+        table_remove(self.sprites, self.item_panel)
+        self.item_panel = nil
+    end
+
+    self.scrolled = 0
+
+    if _s then
+        self.item_panel = ItemPanel(_s)
+        self.item_panel:setCenter(0, 0)
+        self.item_panel:add()
+        self.item_panel:moveTo(playdate.display.getWidth()*0.5+16, pd.display.getHeight()*0.15)
+        self.item_panel:setZIndex(2)
+        table.insert(self.sprites, self.item_panel)
+    end    
+end
+
+
 function LoadoutMenu:initBg()
 
     local img = gfx.image.new(400, 240, gfx.kColorBlack)
@@ -170,7 +257,7 @@ function LoadoutMenu:initBg()
     self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
     self.ui_overlay:setIgnoresDrawOffset(true)
     self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.ui_overlay:setZIndex(2)
+    self.ui_overlay:setZIndex(3)
     self.ui_overlay:add()
 
     table.insert(self.sprites, self.ui_overlay)
@@ -198,6 +285,21 @@ function LoadoutMenu:unfocus()
     end
 end
 
+function LoadoutMenu:scrollItemPanel(amount)
+    for k,v in pairs(self.item_panel_underlays) do
+        v:moveBy(0, amount)
+        if v.y < -playdate.display.getHeight()/2 then
+            v:moveBy(0,v.height*2)
+        end
+        if v.y > playdate.display.getHeight()*1.5 then
+            v:moveBy(0,-v.height*2)
+        end
+    end
+    if self.item_panel then
+        self.item_panel:moveBy(0, amount)
+    end
+end
+
 function LoadoutMenu:doUpdate()
     if not self.noise_timer then
         self.noise_timer = pd.timer.new(math.random(3000, 10000))
@@ -211,5 +313,14 @@ function LoadoutMenu:doUpdate()
             self.bg_sprite:markDirty()
             self.noise_timer = nil
         end
+    end
+
+    local _a = pd.getCrankChange()*0.25
+    if self.scrolled - _a < 0 then
+        self:scrollItemPanel(-self.scrolled)
+        self.scrolled = 0
+    else
+        self:scrollItemPanel(_a)
+        self.scrolled -= _a
     end
 end

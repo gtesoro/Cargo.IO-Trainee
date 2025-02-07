@@ -38,11 +38,17 @@ function AsteroidSystem:initAsteroids()
             spr.interactuable = true
             local _self = self
             function spr:interact()
-                g_SceneManager:pushScene(MiningLaser({bg_img = _self:getCurrentBg()}), 'wipe down')
-                        
-                table_remove(_self.sprites, spr)
-                table_remove(_self.asteroids, spr)
-                spr:remove()
+
+                if #g_SystemManager:getPlayer():getLoadoutByType('Laser') > 0 then
+                    g_SceneManager:pushScene(MiningLaser({bg_img = _self:getCurrentBg()}), 'wipe down')
+                    table_remove(_self.sprites, spr)
+                    table_remove(_self.asteroids, spr)
+                    spr:remove()
+                   
+                else
+                    g_NotificationManager:notify('Mining requires a Laser')
+                end
+                
 
             end
             table.insert(self.asteroids, spr)

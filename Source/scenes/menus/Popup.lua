@@ -28,7 +28,7 @@ function Popup:startScene()
                 if not v.no_exit then
                     self:unblur(function ()
                         g_SoundManager:playPopupOut()
-                        g_SceneManager:popScene('unstack')
+                        g_SceneManager:popScene()
                     end)
                 end
             end
@@ -108,6 +108,14 @@ function Popup:animateIn()
 end
 
 function Popup:unblur(callback)
+
+    self.box_spr:remove()
+    self.box_spr_shadow:remove()
+    if self.list_box then
+        self.list_box:remove()
+        self.list_box_shadow:remove()
+    end
+
     local unblur_timer = pd.timer.new(self.blur_duration, 4, 0, pd.easingFunctions.inLinear)
     unblur_timer.updateCallback = function(timer)
         self:setImage(self.previous_scene_img:blurredImage(timer.value, 2, gfx.image.kDitherTypeBayer8x8))
@@ -127,7 +135,7 @@ function Popup:initInputs()
         BButtonUp = function ()
             self:unblur(function ()
                 g_SoundManager:playPopupOut()
-                g_SceneManager:popScene('unstack')
+                g_SceneManager:popScene()
             end)
         end
 
@@ -150,7 +158,7 @@ function Popup:initDialog()
 
         self.list_box.b_callback = function ()
             self:unblur(function ()
-                g_SceneManager:popScene('unstack')
+                g_SceneManager:popScene()
             end)
         end
     end

@@ -23,7 +23,7 @@ function CargoHub:init()
                     createPopup({text="No cargo avaialble in inventory."})
                 else
 
-                    g_SceneManager:pushScene(InventoryPopup({
+                    g_SceneManager:pushScene(GenericInventory({
                         items=_items,
                         rows=1,
                         columns=#_items,
@@ -38,10 +38,24 @@ function CargoHub:init()
                                     v:onComplete()
                                 end
                             end
+                            g_SceneManager:popScene('between menus')
                         end
-                    }), "stack")
+                    }),'between menus')
                 end
 
+            end
+        },
+        {
+            name = 'System Delivery Contract',
+            callback = function ()
+                if #g_SystemManager:getPlayer():getContractByType('DeliveryContract') > 0 then
+                    createPopup({text='You can only have one Quick Lock delivery contract at the same time.'})
+                else
+                    local _contract = DeliveryContract()
+                    _contract:generateSystemContract()
+                    getSignContractCallback(_contract)()
+                end
+                
             end
         }
     }
@@ -73,7 +87,6 @@ function CargoHubDelivery:init(data)
     CargoHubDelivery.super.init(self, data)
 
     self.data.items = g_SystemManager:getPlayer().inventory.items
-    self.data.item_panel = ItemPanel(180, 150)
 
     self.data.context_options = {
         {
@@ -212,8 +225,6 @@ function ShopInventory:init(data)
 
     self.data.items = self.data.shop_items
 
-    self.data.item_panel = ItemPanel(180, 150)
-
     self.data.context_options = {
         {
             name="Buy",
@@ -241,7 +252,6 @@ function ShopPlayerInventory:init(data)
     ShopPlayerInventory.super.init(self, data)
 
     self.data.items = g_SystemManager:getPlayer().inventory.items
-    self.data.item_panel = ItemPanelShop(180, 150)
 
     self.data.context_options = {
         {

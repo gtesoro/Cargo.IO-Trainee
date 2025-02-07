@@ -5,127 +5,10 @@ local gfx <const> = pd.graphics
 class('Dialogue').extends(Scene)
 
 function Dialogue:startScene()
+    printTable(self.data)
     self:initInputs()
     self:initBg()
 end
-
-
-local _test_dialog = {
-    {
-        text = "Hello! I'm the dialog test robot.",
-        type = DIAG_OTHER
-    },
-    {
-        text = "The robot seems strange. as if he wanted to challenge you. As much as robots want things anyhow.\nBe careful.",
-        type = DIAG_DESC
-    },
-    {
-        text = "Please choose an option.",
-        type = DIAG_OTHER,
-        options = {
-            {
-                answer = "I dont trust you",
-                dialogue = {
-                    {
-                        text = "I'm very friendly!",
-                        type = DIAG_OTHER
-                    },
-                    {
-                        text = "Do NOT trust this robot",
-                        type = DIAG_DESC
-                    },
-                }
-            },
-            {
-                answer = "Sure, I will choose an option...",
-                dialogue = {
-                    {
-                        text = "Mwhahaha! You fell into my trap",
-                        type = DIAG_OTHER
-                    },
-                    {
-                        text = "Wow, evil robot, fantastic",
-                        type = DIAG_DESC
-                    },
-                }
-            },
-            {
-                answer = "I'm leaving",
-                dialogue = {
-                    {
-                        text = "Ok, you can do whatever you want",
-                        type = DIAG_OTHER
-                    },
-                    {
-                        text = "The passive-aggressive module of the robot seems to be working overtime",
-                        type = DIAG_DESC
-                    },
-                    {
-                        text = "Bye",
-                        type = DIAG_OTHER
-                    },
-                }
-            }
-        }
-    },
-}
-
--- _test_dialog = {
---     {
---         text = "Hola! Soy el robot de pruebas para el sistema de dialogo.",
---         type = DIAG_OTHER
---     },
---     {
---         text = "Ojo cuidado, creo que es Cesar disfrazado.",
---         type = DIAG_DESC
---     },
---     {
---         text = "Por favor, elige una opcion.",
---         type = DIAG_OTHER,
---         options = {
---             {
---                 answer = "Venga, una opcion",
---                 dialogue = {
---                     {
---                         text = "Muy bien!",
---                         type = DIAG_OTHER
---                     },
---                     {
---                         text = "Decepcionante",
---                         type = DIAG_DESC
---                     },
---                 }
---             },
---             {
---                 answer = "Hmm, crees que el pastel es mentira?",
---                 dialogue = {
---                     {
---                         text = "No todos los robots somos como Glados.",
---                         type = DIAG_OTHER
---                     },
---                     {
---                         text = "Eso dicen todos",
---                         type = DIAG_DESC
---                     },
---                 }
---             },
---             {
---                 answer = "Cesar, quitate el disfraz y ponte el tanga",
---                 dialogue = {
---                     {
---                         text = "Pensaba que nunca me lo pedirias!",
---                         type = DIAG_OTHER
---                     },
---                     {
---                         text = "Dale Zelda",
---                         type = DIAG_DESC
---                     },
---                 }
---             }
---         }
---     }
-    
--- }
 
 function Dialogue:initBg()
 
@@ -135,9 +18,11 @@ function Dialogue:initBg()
         _i:drawAnchored(pd.display.getWidth()/2, pd.display.getHeight()/2, 0.5, 0.5)
     gfx.popContext()
 
-    self.dialogue = _test_dialog
+    self.dialogue = self.data.dialogue
     self.current_dialogue = self.dialogue
     self.current_dialogue_index = 1
+
+    self.text_input = {text = ''}
 
     self.bg_image = img:blurredImage(1, 2, gfx.image.kDitherTypeScreen)
 
@@ -161,7 +46,7 @@ function Dialogue:initBg()
         gfx.fillRect(0,0, img:getSize())
     gfx.popContext()
 
-    self.animating = false
+    self.animations = 0
     self.scrolled = 0
     self.dialog_hidden = false
     self.selection_box_hidden = false
@@ -197,38 +82,142 @@ function Dialogue:initBg()
     table.insert(self.dialog_underlays, self.dialog_underlay_3)
     table.insert(self.sprites, self.dialog_underlay_3)
 
-    self.character_bg = gfx.sprite.new(getImageWithDitherMask('assets/characters/test_char_bg', true))
-    self.character_bg:moveTo(playdate.display.getWidth()*0.5, playdate.display.getHeight()/2)
+end
+
+function Dialogue:removeElement(spr, callback)
+
+    local _start = 200
+    local _end = -200
+
+    self.animations += 1
+
+    local _t = pd.timer.new(250, _start, _end, pd.easingFunctions.outCubic)
+    _t.updateCallback = function (timer)
+        spr:moveTo(timer.value, spr.y)
+    end
+    _t.timerEndedCallback = function ()
+        self.animations -= 1
+        spr:remove()
+        table_remove(self.sprites, spr)
+        if spr.flicker_timer then
+            spr.flicker_timer:remove()
+            spr.flicker_timer = nil
+        end
+        if callback then
+            callback()
+        end
+    end
+end
+
+function Dialogue:addElement(spr, callback)
+
+    local _start = -200
+    local _end = 200
+    self.animations += 1
+    local _t = pd.timer.new(250, _start, _end, pd.easingFunctions.outCubic)
+    _t.updateCallback = function (timer)
+        spr:moveTo(timer.value, spr.y)
+    end
+    _t.timerEndedCallback = function ()
+        self.animations -= 1
+        applyFlicker(spr)
+        if callback then
+            callback()
+        end
+    end
+end
+
+function Dialogue:removeBg(callback)
+    if self.character_bg then
+        self:removeElement(self.character_bg, callback)
+        self.character_bg = nil
+    end
+end
+
+function Dialogue:addBg(image, callback)
+
+    self.character_bg = gfx.sprite.new(getImageWithDitherMask(image, true))
+    self.character_bg:moveTo(-playdate.display.getWidth()*0.5, playdate.display.getHeight()/2)
     self.character_bg:setZIndex(1)
     self.character_bg:add()
-
     table.insert(self.sprites, self.character_bg)
 
-    self.character = gfx.sprite.new(gfx.image.new('assets/characters/test_char'))
-    self.character:moveTo(playdate.display.getWidth()*0.5, playdate.display.getHeight()/2)
+    self:addElement(self.character_bg, callback)
+    
+end
+
+function Dialogue:removeCharacter(callback)
+    if self.character then
+        self:removeElement(self.character, callback)
+        self.character = nil
+    end
+end
+
+function Dialogue:addCharacter(image, callback)
+
+
+    self.character = gfx.sprite.new(gfx.image.new(image))
+    self.character:moveTo(-playdate.display.getWidth()*0.5, playdate.display.getHeight()/2)
     self.character:setZIndex(1)
     self.character:add()
 
-    table.insert(self.sprites, self.character)    
+    table.insert(self.sprites, self.character)
 
+    self:addElement(self.character, callback)
+    
 end
 
 function Dialogue:dialogueFinished()
-
     return self.current_dialogue_index > #self.current_dialogue
     
 end
 
 function Dialogue:nextDialogue()
 
-    if self.waiting_for_anser then
+    if self.waiting_for_answer then
 
-        local _s, _r, _c = self.selection_box.listview:getSelection()
-        self:addDialogue(self.current_dialogue[self.current_dialogue_index].options[_r].answer, DIAG_PLAYER)
-        self.current_dialogue = self.current_dialogue[self.current_dialogue_index].options[_r].dialogue
+        local _s, _r, _col = self.selection_box.listview:getSelection()
+
+        local _d = self.current_dialogue[self.current_dialogue_index].options[_r]
+
+        if _d.trigger then
+            _d.trigger()
+        end
+        
+        self:addDialogue(_d.answer, DIAG_PLAYER, _c)
+        self.current_dialogue = _d.dialogue
         self.current_dialogue_index = 1
-        self.waiting_for_anser = false
+        self.waiting_for_answer = false
         self:animateSelectionBoxOut()
+        return
+    end
+
+    local _d = self.current_dialogue[self.current_dialogue_index]
+
+    if self.waiting_for_text_input then
+
+        if _d.trigger then
+            _d.trigger()
+        end
+
+        local _next = _d.default
+
+        for k,v in pairs(_d.options) do
+            if v.answer == self.text_input.text then
+                _next = v.dialogue
+            end
+        end
+        
+        self.current_dialogue = _next
+        self.current_dialogue_index = 1
+        self.waiting_for_text_input = false
+
+        if self.text_input.text then
+            self:addDialogue(self.text_input.text, DIAG_PLAYER, _c)
+        else
+            self:nextDialogue()
+        end
+
         return
     end
     
@@ -238,9 +227,46 @@ function Dialogue:nextDialogue()
         return nil
     end
 
-    local _d = self.current_dialogue[self.current_dialogue_index]
+    local _c = function ()
+        if _d.trigger then
+            _d.trigger()
+        end
+        if _d.continue then
+            self:nextDialogue()
+        end
+    end
 
-    if _d.options then
+    if _d.type == DIAG_BG_IN then
+        self:addBg(_d.file, _c)
+        self.current_dialogue_index += 1
+        return
+    end
+
+    if _d.type == DIAG_CHAR_IN then
+        self:addCharacter(_d.file, _c)
+        self.current_dialogue_index += 1
+        return
+    end
+
+    if _d.type == DIAG_BG_OUT then
+        self:removeBg(_c)
+        self.current_dialogue_index += 1
+        return
+    end
+
+    if _d.type == DIAG_CHAR_OUT then
+        self:removeCharacter(_c)
+        self.current_dialogue_index += 1
+        return
+    end
+
+    if _d.type == DIAG_INPUT_TEXT then
+        g_SceneManager:pushScene(TextInput(self.text_input))
+        self.waiting_for_text_input = true
+        return
+    end
+
+    if _d.type == DIAG_INPUT_OPTIONS then
 
         if self.selection_box then
             self.selection_box:remove()
@@ -252,40 +278,46 @@ function Dialogue:nextDialogue()
             table.insert(_options, {text=o.answer})
         end
 
-        local _bubble = self:addDialogue(_d.text, _d.type)
-        local _f = _bubble.on_finish
-        _bubble.on_finish = function ()
-            if _f then
-                _f()
-            end
-            self.selection_box = TextSelectionBox(_options)
-            self.selection_box:setCenter(0, 1)
-            self.selection_box:moveTo(-self.selection_box.width, 200)
-            self.selection_box:setZIndex(3)
-            self.selection_box:add()
-            self:animateSelectionBoxIn()
-        end
+        self.selection_box = TextSelectionBox(_options)
+        self.selection_box:setCenter(0, 1)
+        self.selection_box:moveTo(-self.selection_box.width, 200)
+        self.selection_box:setZIndex(3)
+        self.selection_box:add()
+        self:animateSelectionBoxIn()
 
-        self.waiting_for_anser = true
-        
-    else
-        self:addDialogue(_d.text, _d.type)
-        self.current_dialogue_index += 1
+        self.waiting_for_answer = true
+        return
     end
+
+    self:addDialogue(_d.text, _d.type, _c)
+    self.current_dialogue_index += 1
+    
 
 end
 
-function Dialogue:addDialogue(text, type)
+function Dialogue:addDialogue(text, type, callback)
 
     local _dialog_bubble = TextBubble(text, 156, type, 5)
 
-    if type == DIAG_OTHER then
-        local _t = rumbleSprite(self.character)
-        _dialog_bubble.on_finish = function ()
+    table.insert(self.bubbles, _dialog_bubble)
+    table.insert(self.sprites, _dialog_bubble)
+
+    local _c = function ()
+        if callback then
+            callback()
+        end
+        if type == DIAG_OTHER then
+            local _t = rumbleSprite(self.character)
             _t.timerEndedCallback()
             _t:remove()
-        end 
+        end
+    
+        if type == DIAG_PLAYER then
+            self:nextDialogue()
+        end
     end
+
+    _dialog_bubble.on_finish = _c
 
     if #self.bubbles == 0 then
         _dialog_bubble:setCenter(0,1)
@@ -293,15 +325,13 @@ function Dialogue:addDialogue(text, type)
         _dialog_bubble:setZIndex(3)
         _dialog_bubble:add()
 
-        table.insert(self.bubbles, _dialog_bubble)
-        table.insert(self.sprites, _dialog_bubble)
         return
     end
 
     local _w, _h = _dialog_bubble:getSize()
     _h += 5
 
-    self.animating = true
+    self.animations += 1
 
     local _prev = 0
 
@@ -336,10 +366,7 @@ function Dialogue:addDialogue(text, type)
             _dialog_bubble:setZIndex(3)
             _dialog_bubble:add()
 
-            table.insert(self.bubbles, _dialog_bubble)
-            table.insert(self.sprites, _dialog_bubble)
-
-            self.animating = false
+            self.animations -= 1
         end
     end
 
@@ -368,9 +395,8 @@ end
 
 function Dialogue:toggleDialog()
 
-    self.animating = true
+    self.animations += 1
     if self.dialog_hidden then
-        self.animating = true
         local _timer = pd.timer.new(250, 380, 200, pd.easingFunctions.outCubic)
         _timer.updateCallback = function (timer)
             for k,v in pairs(self.dialog_underlays) do
@@ -382,7 +408,7 @@ function Dialogue:toggleDialog()
             end
         end
         _timer.timerEndedCallback = function ()
-            self.animating = false
+            self.animations -= 1
             self.dialog_hidden = false
         end
     else
@@ -397,19 +423,20 @@ function Dialogue:toggleDialog()
             end
         end
         _timer.timerEndedCallback = function ()
-            self.animating = false
+            self.animations -= 1
             self.dialog_hidden = true
         end
     end
 end
 
 function Dialogue:animateSelectionBoxOut()
+    self.animations += 1
     local _timer = pd.timer.new(250, 0, self.selection_box.width, pd.easingFunctions.outCubic)
     _timer.updateCallback = function (timer)
         self.selection_box:moveTo(-timer.value, self.selection_box.y)
     end
     _timer.timerEndedCallback = function ()
-        self.animating = false
+        self.animations -= 1
         self.selection_box:moveTo(-self.selection_box.width, self.selection_box.y)
         self.selection_box:remove()
         self.selection_box = nil
@@ -417,12 +444,15 @@ function Dialogue:animateSelectionBoxOut()
 end
 
 function Dialogue:animateSelectionBoxIn()
+
+    self.animations += 1
+
     local _timer = pd.timer.new(250, self.selection_box.width, 0, pd.easingFunctions.outCubic)
     _timer.updateCallback = function (timer)
         self.selection_box:moveTo(-timer.value, self.selection_box.y)
     end
     _timer.timerEndedCallback = function ()
-        self.animating = false
+        self.animations -= 1
         self.selection_box:moveTo(0, self.selection_box.y)
     end
 end
@@ -433,14 +463,14 @@ function Dialogue:toggleDialogSelection()
         return
     end
 
-    self.animating = true
+    self.animations += 1
     if self.selection_box_hidden then
         local _timer = pd.timer.new(250, self.selection_box.width - 20, 0, pd.easingFunctions.outCubic)
         _timer.updateCallback = function (timer)
             self.selection_box:moveTo(-timer.value, self.selection_box.y)
         end
         _timer.timerEndedCallback = function ()
-            self.animating = false
+            self.animations -= 1
             self.selection_box_hidden = false
             self.selection_box:moveTo(0, self.selection_box.y)
         end
@@ -450,7 +480,7 @@ function Dialogue:toggleDialogSelection()
             self.selection_box:moveTo(-timer.value, self.selection_box.y)
         end
         _timer.timerEndedCallback = function ()
-            self.animating = false
+            self.animations -= 1
             self.selection_box_hidden = true
             self.selection_box:moveTo(-(self.selection_box.width - 20), self.selection_box.y)
         end
@@ -462,7 +492,7 @@ function Dialogue:initInputs()
     self.input_handlers = {
 
         cranked = function (change, acceleratedChange)
-            if not self.animating and not self.dialog_hidden and #self.bubbles > 0 then
+            if self.animations == 0 and not self.dialog_hidden and #self.bubbles > 0 then
                 local _a = change*0.25
                 if self.scrolled + _a < 0 then
                     self:moveDialog(-self.scrolled)
@@ -488,7 +518,7 @@ function Dialogue:initInputs()
 
         leftButtonUp = function ()
 
-            if not self.animating then
+            if self.animations == 0 then
                 self:toggleDialogSelection()
             end
 
@@ -496,7 +526,7 @@ function Dialogue:initInputs()
 
         rightButtonUp = function ()
             
-            if not self.animating  then
+            if self.animations == 0  then
                 self:toggleDialog()
             end
         end,
@@ -517,7 +547,15 @@ function Dialogue:initInputs()
         
         AButtonUp = function ()
 
-            if self.animating or self.dialog_hidden then
+            if self.animations > 0 then
+                return 
+            end
+            
+            if self.dialog_hidden then
+                return 
+            end
+
+            if self.selection_box and self.selection_box_hidden then
                 return 
             end
 
@@ -528,6 +566,7 @@ function Dialogue:initInputs()
                     v:finish()
                 end
             end
+
             if _all_finished then
                 self:nextDialogue()
             end
@@ -536,23 +575,41 @@ function Dialogue:initInputs()
     
 end
 
+function Dialogue:remove()
+    Dialogue.super.remove(self)
+    if self.character then
+        self.character:remove()
+    end
+    if self.character_bg then
+        self.character_bg:remove()
+    end
+    if self.selection_box then
+        self.selection_box:remove()
+    end
+
+    for k, v in pairs(self.sprites) do
+        if v.flicker_timer then
+            v.flicker_timer:remove()
+            v.flicker_timer = nil
+        end
+    end
+end
 
 function Dialogue:add()
     Dialogue.super.add(self)
-    self.distort_timer_char = applyDistortionVCR(self.character)
-    self.distort_timer_bg = applyDistortionVCR(self.character_bg)
 
-end
+    if self.character and not self.character.flicker_timer then
+        applyFlicker(self.character)
+    end
+    if self.character_bg and not self.character_bg.flicker_timer then
+        applyFlicker(self.character_bg)
+    end
 
-function Dialogue:remove()
-    Dialogue.super.remove(self)
-    self.distort_timer_char:remove()
-    self.distort_timer_char = nil
+    self.animations += 1
 
-    self.distort_timer_bg:remove()
-    self.distort_timer_bg = nil
-
-    if self.selection_box then
-        self.selection_box:remove()
+    local _timer_start = pd.timer.new(300)
+    _timer_start.timerEndedCallback = function (timer)
+        self.animations -= 1
+        self:nextDialogue()
     end
 end

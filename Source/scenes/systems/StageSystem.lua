@@ -43,6 +43,7 @@ function StageSystem:initStage()
 
         -- Entities
         for k, entity in pairs(LDtk.get_entities( self.data.stage, layer.name)) do
+            print(entity.name)
             printTable(entity)
             if entity.name == "Item" then
                 print(entity.fields.class)
@@ -55,6 +56,15 @@ function StageSystem:initStage()
                 table.insert(self.sprites, _item)
 
             end
+
+            if entity.name == "InteractionPoint" then
+                local _ip = InteractionPoint(entity.fields.funct, entity.fields.w, entity.fields.h)
+                _ip:moveTo(entity.position.x + self.data.stage_offset_x, entity.position.y + self.data.stage_offset_y)
+                _ip:setZIndex(entity.zIndex + 1)
+                _ip:add()
+
+                table.insert(self.sprites, _ip)
+            end
             
         end
 
@@ -62,7 +72,7 @@ function StageSystem:initStage()
 
     self.tilemap_layer = gfx.sprite.new(_img)
     self.tilemap_layer:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)
-    self.tilemap_layer:setZIndex(1)
+    self.tilemap_layer:setZIndex(3)
     self.tilemap_layer:add()
     self.tilemap_layer:setVisible(false)
 
@@ -77,6 +87,16 @@ function StageSystem:initStage()
     self.overlay:add()
 
     table.insert(self.sprites, self.overlay)
+
+    if self.data.stage_middle then
+        self.stage_middle = gfx.sprite.new(gfx.image.new(self.data.stage_middle))
+        self.stage_middle:setCenter(0,0)
+        self.stage_middle:moveTo(self.data.stage_offset_x , self.data.stage_offset_y)
+        self.stage_middle:setZIndex(self.bg_sprite:getZIndex()+1)
+        self.stage_middle:add()
+
+        table.insert(self.sprites, self.stage_middle)  
+    end
     
 end
 

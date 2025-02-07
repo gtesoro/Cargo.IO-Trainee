@@ -18,7 +18,7 @@ function SoundManager:init()
     self.pop_up_in = pd.sound.sampleplayer.new('assets/sounds/popup_in')
     self.pop_up_in:setVolume(0.5)
 
-    self.pop_up_out = pd.sound.sampleplayer.new('assets/sounds/popup_out')
+    self.pop_up_out = pd.sound.sampleplayer.new('assets/sounds/popup_in')
     self.pop_up_out:setVolume(0.5)
 
     self.stamp = pd.sound.sampleplayer.new('assets/sounds/stamp')

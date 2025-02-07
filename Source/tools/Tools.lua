@@ -163,9 +163,10 @@ function getImageWithDitherMask(img, blurred)
     
 end
 
-function applyDistortionVCR(sprite)
+function applyFlicker(sprite)
     local _spr_img_orig = sprite:getImage():copy()
     local _timer = pd.timer.new(math.random(5000, 8000))
+    sprite.flicker_timer = _timer
     _timer.flicker_duration = math.random(100, 300)
     _timer.repeats = true
     _timer.updateCallback = function (timer)
@@ -190,6 +191,15 @@ function applyDistortionVCR(sprite)
     return _timer
 end
 
+function tableHasElement(table, element)
+    for k,v in pairs(table) do
+        if v == element then
+            return true
+        end
+    end
+    return false
+end
+
 function rumbleSprite(spr, duration, distance, delay)
 
     if spr.rumbling then
@@ -197,7 +207,7 @@ function rumbleSprite(spr, duration, distance, delay)
     end
     
     local _duration = duration or 999999999999
-    local _distance = distance or 2
+    local _distance = distance or 1
     local _delay = delay or 0
 
     local _t = pd.timer.new(_duration)
@@ -239,7 +249,6 @@ function collectGarbage()
         local _b = collectgarbage("count")
         collectgarbage("collect")
         local _a = collectgarbage("count")
-        print(string.format('Garbage Collected %i %f Kb', i, _b - _a))
     end
 end
 
@@ -336,7 +345,7 @@ function getSignContractCallback(contract)
                 {
                     name='No'
                 }
-            }}), 'stack')
+            }}))
             
         end}), 'between menus')
     end
@@ -345,7 +354,7 @@ function getSignContractCallback(contract)
 end
 
 function createPopup(data)
-    g_SceneManager:pushScene(Popup(data), 'stack')
+    g_SceneManager:pushScene(Popup(data))
 end
 
 function goTo(x, y, z, direction, no_last_position_update)

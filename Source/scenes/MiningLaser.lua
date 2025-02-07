@@ -136,7 +136,7 @@ end
 
 function MiningLaser:rotateMinerals()
     for k,v in pairs(self.minerals) do
-        local _x, _y = rotatePoint(v[2], v[3], pd.display.getWidth()/2, pd.display.getHeight()/2, math.floor(self.asteroid_rotation)-1)
+        local _x, _y = rotatePoint(v[2], v[3], pd.display.getWidth()/2, pd.display.getHeight()/2, self.asteroid_rotation + self.vibration)
         v[1]:moveTo(_x, _y)
     end
 end
@@ -308,6 +308,8 @@ function MiningLaser:initAsteroid()
     self.asteroid_img_quantum = 2
 
     self.asteroid_rotation = 1
+    self.vibration = 0
+    self.vibration_range = 3
     self.asteroid_angular_speed = 0
 
 
@@ -327,8 +329,8 @@ function MiningLaser:initAsteroid()
         self.asteroid_cache[#self.asteroid_cache+1] = img
     end
 
-    if self.asteroid_cache[math.floor(self.asteroid_rotation)] then
-        self.asteroid_canvas:setImage(self.asteroid_cache[math.floor(self.asteroid_rotation)])
+    if self.asteroid_cache[self.asteroid_rotation+self.vibration] then
+        self.asteroid_canvas:setImage(self.asteroid_cache[self.asteroid_rotation+self.vibration])
     end
 
     table.insert(self.sprites, self.asteroid_canvas)
@@ -381,10 +383,12 @@ function MiningLaser:applyLaser()
 
     _hit, self.laser_target_x, self.laser_target_y = self:castRay(self.asteroid_canvas:getImage(), _laser_line)
 
+    self.vibration = math.random(-self.vibration_range, self.vibration_range)
+
     if self.laser_counter == self.laser_update then
 
-        self.remaining_beam -= self.beam_rate
-
+        --self.remaining_beam -= self.beam_rate
+        
         _laser_line = pd.geometry.lineSegment.new(self.laser_origin_x, self.laser_origin_y, self.laser_target_x, self.laser_target_y)
         local _hit, _t_x, _t_y = self:castRay(self.asteroid_canvas:getImage(), _laser_line)
 
@@ -428,15 +432,7 @@ function MiningLaser:initInputs()
     self.input_handlers = {
 
         cranked = function (change, acceleratedChange)
-            if math.abs(self.asteroid_angular_speed) < _max_speed then
-                -- self.asteroid_angular_speed += acceleratedChange * _acc_mod
-                -- if math.abs(self.asteroid_angular_speed) > _max_speed then
-                --     self.asteroid_angular_speed = 2 * self.asteroid_angular_speed/math.abs(self.asteroid_angular_speed)
-                -- end
-                
-            end
-            self.asteroid_angular_speed += acceleratedChange/1000
-            self.asteroid_angular_speed = clamp(self.asteroid_angular_speed, -_max_speed, _max_speed)
+            self.asteroid_rotation = math.floor(pd.getCrankPosition())
         end,
 
         AButtonDown = function ()
@@ -445,6 +441,7 @@ function MiningLaser:initInputs()
 
         AButtonUp = function ()
             self.firing = false
+            self.vibration = 0
         end,
 
         BButtonDown = function ()
@@ -472,32 +469,7 @@ function MiningLaser:doUpdate()
         return
     end
 
-
     self:drawTrigger()
-
-    local _as_decay = 0.005
-
-    -- if self.asteroid_angular_speed > 0 then
-    --     self.asteroid_angular_speed -= _as_decay
-    -- end
-
-    -- if self.asteroid_angular_speed < 0 then
-    --     self.asteroid_angular_speed += _as_decay
-    -- end
-
-    self.asteroid_angular_speed *= 0.99
-
-    self.asteroid_rotation += self.asteroid_angular_speed
-
-    if self.asteroid_rotation > 360 then
-        self.asteroid_rotation = 1
-    end
-
-    if self.asteroid_rotation < 1 then
-        self.asteroid_rotation = 361
-    end
-
-    self:rotateMinerals()
 
     self.laser_counter += 1
 
@@ -526,8 +498,10 @@ function MiningLaser:doUpdate()
         end
     end
 
-    if self.asteroid_cache[math.floor(self.asteroid_rotation)] then
-        self.asteroid_canvas:setImage(self.asteroid_cache[math.floor(self.asteroid_rotation)])
+    self:rotateMinerals()
+
+    if self.asteroid_cache[self.asteroid_rotation+self.vibration] then
+        self.asteroid_canvas:setImage(self.asteroid_cache[self.asteroid_rotation+self.vibration])
     end
 
     if self.laser_counter > self.laser_update then

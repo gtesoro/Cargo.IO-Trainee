@@ -7,6 +7,7 @@ import "CoreLibs/animation"
 import "CoreLibs/math"
 import "CoreLibs/crank"
 import "CoreLibs/ui"
+import "CoreLibs/keyboard"
 
 import "LDtk"
 
@@ -41,6 +42,7 @@ import "obj/Planet"
 import "obj/Ship"
 import "obj/Enemy"
 import "obj/Particle"
+import "obj/InteractionPoint"
 
 import "obj/UI/Widget"
 import "scenes/Scene"
@@ -74,6 +76,7 @@ import "scenes/menus/Intro"
 import "scenes/menus/GameOver"
 import "scenes/menus/LoadoutMenu"
 import "scenes/menus/InventoryPopup"
+import "scenes/menus/TextInput"
 
 import "scenes/facilities/Facilities"
 

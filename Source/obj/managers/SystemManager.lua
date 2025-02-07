@@ -67,6 +67,12 @@ function SystemManager:death()
 
 end
 
+function SystemManager:getButtonImage(button_id)
+    
+    local _t = gfx.imagetable.new('assets/ui/icons')
+    return _t:getImage(button_id)
+
+end
 
 function SystemManager:isTick(x)
     return math.fmod(self.frame_counter, x) == 0
@@ -120,13 +126,13 @@ function SystemManager:initState()
     _player.inventory.items = {}
     _player.inventory.items[#_player.inventory.items+1] = { className='YggdrasilAtlas'}
     _player.inventory.items[#_player.inventory.items+1] = { className='Laser'}
+    _player.inventory.items[#_player.inventory.items+1] = { className='LeapEngine'}
 
     _player.contracts = {}
 
     _player.codex = {
-        locations={},
-        systems={},
-        terms={}
+        Locations={},
+        Terms={}
     }
 
     return self.state
@@ -148,7 +154,6 @@ function SystemManager:initCycleManagement()
         self.cycle_compensation = self.state.player.cycle_time
 
         self.cycle_timer.timerEndedCallback = function ()
-            print('Cycle Finished')
             g_SystemManager:getPlayer().cycle += 1
             g_EventManager:trigger(EVENT_NEXT_CYCLE, g_SystemManager:getCycle())
             self.cycle_compensation = 0
@@ -467,6 +472,34 @@ function Player:gainMoney(amount)
     g_NotificationManager:notify(string.format("+%iC : %iC", amount, self.money))
 
     return true
+    
+end
+
+function Player:getLoadoutByType(item_type)
+
+    local _ret = {}
+
+    for k,v in pairs(self.ship.loadout.items) do
+        if v.className == item_type then
+            _ret[#_ret+1] = v
+        end
+    end
+
+    return _ret
+    
+end
+
+function Player:getItemsByType(item_type)
+
+    local _ret = {}
+
+    for k,v in pairs(self.inventory.items) do
+        if v.className == item_type then
+            _ret[#_ret+1] = v
+        end
+    end
+
+    return _ret
     
 end
 

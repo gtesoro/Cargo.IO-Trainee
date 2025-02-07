@@ -92,15 +92,19 @@ end
 
 function GenericMenu:add()
     GenericMenu.super.add(self)
-    self.distort_timer = applyDistortionVCR(self.bg_sprite)
+    applyFlicker(self.bg_sprite)
 end
 
 function GenericMenu:remove()
-    GenericMenu.super.remove(self)
-    self.distort_timer:remove()
-    self.distort_timer = nil
+    GenericInventory.super.remove(self)
+    for k, v in pairs(self.sprites) do
+        if v.flicker_timer then
+            v.flicker_timer:remove()
+            v.flicker_timer = nil
+        end
+        v:remove()
+    end
 end
-
 
 function GenericMenu:setRightSide(spr)
 

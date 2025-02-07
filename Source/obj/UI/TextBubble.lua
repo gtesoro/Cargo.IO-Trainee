@@ -17,7 +17,6 @@ function TextBubble:init(text, w, type, margin, animate, delay)
         self.font = g_font_text
     else
         self.font = g_font_desc
-
     end
     
     gfx.setFont(self.font)
@@ -42,7 +41,7 @@ end
 function TextBubble:add()
     TextBubble.super.add(self)
 
-    if self.animate then
+    if self.animate and not self.finished then
         g_SoundManager:playBeginTransmission()
         local _target = self.canvas.width
         if self.type == DIAG_DESC then
@@ -108,11 +107,11 @@ function TextBubble:drawBubbleBg(value)
         -- gfx.fillRect(self.canvas.width-_bar_thick,0, _bar_thick, value or self.canvas.height)
         -- gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
         gfx.setColor(gfx.kColorBlack)
-        gfx.fillRoundRect(_hover, _hover, (value or self.canvas.width)-_hover, self.canvas.height-_hover,2)
+        gfx.fillRoundRect(_hover + self.canvas.width-(value or self.canvas.width) , _hover, (value or self.canvas.width)-_hover, self.canvas.height-_hover,2)
         gfx.setColor(gfx.kColorBlack)
-        gfx.fillRoundRect(0,0, (value or self.canvas.width)-_hover, self.canvas.height-_hover,2)
+        gfx.fillRoundRect(self.canvas.width-(value or self.canvas.width),0, (value or self.canvas.width)-_hover, self.canvas.height-_hover,2)
         gfx.setColor(gfx.kColorWhite)
-        gfx.drawRoundRect(0,0, (value or self.canvas.width)-_hover, self.canvas.height-_hover,2)
+        gfx.drawRoundRect(self.canvas.width-(value or self.canvas.width),0, (value or self.canvas.width)-_hover, self.canvas.height-_hover,2)
         gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
     end
     
@@ -130,13 +129,17 @@ function TextBubble:drawText(length)
 
     gfx.pushContext(self.canvas)
         self:drawBubbleBg()
-        gfx.drawTextInRect(_str, self.margin, self.margin, self._w, self._h)
-
+        if self.type == DIAG_PLAYER then
+            gfx.drawTextInRect(_str, self.canvas.width-self.margin-self._w-3, self.canvas.height-self.margin-self._h, self._w, self._h, nil , nil, kTextAlignment.right)
+        else
+            gfx.drawTextInRect(_str, self.margin, self.margin, self._w, self._h)
+        end
     gfx.popContext()
 
 end
 
 function TextBubble:finish()
+
     self.finished = true
     if self.animate_in_timer then
         self.animate_in_timer:remove()

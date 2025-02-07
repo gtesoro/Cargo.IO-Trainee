@@ -56,7 +56,7 @@ function InventoryPopup:initGrids()
         if self.data.a_callback then
             self.data.a_callback(_self)
             self:unblur(function ()
-                g_SceneManager:popScene('unstack')
+                g_SceneManager:popScene()
             end)
         end
     end
@@ -66,7 +66,7 @@ function InventoryPopup:initGrids()
             self.data.b_callback()
         end
         self:unblur(function ()
-            g_SceneManager:popScene('unstack')
+            g_SceneManager:popScene()
         end)
     end
 

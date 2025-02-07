@@ -91,27 +91,27 @@ function Contract:onLose()
 
 end
 
-function Contract:onCancel()
+-- function Contract:onCancel()
 
-    if g_SystemManager:getPlayer():hasContract(self) then
-        g_SceneManager:pushScene(Popup({text='Cancel Contract?', options={
-            {
-                name='Yes',
-                callback= function ()
-                    g_NotificationManager:notify(string.format("Contract Canceled: %s", self.name))
-                    self:onLose()
-                    g_SystemManager:getPlayer():removeContract(self)
-                    g_SceneManager:popScene('between menus')
-                end
-            },
-            {
-                name='No'
-            }
-        }}))
-        return true
-    end
-        return false
-end
+--     if g_SystemManager:getPlayer():hasContract(self) then
+--         g_SceneManager:pushScene(Popup({text='Cancel Contract?', options={
+--             {
+--                 name='Yes',
+--                 callback= function ()
+--                     g_NotificationManager:notify(string.format("Contract Canceled: %s", self.name))
+--                     self:onLose()
+--                     g_SystemManager:getPlayer():removeContract(self)
+--                     g_SceneManager:popScene('between menus')
+--                 end
+--             },
+--             {
+--                 name='No'
+--             }
+--         }}))
+--         return true
+--     end
+--         return false
+-- end
 
 function Contract:canSign()
     return true
@@ -132,12 +132,6 @@ function Contract:getOptions()
             name = "Contract",
             callback = function ()
                 g_SceneManager:pushScene(ImageViewer({image=gfx.sprite.new(self:getContractImage())}), "between menus")
-            end
-        },
-        {
-            name = "Cancel",
-            callback = function ()
-               self:onCancel()
             end
         }
     }
@@ -231,8 +225,9 @@ Upon signing, the contractee commits to deliver the provided cargo to:
   - %s, %s
 before the end of Cycle %i in exchange for:  
   - %i Credits
-upon delivery. Delays will have penalties on this amount.
-Damaging, loosing or stealing the provided cargo will be consider a criminal offence.
+upon delivery. 
+Delays will have penalties on the reward amount.
+Damaging, loosing or stealing the provided cargo will be fined with half of the contractee's net worth.
 ]]
                                         
 end
@@ -262,7 +257,53 @@ function DeliveryContract:generateLocalContract()
     self.name = string.format("%s #%i", self.name, self.state.number)
     self.contract_text = self:renderText()
 
-    
+end
+
+function DeliveryContract:generateSystemContract()
+
+    local _current_system = g_SystemManager:getPlayer():getCurrentSystem()
+
+    math.randomseed(g_SystemManager:getPlayer().cycle + stringToSeed(_current_system.data.name))
+
+    local _possible_systems = {}
+
+    for k, _sys in pairs(g_SystemManager:getSystems()) do
+        if _sys.name ~= _current_system.data.name and _sys.locations and _sys.z == _current_system.data.z then
+            for k, _loc in pairs(_sys.locations) do
+                if tableHasElement(_loc.facilities, FACILITY_CARGO) then
+                    table.insert(_possible_systems, _sys)
+                end
+                break
+            end
+        end
+    end
+
+    self.state.destination_system = _possible_systems[math.random(1, #_possible_systems)] 
+
+    local _possible_locations = {}
+
+    for k, _loc in pairs(self.state.destination_system.locations) do
+        if tableHasElement(_loc.facilities, FACILITY_CARGO) then
+            table.insert(_possible_locations, _loc)
+        end
+    end
+
+    self.state.destination = _possible_locations[math.random(1, #_possible_locations)]
+
+    self.state.length = math.floor((math.abs(_current_system.data.x - self.state.destination_system.x) + math.abs(_current_system.data.y - self.state.destination_system.y))/2)
+    self.state.reward = math.random(200, 500)
+    if g_SystemManager:getGlobalState().ql_number == nil then
+        g_SystemManager:getGlobalState().ql_number = 1
+    end
+    self.state.number = g_SystemManager:getGlobalState().ql_number
+    self.name = string.format("%s #%i", self.name, self.state.number)
+    self.contract_text = self:renderText()
+
+end
+
+function DeliveryContract:onSign()
+    DeliveryContract.super.onSign(self)
+    g_SystemManager:getGlobalState().ql_number += 1
 end
 
 function DeliveryContract:renderText()

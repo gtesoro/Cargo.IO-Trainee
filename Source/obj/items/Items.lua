@@ -32,13 +32,14 @@ function Item:init()
             name="Description",
             callback = function (_self)
                 _self:remove()
-                g_SceneManager:pushScene(Popup({text=self.description}), 'stack')
+                g_SceneManager:pushScene(Popup({text=self.description}))
             end
         }
     }
 end
 
 function Item:getAttrs()
+    local _self = self
     return {
         {
             "Type",  self.type 
@@ -47,7 +48,12 @@ function Item:getAttrs()
             "Usage", self.usage
         },
         {
-            "Price", table.concat({self.price_min,'-',self.price_max})
+            "Price Range", table.concat({self.price_min,'-',self.price_max})
+        },
+        {
+            "Price", function ()
+                return _self:getCurrentPrice()
+            end
         }
     }
 end
@@ -62,6 +68,14 @@ function Item:getOptions()
 end
 
 function Item:onGain()
+    
+end
+
+function Item:onEquip()
+    
+end
+
+function Item:onUnequip()
     
 end
 
@@ -202,6 +216,7 @@ function Radio:init()
 
 end
 
+
 class('Laser').extends(Item)
 
 function Laser:init()
@@ -219,6 +234,33 @@ function Laser:init()
 
     self.description = "TBD"
 
+end
+
+class('LeapEngine').extends(Item)
+
+function LeapEngine:init()
+
+    Laser.super.init(self)
+
+    self.name = "Leap Engine"
+
+    self.image = gfx.image.new("assets/items/leap_engine")
+
+    self.type = "Equipment"
+    self.usage = "Leap"
+    self.price_max = 10000
+    self.price_min = 9000
+
+    self.description = "It allows to performed leaps through space. A Friedenmarke is required for its operation."
+
+end
+
+function LeapEngine:onEquip()
+    g_NotificationManager:notify('New Function: Leap')
+end
+
+function LeapEngine:onUnequip()
+    g_NotificationManager:notify('Function Lost: Leap')
 end
 
 class('Neodymium').extends(Item)
@@ -310,20 +352,11 @@ function QlCargo:save()
 end
 
 function QlCargo:getAttrs()
-    return {
-        {
-            "Type",  self.type 
-        },
-        {
-            "Usage", self.usage
-        },
-        {
-            "Price", string.format("%s-%s", self.price_min, self.price_max)
-        },
-        {
-            "Destination", self.destination.name
-        }
-    }
+    local _attrs = QlCargo.super.getAttrs(self)
+    table.insert(_attrs, {
+        "Destination", self.destination.name
+    })
+    return _attrs
 end
 
 class('YggdrasilAtlas').extends(Item)

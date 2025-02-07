@@ -76,6 +76,7 @@ function Scene:remove()
 end
 
 function Scene:clean()
+    print('Cleaning', self.className)
     for k, v in pairs(self.sprites) do
         v:remove()
         self.sprites[k] = nil

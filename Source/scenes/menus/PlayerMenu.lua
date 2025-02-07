@@ -11,10 +11,17 @@ function PlayerMenu:init()
     self.data.options = {
 
         {
-            name = 'Status',
+            name = 'Ship',
             sprite = gfx.sprite.new(getStatusImg()),
             callback = function ()
                 g_SceneManager:pushScene(LoadoutMenu({items=g_SystemManager:getPlayer().ship.loadout.items, read_only=true}), 'between menus')
+            end
+        },
+        {
+            name = 'Map',
+            sprite = gfx.sprite.new(gfx.image.new('assets/menus/map')),
+            callback = function ()
+                g_SceneManager:pushScene(Map(), 'between menus')
             end
         },
         {
@@ -35,14 +42,7 @@ function PlayerMenu:init()
             name = 'Codex',
             sprite = gfx.sprite.new(gfx.image.new('assets/menus/codex')),
             callback = function ()
-                g_SceneManager:pushScene(CodexListMenu(), 'between menus')
-            end
-        },
-        {
-            name = 'Map',
-            sprite = gfx.sprite.new(gfx.image.new('assets/menus/map')),
-            callback = function ()
-                g_SceneManager:pushScene(Map(), 'between menus')
+                g_SceneManager:pushScene(CodexMaintMenu(), 'between menus')
             end
         },
         {
@@ -90,10 +90,33 @@ function FunctionsMenu:init()
                         {
                             name='No'
                         }
-                    }}), 'stack')
+                    }}))
                 end
             }
         }
+    
+    if #g_SystemManager:getPlayer():getLoadoutByType('LeapEngine') > 0 then
+        table.insert(self.data.options, {
+            name = "Leap",
+            callback = function ()
+                g_SceneManager:pushScene(TextInput(
+                {
+                    callback = function (text)
+                        local x, y, z = string.match(text, "(%d+)%.(%d+)%.(%d+)")
+                        if x and y and z then
+                            x = tonumber(x)
+                            y = tonumber(y)
+                            z = tonumber(z)
+                            goTo(x, y, z)
+                        else
+                           g_NotificationManager:notify('Invalid System') 
+                        end
+                    end
+                }
+                ), "between menus")
+            end
+        })
+    end
 end
 
 class('ContractMenu').extends(GenericMenu)
@@ -127,31 +150,75 @@ function ContractListMenu:init()
     
 end
 
-class('CodexListMenu').extends(GenericMenu)
+class('CodexMaintMenu').extends(GenericMenu)
 
-function CodexListMenu:init()
+function CodexMaintMenu:init()
 
-    CodexListMenu.super.init(self)
+    CodexMaintMenu.super.init(self)
     self.data.options = {
         {
             name = "Notifications",
             callback = function ()
                 g_SceneManager:pushScene(NotificationsMenu(), 'between menus')
             end
-        },
-        {
-            name = "Systems",
-            callback = function ()
-                g_SceneManager:pushScene(CodexSystemListMenu(), 'between menus')
-            end
-        },
-        {
-            name = "Locations",
-            callback = function ()
-                g_SceneManager:pushScene(CodexLocationListMenu(), 'between menus')
-            end
         }
     }
+
+    for k,v in pairs(g_SystemManager.static.codex) do
+        local _entry = {
+            name = v.name,
+            callback = function ()
+                g_SceneManager:pushScene(CodexListMenu({list=v.children}), 'between menus')
+            end
+        }
+        table.insert(self.data.options, _entry)
+    end
+
+end
+
+
+class('CodexListMenu').extends(GenericMenu)
+
+function CodexListMenu:init(data)
+
+    CodexListMenu.super.init(self, data)
+
+    local _list = {}
+        
+    -- for k, v in pairs(g_SystemManager:getPlayer().codex.locations) do
+    --     local _location = g_SystemManager:getLocation(v)
+    --     _list[#_list+1] = {
+    --         name = _location.name,
+    --         sprite = function ()
+    --             return AnimatedSprite(_location.img, 100)
+    --         end,
+    --         callback = function ()
+    --             g_SceneManager:pushScene(ImageViewer({image=PlanetDescription(_location)}), 'between menus')
+    --         end
+    --     }
+    -- end
+    for k,v in pairs(self.data.list) do
+        local _entry = nil
+
+        if v.children then
+            _entry = {
+                name = v.name,
+                callback = function ()
+                    g_SceneManager:pushScene(CodexListMenu({list=children}), 'between menus')
+                end
+            }
+        else
+            _entry = v
+        end
+        
+        table.insert(_list, _entry)
+    end
+
+    table.sort(_list, function (a, b)
+        return a.name < b.name
+    end)
+
+    self.data.options = _list
 end
 
 class('NotificationsMenu').extends(GenericMenu)
@@ -174,80 +241,6 @@ function NotificationsMenu:init()
     self.data.options = _list
 end
 
-class('CodexSystemListMenu').extends(GenericMenu)
-
-function CodexSystemListMenu:init()
-
-    CodexLocationListMenu.super.init(self)
-
-    local _list = {}
-        
-    for k, v in pairs(g_SystemManager:getPlayer().codex.systems) do
-        local _system = g_SystemManager:getSystemByName(v)
-        _list[#_list+1] = {
-            name = _system.name,
-            sprite = function ()
-                return AnimatedSprite(_system.sun, 100)
-            end,
-            callback = function ()
-                g_SceneManager:pushScene(CodexSystemMenu(_system), 'between menus')
-            end
-        }
-    end
-
-    table.sort(_list, function (a, b)
-        return a.name < b.name
-    end)
-
-    self.data.options = _list
-end
-
-
-class('CodexLocationListMenu').extends(GenericMenu)
-
-function CodexLocationListMenu:init()
-
-    CodexLocationListMenu.super.init(self)
-
-    local _list = {}
-        
-    for k, v in pairs(g_SystemManager:getPlayer().codex.locations) do
-        local _location = g_SystemManager:getLocation(v)
-        _list[#_list+1] = {
-            name = _location.name,
-            sprite = function ()
-                return AnimatedSprite(_location.img, 100)
-            end,
-            callback = function ()
-                g_SceneManager:pushScene(ImageViewer({image=PlanetDescription(_location)}), 'between menus')
-            end
-        }
-    end
-
-    table.sort(_list, function (a, b)
-        return a.name < b.name
-    end)
-
-    self.data.options = _list
-end
-
-class('CodexLocationMenu').extends(GenericMenu)
-
-function CodexLocationMenu:init()
-
-    CodexLocationMenu.super.init(self)
-    self.data.options = {}
-end
-
-class('CodexSystemMenu').extends(GenericMenu)
-
-function CodexSystemMenu:init()
-
-    CodexSystemMenu.super.init(self)
-    self.data.options = {}
-
-end
-
 
 class('PlayerInventory').extends(GenericInventory)
 
@@ -256,7 +249,6 @@ function PlayerInventory:init()
     PlayerInventory.super.init(self)
 
     self.data.items = g_SystemManager:getPlayer().inventory.items
-    self.data.item_panel = ItemPanel(180, 150)
 
     self.data.context_options = {
         {

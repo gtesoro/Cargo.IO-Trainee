@@ -25,11 +25,12 @@ function BetweenMenusIn:init(duration)
 
     self.fade_timer.updateCallback = function(timer)
         local value = clamp(math.ceil(timer.value*100), 1, 100)
-        if g_SystemManager:isTick(_ticks) then
-            self.grid:setImage(self.grid_sheet:getImage(1))
-        else
-            self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
-        end
+        -- if g_SystemManager:isTick(_ticks) then
+        --     self.grid:setImage(self.grid_sheet:getImage(1))
+        -- else
+        --     self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
+        -- end
+        self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
         
         self.grid:markDirty()
     end
@@ -74,11 +75,12 @@ function BetweenMenusOut:init(duration)
 
     self.fade_timer.updateCallback = function(timer)
         local value = clamp(math.ceil(timer.value*100), 1, 100)
-        if g_SystemManager:isTick(_ticks) then
-            self.grid:setImage(self.grid_sheet:getImage(1))
-        else
-            self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
-        end
+        -- if g_SystemManager:isTick(_ticks) then
+        --     self.grid:setImage(self.grid_sheet:getImage(1))
+        -- else
+        --     self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
+        -- end
+        self.grid:setImage(self.grid_sheet:getImage(value):vcrPauseFilterImage())
         self.grid:markDirty()
     end
 

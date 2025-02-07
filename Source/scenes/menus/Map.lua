@@ -8,6 +8,10 @@ function Map:startScene()
     self.player_pos = g_SystemManager:getPlayer().current_position
     self.current_z = self.player_pos.z
 
+    self.unknown_system = {
+        name = 'Unknown'
+    }
+
     self:initInputs()
 
     local img = gfx.image.new(400, 240, gfx.kColorBlack)
@@ -26,8 +30,8 @@ function Map:startScene()
 
     self.pointer_system = nil
     self.pointer_size = 80
-    self.pointer = gfx.sprite.new(gfx.image.new(self.pointer_size, self.pointer_size))
-    inContext(self.pointer:getImage(), function ()
+    self.pointer_img = gfx.image.new(self.pointer_size, self.pointer_size)
+    inContext(self.pointer_img, function ()
         gfx.setColor(gfx.kColorWhite)
         gfx.setLineWidth(8)
         gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
@@ -40,6 +44,9 @@ function Map:startScene()
         -- gfx.drawLine(200, 120 + self.pointer_size/2, 200, 240)
 
     end)
+
+    self.pointer = gfx.sprite.new(self.pointer_img)
+    
     self.pointer:setIgnoresDrawOffset(true)
     self.pointer:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.pointer:setZIndex(4)
@@ -54,6 +61,14 @@ function Map:startScene()
     self.infolay:add()
 
     table.insert(self.sprites, self.infolay)
+
+    self.infolay_coords = gfx.sprite.new(gfx.image.new(400, 240))
+    self.infolay_coords:setIgnoresDrawOffset(true)
+    self.infolay_coords:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
+    self.infolay_coords:setZIndex(4)
+    self.infolay_coords:add()
+
+    table.insert(self.sprites, self.infolay_coords)
 
     self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
     self.ui_overlay:setIgnoresDrawOffset(true)
@@ -196,8 +211,11 @@ end
 
 function Map:doVCR()
 
-    self.bg_sprite:setImage(self.bg_image:vcrPauseFilterImage())
-    
+    -- if g_SystemManager:isTick(4) then
+    --     self.bg_sprite:setImage(self.bg_image:vcrPauseFilterImage())
+    -- end
+
+    self.pointer:setImage(self.pointer_img:vcrPauseFilterImage())
 end
 
 function Map:initInputs()
@@ -212,9 +230,11 @@ function Map:initInputs()
         --     -- self:drawMap()
         -- end,
 
-        -- AButtonUp = function ()
-
-        -- end,
+        AButtonUp = function ()
+            if #g_SystemManager:getPlayer():getLoadoutByType('LeapEngine') > 0 and self.pointer_system then
+                goTo(self.pointer_system.x, self.pointer_system.y, self.pointer_system.z)
+            end
+        end,
 
         BButtonUp = function ()
             self.map_sprite:remove()
@@ -249,6 +269,17 @@ function Map:initInputs()
     
 end
 
+function Map:getCoordsFromOffset(x_offset, y_offset)
+    
+    local _x, _y, _z = 0, 0, self.current_z
+
+    _x = math.floor((x_offset / self.separation) + 0.5)
+    _y = math.floor((y_offset / self.separation) + 0.5)
+
+    return _x, _y, _z
+
+end
+
 function Map:getSystemFromOffset(x_offset, y_offset)
     
     local _x, _y, _z = 0, 0, self.current_z
@@ -264,12 +295,10 @@ function Map:getSystemFromOffset(x_offset, y_offset)
         if _s then
             return _s
         else
-            return {
-                name = 'Unknown',
-                x = _x,
-                y = _y,
-                z = _z
-            }
+            self.unknown_system.x = _x
+            self.unknown_system.y = _y
+            self.unknown_system.z = _z
+            return self.unknown_system
         end
     end
 
@@ -280,7 +309,7 @@ function Map:doUpdate()
 
     local _cam_speed = 4
 
-    self.bg_sprite:setImage(self.bg_image)
+    self.pointer:setImage(self.pointer_img)
 
     gfx.setDrawOffset(-self.x_offset, -self.y_offset)
     self.map_sprite:setVisible(true)
@@ -309,6 +338,15 @@ function Map:doUpdate()
         gfx.setDrawOffset(-self.x_offset, -self.y_offset)
     end
 
+    inContext(self.infolay_coords:getImage(), function ()
+        gfx.clear()
+        local _x, _y, _z = self:getCoordsFromOffset(self.x_offset, self.y_offset)
+        gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+        gfx.drawTextAligned(string.format("%d.%d.%d", _x, _y, _z), 360, 208, kTextAlignment.right)
+        gfx.setImageDrawMode(gfx.kDrawModeCopy)
+    end)
+    self.infolay_coords:markDirty()
+
     local _s = self:getSystemFromOffset(self.x_offset, self.y_offset)
     
     if self.pointer_system ~= _s then
@@ -323,12 +361,24 @@ function Map:doUpdate()
                 --gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
                 gfx.drawTextAligned(self.pointer_system.name, 200, 25, kTextAlignment.center)
                 gfx.drawTextAligned(systemNameFromCoords(self.pointer_system.x, self.pointer_system.y, self.pointer_system.z) , 200, 45, kTextAlignment.center)
+                local _current = g_SystemManager:getPlayer():getCurrentSystem().data
+                if #g_SystemManager:getPlayer():getLoadoutByType('LeapEngine') > 0  and
+                    self.pointer_system ~= _current.x and  
+                    self.pointer_system.y ~= _current.y and  
+                    self.pointer_system.z ~= _current.z then
+                    local _x_start = 300
+                    local _a_button = g_SystemManager:getButtonImage(ICON_BUTTON_A)
+                    _a_button:draw(_x_start, 42.5 - _a_button.height/2)
+                    gfx.setFont(g_font_18)
+                    local _w, _h = gfx.getTextSize('Leap')
+                    gfx.drawTextAligned('Leap', _x_start + 20, 42.5 - _h/2, kTextAlignment.left)
+                end
                 gfx.setImageDrawMode(gfx.kDrawModeCopy)
             end)
-            self.infolay:markDirty()
         else
             self.infolay:getImage():clear(gfx.kColorClear)
         end
+        self.infolay:markDirty()
     end
 
 end

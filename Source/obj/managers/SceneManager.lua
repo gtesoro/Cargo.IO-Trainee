@@ -78,10 +78,10 @@ function SceneManager:switchSceneHWipe(scene, duration, dir)
         self.scene_stack[#self.scene_stack] = scene
         collectGarbage()
         scene:load()
-        scene:focus()
         scene:add()
         local _t_out = Wipe(duration, dir, true)
         _t_out.endCallback = function ()
+            scene:focus()
             self.transitioning = false
         end
         _t_out:add()
@@ -102,10 +102,11 @@ function SceneManager:pushSceneHWipe(scene, duration, dir)
         end
         self.scene_stack[#self.scene_stack+1] = scene
         scene:load()
-        scene:focus()
         scene:add()
+
         local _t_out = Wipe(duration, dir, true)
         _t_out.endCallback = function ()
+            scene:focus()
             self.transitioning = false
         end
         _t_out:add()
@@ -152,11 +153,11 @@ function SceneManager:pushSceneToMenu(scene, duration, blur)
         local _t2 = BetweenMenusIn(duration/2)
         
         _t2.endCallback = function ()
+            scene:focus()
             self.transitioning = false
         end
         _t2:add()
         scene:load()
-        scene:focus()
         scene:add()
         
     end
@@ -174,13 +175,13 @@ function SceneManager:pushSceneStack(scene, duration, blur)
 
     self.scene_stack[#self.scene_stack+1] = scene
     scene:load()
-    scene:focus()
     scene:moveTo(200, -120)
     scene:add()
 
     local _t1 = Stack(duration, blur)
     
-    _t1.endCallback = function ()    
+    _t1.endCallback = function ()
+        scene:focus()
         self.transitioning = false
     end
 
@@ -204,16 +205,28 @@ function SceneManager:pushSceneBetweenMenus(scene, duration, blur)
         local _t2 = BetweenMenusIn(duration/2)
         
         _t2.endCallback = function ()
+            scene:focus()
             self.transitioning = false
         end
         _t2:add()
         scene:load()
-        scene:focus()
         scene:add()
         
     end
 
     _t1:add()
+
+end
+
+function SceneManager:disableControls()
+
+    pd.inputHandlers.push({}, true)
+
+end
+
+function SceneManager:enableControls()
+
+    pd.inputHandlers.pop()
 
 end
 
@@ -233,10 +246,12 @@ function SceneManager:popSceneOutMenu(duration)
         collectGarbage()
 
         if #self.scene_stack > 0 then
-            self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
         end
         _t2.endCallback = function ()
+            if #self.scene_stack > 0 then
+                self.scene_stack[#self.scene_stack]:focus()
+            end
             self.transitioning = false
         end
         _t2:add()
@@ -261,11 +276,13 @@ function SceneManager:popSceneBetweenMenus(duration)
         collectGarbage()
 
         if #self.scene_stack > 0 then
-            self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
         end
 
         _t2.endCallback = function ()
+            if #self.scene_stack > 0 then
+                self.scene_stack[#self.scene_stack]:focus()
+            end
             self.transitioning = false 
         end
         _t2:add()
@@ -312,11 +329,13 @@ function SceneManager:popSceneHWipe(duration, dir)
         collectGarbage()
 
         if #self.scene_stack > 0 then
-            self.scene_stack[#self.scene_stack]:focus()
             self.scene_stack[#self.scene_stack]:add()
         end
         local _t_out = Wipe(duration, dir, true)
         _t_out.endCallback = function ()
+            if #self.scene_stack > 0 then
+                self.scene_stack[#self.scene_stack]:focus()
+            end
             self.transitioning = false
         end
         _t_out:add()
@@ -409,8 +428,8 @@ function SceneManager:pushScene(scene, transition, duration)
         end
         self.scene_stack[#self.scene_stack+1] = scene
         scene:load()
-        scene:focus()
         scene:add()
+        scene:focus()
         self.transitioning = false
     end
 

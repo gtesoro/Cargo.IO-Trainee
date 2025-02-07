@@ -15,8 +15,12 @@ function getStaticData()
         facilities= {
             FACILITY_STARPORT,
             FACILITY_CARGO
-        }
+        },
+        thumbnail = function ()
+            return AnimatedSprite('assets/space/cylinder_station_thumb', 250)  
+        end
     }
+    static.locations[#static.locations+1] = _valhalla_station
 
     local _freja = {
         img="assets/planets/planet3",
@@ -29,7 +33,10 @@ function getStaticData()
         facilities= {
             FACILITY_STARPORT,
             FACILITY_CARGO
-        }
+        },
+        thumbnail = function ()
+            return AnimatedSprite('assets/planets/planet3')  
+        end
     }
 
     static.locations[#static.locations+1] = _freja
@@ -45,7 +52,10 @@ function getStaticData()
         facilities= {
             FACILITY_MARKET,
             FACILITY_CARGO
-        }
+        },
+        thumbnail = function ()
+            return AnimatedSprite('assets/planets/thor/thor')  
+        end
     }
 
     static.locations[#static.locations+1] = _thor
@@ -61,7 +71,10 @@ function getStaticData()
         facilities= {
             FACILITY_CLONING,
             FACILITY_CARGO
-        }
+        },
+        thumbnail = function ()
+            return AnimatedSprite('assets/planets/loki/sd')  
+        end
     }
 
     static.locations[#static.locations+1] = _loki
@@ -76,7 +89,10 @@ function getStaticData()
         outline=true,
         facilities= {
             FACILITY_CARGO
-        }
+        },
+        thumbnail = function ()
+            return AnimatedSprite('assets/planets/planet1')  
+        end
     }
 
     static.locations[#static.locations+1] = _odin
@@ -87,7 +103,7 @@ function getStaticData()
 
     local _sys = {
         class = 'System',
-        name = "Valhalla Station",
+        name = "Outer Reach",
         x = 2,
         y = 3,
         z = 0,
@@ -271,8 +287,9 @@ function getStaticData()
         class = 'StageSystem',
         name = "DevStage",
         background = "assets/backgrounds/space/empty_2",
-        stage = "Test",
-        stage_overlay = "assets/spaceships/Cargo_Top_dir3",
+        stage = "Ship02",
+        stage_overlay = "assets/spaceships/N.01-C",
+        stage_middle = "assets/spaceships/N.01-C_Middle",
         stage_offset_x = 100,
         stage_offset_y = 100,
         x = -3,
@@ -284,6 +301,34 @@ function getStaticData()
     
     table.insert(_systems, _sys)
 
+    local _codex_locations = {
+        name= "Locations",
+        children = {}
+    }
+
+    local _codex_terms = {
+        name= "Terms",
+        children = {}
+    }
+
+    static.codex = {
+        _codex_locations,
+        _codex_terms 
+    }
+
+    for k,v in pairs(static.locations) do
+        table.insert(_codex_locations.children, {
+            name=v.name, 
+            sprite=v.thumbnail,
+            callback=function ()
+                g_SceneManager:pushScene(ImageViewer({image=PlanetDescription(v)}), 'between menus')
+        end})
+    end
+
     return static
 
+end
+
+function addToCodexPath(path, element)
+    
 end

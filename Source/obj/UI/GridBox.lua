@@ -117,22 +117,22 @@ function GridBox:initInputs()
         
         cranked = function (change, acceleratedChange)
 
-            local _sensitivity = g_SystemManager.crank_menu_sensitivity
-            self.accumulated_crank += acceleratedChange
+            -- local _sensitivity = g_SystemManager.crank_menu_sensitivity
+            -- self.accumulated_crank += acceleratedChange
 
-            if math.abs(self.accumulated_crank) > _sensitivity then
-                if self.accumulated_crank > 0 then
-                    g_SoundManager:playMenuListChange()
-                    self.grid:selectNextColumn(true)
-                else
-                    g_SoundManager:playMenuListChange()
-                    self.grid:selectPreviousColumn(true)
-                end
-                if self.on_change then
-                    self.on_change(self:getSelection())
-                end
-                self.accumulated_crank = 0
-            end
+            -- if math.abs(self.accumulated_crank) > _sensitivity then
+            --     if self.accumulated_crank > 0 then
+            --         g_SoundManager:playMenuListChange()
+            --         self.grid:selectNextColumn(true)
+            --     else
+            --         g_SoundManager:playMenuListChange()
+            --         self.grid:selectPreviousColumn(true)
+            --     end
+            --     if self.on_change then
+            --         self.on_change(self:getSelection())
+            --     end
+            --     self.accumulated_crank = 0
+            -- end
         end,
 
         AButtonUp = function ()

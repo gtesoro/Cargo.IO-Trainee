@@ -394,16 +394,24 @@ end
 -- return all the tileIDs NOT tagged in LDtk with tileset_enum_value
 -- playdate functions usually require this function (getCollisionRects(emptyIDs), addWallSprites() )
 function LDtk.get_empty_tileIDs( level_name, tileset_enum_value, layer_name )
+
+	
+
 	local layer = _.get_tile_layer( level_name, layer_name )
 	if not layer then return end
 
+	print(level_name, layer_name, layer.tileset_uid)
+	printTable(_tilesets)
+
+	
 	local tileset = _tilesets[ layer.tileset_uid ]
 	if not tileset then return end
 
 	if layer.has_flipped_tiles then
 		return tileset.tileIDs_flipped_empty[ tileset_enum_value ]
 	end
-
+	
+	printTable(tileset.tileIDs_empty[ tileset_enum_value ])
 	return tileset.tileIDs_empty[ tileset_enum_value ]
 end
 
