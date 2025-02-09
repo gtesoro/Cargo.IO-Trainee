@@ -381,7 +381,7 @@ function SceneManager:popScene(transition, duration)
         self.transitioning = false
     end
 
-    print('Pop Scene Ends:',transition, #self.scene_stack)
+    --print('Pop Scene Ends:',transition, #self.scene_stack)
 
 end
 
@@ -433,7 +433,7 @@ function SceneManager:pushScene(scene, transition, duration)
         self.transitioning = false
     end
 
-    print('Push Scene Ends:', #self.scene_stack)
+    --print('Push Scene Ends:', #self.scene_stack)
 
 end
 
@@ -479,7 +479,7 @@ function SceneManager:switchScene(scene, transition, duration)
         self.transitioning = false
     end
 
-    print('Switch Scene Ends:', #self.scene_stack)
+    --print('Switch Scene Ends:', #self.scene_stack)
 end
 
 function SceneManager:reset(scene)

@@ -16,7 +16,7 @@ function Widget:focus()
     if self.input_handlers then
         
         pd.inputHandlers.push(self.input_handlers)
-        print('Setting inputs for', self.className, #self.input_handlers)
+        --print('Setting inputs for', self.className, #self.input_handlers)
     end
 end
 
@@ -26,7 +26,7 @@ function Widget:unfocus()
     if self.input_handlers then
         
         pd.inputHandlers.pop()
-        print('Popping inputs for', self.className, #self.input_handlers)
+        --print('Popping inputs for', self.className, #self.input_handlers)
     end
 
 end

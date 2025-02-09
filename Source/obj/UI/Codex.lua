@@ -1,61 +1,55 @@
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
-class('PlanetDescription').extends(Scene)
+class('LocationDescription').extends(Scene)
 
-function PlanetDescription:init(planet)
 
-    PlanetDescription.super.init(self)
+function LocationDescription:startScene()
 
-    local img = gfx.image.new(300, 424, gfx.kColorWhite)
-
-    self.data = planet
-
-    inContext(img, function ()
-        
-        gfx.setLineWidth(5)
-        gfx.setColor(gfx.kColorBlack)
-        gfx.drawLine(img.width*0.1, img.height*0.20, img.width*0.9, img.height*0.20)
-
-        gfx.setFont(gfx.font.new('font/Full Circle/font-full-circle'))
-        gfx.drawTextInRect(self.data.description, img.width*0.1, img.height*0.25, img.width*0.8, img.height*0.45)
-
-        local facilities = "Facilities:"
-        for k,v in pairs(self.data.facilities) do
-            facilities = string.format("%s\n  - %s", facilities, facility_v_options[v].name)
-        end
-        gfx.drawTextInRect(facilities, img.width*0.1, img.height*0.7, img.width*0.8, img.height*0.2)
-
-    end)
-
-    self:setImage(img)
+    local _margin_w = 50
+    local _w = 400 - 2*_margin_w
     
-    self:moveTo(self.width/2, self.height/2)
-    self:setZIndex(0)
 
-    self:initPlanet()
+    self.thumbnail = self.data.thumbnail()
 
-end
+    local _h = 10 + self.thumbnail.height/2
 
+    self.thumbnail:setCenter(0, 0.5)
+    self.thumbnail:moveTo(_w*0.1, _h)
+    self.thumbnail:setZIndex(1)
+    table.insert(self.sprites, self.thumbnail)
 
-function PlanetDescription:initPlanet()
+    self.label = gfx.sprite.new(gfx.imageWithText(self.data.name, _w*0.8, nil, gfx.kColorClear, nil, nil, nil, g_font_24))
+    self.label:setCenter(1, 0.5)
+    self.label:moveTo(_w*0.9, _h)
+    self.label:setZIndex(1)
+    table.insert(self.sprites, self.label)
 
-    self.planet_spr = AnimatedSprite(self.data.img, 100)
-    self.planet_spr:moveTo(self.width*0.2, self.height*0.1)
-    self.planet_spr:setZIndex(1)
-    table.insert(self.sprites, self.planet_spr)
+    _h += math.max(self.label.height, self.thumbnail.height) + 10
 
-    gfx.setFont(g_font_24)
-    local img = gfx.image.new(gfx.getTextSize(self.data.name))
-    inContext(img, function ()
-        gfx.drawText(self.data.name, 0,0)
-    end)
-    self.planet_label = gfx.sprite.new(img)
+    local _facilities = "Facilities:"
+    for k,v in pairs(self.data.facilities) do
+        _facilities = string.format("%s\n  - %s", _facilities, facility_v_options[v].name)
+    end
+    self.facilities = gfx.sprite.new(gfx.imageWithText(_facilities, _w*0.8, nil, gfx.kColorClear, nil, nil, nil, g_font_text))
+    self.facilities:setCenter(0, 0)
+    self.facilities:moveTo(_w*0.1, _h)
+    self.facilities:setZIndex(1)
+    table.insert(self.sprites, self.facilities)
 
-    self.planet_label:setZIndex(1)
-    self.planet_label:setCenter(1, 0.5)
-    self.planet_label:moveTo(self.width*0.8, self.height*0.1)
+    _h += self.facilities.height + 10
 
-    table.insert(self.sprites, self.planet_label)
+    self.description = gfx.sprite.new(gfx.imageWithText(self.data.description, _w*0.8, nil, gfx.kColorClear, nil, nil, nil, g_font_text))
+    self.description:setCenter(0, 0)
+    self.description:moveTo(_w*0.1, _h)
+    self.description:setZIndex(1)
+    table.insert(self.sprites, self.description)
+
+    _h += self.description.height + 10
+
+    self:setSize(_w, _h)
+    self:setCollideRect(0,0, self:getSize())
+
+    self:setCenter(0, 0)
 
 end

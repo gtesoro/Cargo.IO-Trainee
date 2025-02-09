@@ -51,6 +51,6 @@ function ItemPanel:init(item)
 
     self:setImage(img)
 
-    print(_header_height, self:getSize())
+    --print(_header_height, self:getSize())
 
 end

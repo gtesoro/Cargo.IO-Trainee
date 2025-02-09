@@ -321,7 +321,9 @@ function getStaticData()
             name=v.name, 
             sprite=v.thumbnail,
             callback=function ()
-                g_SceneManager:pushScene(ImageViewer({image=PlanetDescription(v)}), 'between menus')
+                local _img = LocationDescription(v)
+                _img:load()
+                g_SceneManager:pushScene(ImageViewer({image=_img}), 'between menus')
         end})
     end
 

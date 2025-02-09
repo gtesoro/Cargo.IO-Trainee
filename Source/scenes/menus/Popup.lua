@@ -7,6 +7,7 @@ function Popup:init(data)
     Popup.super.init(self, data)
     self.previous_scene_img = gfx.getDisplayImage()
     self:setZIndex(1000)
+    self:moveTo(200,120)
     self.blur_duration = 100
 end
 

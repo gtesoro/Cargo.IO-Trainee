@@ -119,9 +119,9 @@ function stringToSeed(str)
     return hash
 end
 
--- function printTable(table)
+-- function --printTable(table)
 --     for k,v in pairs(table) do
---         print(k,v)
+--         --print(k,v)
 --     end
 -- end
 
@@ -312,9 +312,9 @@ function getSignContractCallback(contract)
                     callback= function ()
                         if contract:canSign() then
                             
-                            local _timer = pd.timer.new(1000, _image_viewer.image_sprite.y,_image_viewer.image_sprite.height/2 - 240, pd.easingFunctions.outCubic)
+                            local _timer = pd.timer.new(1000, _image_viewer.image_sprite.y, -240, pd.easingFunctions.outCubic)
                             _timer.updateCallback = function (timer)
-                                _image_viewer.image_sprite:moveTo(200, timer.value)
+                                _image_viewer.image_sprite:moveTo(_image_viewer.image_sprite.x, timer.value)
                                 _image_viewer.image_sprite:markDirty()
                             end
                             _timer.timerEndedCallback = function ()

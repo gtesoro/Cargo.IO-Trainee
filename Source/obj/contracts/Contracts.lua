@@ -24,7 +24,7 @@ function Contract:getIcon()
     if self.icon then
         return self.icon
     else
-        local _icon = self:getContractImage()
+        local _icon = self:getContractImage(gfx.kColorWhite)
         return gfx.sprite.new(_icon:scaledImage(150/_icon.height))
     end
 end
@@ -33,10 +33,12 @@ function Contract:getSignPrice()
     return self.sign_price
 end
 
-function Contract:getContractImage()
+function Contract:getContractImage(bg)
+
+    local _bg = bg or gfx.kColorClear
     
 
-    local img = gfx.image.new('assets/contracts/contract_base')
+    local img = gfx.image.new(300, 424, _bg)
     inContext(img, function ()
 
         gfx.setFont(g_font_24)

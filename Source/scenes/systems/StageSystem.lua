@@ -43,12 +43,12 @@ function StageSystem:initStage()
 
         -- Entities
         for k, entity in pairs(LDtk.get_entities( self.data.stage, layer.name)) do
-            print(entity.name)
-            printTable(entity)
+            --print(entity.name)
+            --printTable(entity)
             if entity.name == "Item" then
-                print(entity.fields.class)
+                --print(entity.fields.class)
                 local _item = ItemContainer(_G[entity.fields.class]())
-                printTable(_item)
+                --printTable(_item)
                 _item:moveTo(entity.position.x + self.data.stage_offset_x, entity.position.y + self.data.stage_offset_y)
                 _item:setZIndex(entity.zIndex + 1)
                 _item:add()

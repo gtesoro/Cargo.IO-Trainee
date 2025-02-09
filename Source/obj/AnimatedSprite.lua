@@ -58,13 +58,13 @@ end
 -- function AnimatedSprite:add()
 --     AnimatedSprite.super.add(self)
 
---     print('AnimatedSprite added', self.image_table)
+--     --print('AnimatedSprite added', self.image_table)
 -- end
 
 -- function AnimatedSprite:remove()
 --     AnimatedSprite.super.remove(self)
 
---     print('AnimatedSprite removed', self.image_table)
+--     --print('AnimatedSprite removed', self.image_table)
 -- end
 
 

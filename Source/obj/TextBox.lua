@@ -3,7 +3,7 @@ local gfx <const> = pd.graphics
 
 class('TextBox').extends(gfx.sprite)
 
-function TextBox:init(text, w, h, aligment, margin, bg, font) 
+function TextBox:init(text, w, h, font, alignment, margin, bg) 
     
     self.text = text
 
@@ -22,9 +22,12 @@ function TextBox:init(text, w, h, aligment, margin, bg, font)
         self.font = g_font_18
     end
 
+    gfx.setFont(self.font)
+
+    local _align = alignment or kTextAlignment.center
+
     local _w, _h = gfx.getTextSize(self.text)
     
-    gfx.setFont(g_font_18)
 
     local _box_w, _box_h = _w + self.margin*2, _h + self.margin*2
 
@@ -42,35 +45,11 @@ function TextBox:init(text, w, h, aligment, margin, bg, font)
         gfx.setColor(self.bg)
         gfx.fillRoundRect(0, 0, img.width, img.height, 4)
 
-        gfx.drawTextAligned(self.text, img.width/2, img.height/2 - _h/2, kTextAlignment.center)
+        gfx.drawTextAligned(self.text, img.width/2, img.height/2 - _h/2, _align)
     end)
 
     self:setImage(img)
 
-    -- if _h > h then
-    --     self.scroll = _h - h + self.margin
-    -- end
+    self:setCollideRect(0,0, self:getSize())
 
-end
-
-function TextBox:update()
-
-    -- if self.scroll then
-    --     if not self.timer then
-    --         self.timer = pd.timer.new(1000*self.scroll/10, 0, self.scroll, pd.easingFunctions.inOutCubic)
-    --         self.timer.reverses = true
-    --         self.timer.repeats = true
-    --         self.timer.updateCallback = function (timer)
-    --             inContext(self:getImage(), function ()
-    --                 gfx.clear()
-    --                 gfx.setColor(gfx.kColorWhite)
-    --                 gfx.fillRoundRect(0, 0, self:getImage().width, self:getImage().height, 4)
-    --                 self.text_img:draw(self.margin , self.margin - timer.value)
-                    
-    --             end)
-    --             self:markDirty()
-    --         end
-    --     end
-    -- end
-    
 end

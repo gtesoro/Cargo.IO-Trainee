@@ -13,10 +13,6 @@ function Scene:init(data)
 
     self.loaded = false
     self.sprites = {}
-
-    self:setZIndex(0)
-
-    self:moveTo(200, 120)
 end
 
 function Scene:moveTo(x , y)
@@ -76,7 +72,7 @@ function Scene:remove()
 end
 
 function Scene:clean()
-    print('Cleaning', self.className)
+    --print('Cleaning', self.className)
     for k, v in pairs(self.sprites) do
         v:remove()
         self.sprites[k] = nil

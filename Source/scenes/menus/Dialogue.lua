@@ -5,7 +5,7 @@ local gfx <const> = pd.graphics
 class('Dialogue').extends(Scene)
 
 function Dialogue:startScene()
-    printTable(self.data)
+    --printTable(self.data)
     self:initInputs()
     self:initBg()
 end
@@ -493,13 +493,16 @@ function Dialogue:initInputs()
 
         cranked = function (change, acceleratedChange)
             if self.animations == 0 and not self.dialog_hidden and #self.bubbles > 0 then
-                local _a = change*0.25
-                if self.scrolled + _a < 0 then
+                local _t = -pd.getCrankTicks(25)
+                if math.fmod(_t, 2) ~= 0 then
+                    _t += 1 * (_t/math.abs(_t))
+                end
+                if self.scrolled + _t < 0 then
                     self:moveDialog(-self.scrolled)
                     self.scrolled = 0
                 else
-                    self:moveDialog(_a)
-                    self.scrolled += _a
+                    self:moveDialog(_t)
+                    self.scrolled += _t
                 end
             end
         end,

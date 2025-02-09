@@ -193,7 +193,7 @@ function CodexListMenu:init(data)
     --             return AnimatedSprite(_location.img, 100)
     --         end,
     --         callback = function ()
-    --             g_SceneManager:pushScene(ImageViewer({image=PlanetDescription(_location)}), 'between menus')
+    --             g_SceneManager:pushScene(ImageViewer({image=LocationDescription(_location)}), 'between menus')
     --         end
     --     }
     -- end
@@ -210,7 +210,7 @@ function CodexListMenu:init(data)
         else
             _entry = v
         end
-        
+
         table.insert(_list, _entry)
     end
 

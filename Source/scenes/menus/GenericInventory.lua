@@ -240,13 +240,18 @@ end
 
 function GenericInventory:doUpdate()
 
-    local _a = pd.getCrankChange()*0.25
-    if self.scrolled - _a < 0 then
+    --local _a = pd.getCrankChange()*0.25
+
+    local _t = -pd.getCrankTicks(25)
+    if math.fmod(_t, 2) ~= 0 then
+        _t += 1 * (_t/math.abs(_t))
+    end
+    if self.scrolled - _t < 0 then
         self:scrollItemPanel(-self.scrolled)
         self.scrolled = 0
     else
-        self:scrollItemPanel(_a)
-        self.scrolled -= _a
+        self:scrollItemPanel(_t)
+        self.scrolled -= _t
     end
     
 end
