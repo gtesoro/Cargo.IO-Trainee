@@ -2,46 +2,26 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('ImageViewer').extends(Scene)
+class('ImageViewer').extends(GenericMenu)
 
 function ImageViewer:startScene()
 
-    self:initBg()
+    ImageViewer.super.startScene(self)
+
+    self:initWidgets()
     self:initImage()
     self:initInputs()
 end
 
-function ImageViewer:initBg()
-
-    local img = gfx.image.new(400, 240, gfx.kColorBlack)
-    gfx.pushContext(img)
-        local _i = gfx.image.new('assets/backgrounds/grid')
-        _i:drawAnchored(pd.display.getWidth()/2, pd.display.getHeight()/2, 0.5, 0.5)
-    gfx.popContext()
-
-    self.bg_image = img:blurredImage(1, 2, gfx.image.kDitherTypeScreen)
-
-    self.bg_sprite = gfx.sprite.new(self.bg_image)
-    self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.bg_sprite:setZIndex(-1)
-    self.bg_sprite:add()
-    table.insert(self.sprites, self.bg_sprite)
-
-    self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
-    self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.ui_overlay:setZIndex(4)
-    self.ui_overlay:add()
-
+function ImageViewer:initWidgets()
     self.underlays = {}
 
-    table.insert(self.sprites, self.ui_overlay)
-
     img = gfx.image.new('assets/ui/imageviewer_bg')
-    gfx.pushContext(img)
-        gfx.setColor(gfx.kColorBlack)
-        gfx.setDitherPattern(0.8, gfx.image.kDitherTypeScreen)
-        gfx.fillRect(0,0, img:getSize())
-    gfx.popContext()
+    -- gfx.pushContext(img)
+    --     gfx.setColor(gfx.kColorBlack)
+    --     gfx.setDitherPattern(0.8, gfx.image.kDitherTypeScreen)
+    --     gfx.fillRect(0,0, img:getSize())
+    -- gfx.popContext()
 
     self.underlay_1 = gfx.sprite.new(img)
 
@@ -105,7 +85,7 @@ function ImageViewer:initInputs()
     self.input_handlers = {
 
         cranked = function (change, acceleratedChange)
-            local _t = -pd.getCrankTicks(25)
+            local _t = -pd.getCrankTicks(g_SystemManager.scroll_sensitivity)
             if math.fmod(_t, 2) ~= 0 then
                 _t += 1 * (_t/math.abs(_t))
             end

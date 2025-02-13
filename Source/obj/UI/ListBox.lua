@@ -153,18 +153,28 @@ function ListBox:initInputs()
     self.input_handlers = {
 
         cranked = function (change, acceleratedChange)
-            local _sensitivity = g_SystemManager.crank_menu_sensitivity
-            self.accumulated_crank += change
+            -- local _sensitivity = g_SystemManager.crank_menu_sensitivity
+            -- self.accumulated_crank += change
 
-            if math.abs(self.accumulated_crank) > _sensitivity then
-                if self.accumulated_crank < 0 then
-                    g_SoundManager:playMenuListChange()
-                    self.listview:selectPreviousRow(false)
-                else
-                    g_SoundManager:playMenuListChange()
-                    self.listview:selectNextRow(false)
-                end
-                self.accumulated_crank = 0
+            -- if math.abs(self.accumulated_crank) > _sensitivity then
+            --     if self.accumulated_crank < 0 then
+            --         g_SoundManager:playMenuListChange()
+            --         self.listview:selectPreviousRow(false)
+            --     else
+            --         g_SoundManager:playMenuListChange()
+            --         self.listview:selectNextRow(false)
+            --     end
+            --     self.accumulated_crank = 0
+            -- end
+
+            local _t = -pd.getCrankTicks(g_SystemManager.crank_menu_sensitivity)
+            if _t > 0 then
+                g_SoundManager:playMenuListChange()
+                self.listview:selectPreviousRow(false)
+            end
+            if _t < 0 then
+                g_SoundManager:playMenuListChange()
+                self.listview:selectNextRow(false)
             end
         end,
 

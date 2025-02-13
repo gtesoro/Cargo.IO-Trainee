@@ -2,7 +2,7 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('PlayerMenu').extends(GenericMenu)
+class('PlayerMenu').extends(GenericMenuList)
 
 function PlayerMenu:init()
 
@@ -60,7 +60,7 @@ function PlayerMenu:clean()
     PlayerMenu.super.clean(self)
 end
 
-class('FunctionsMenu').extends(GenericMenu)
+class('FunctionsMenu').extends(GenericMenuList)
 
 function FunctionsMenu:init()
 
@@ -119,7 +119,7 @@ function FunctionsMenu:init()
     end
 end
 
-class('ContractMenu').extends(GenericMenu)
+class('ContractMenu').extends(GenericMenuList)
 
 function ContractMenu:init(contract)
 
@@ -127,7 +127,7 @@ function ContractMenu:init(contract)
     self.data.options = contract:getOptions()
 end
 
-class('ContractListMenu').extends(GenericMenu)
+class('ContractListMenu').extends(GenericMenuList)
 
 function ContractListMenu:init()
 
@@ -150,7 +150,7 @@ function ContractListMenu:init()
     
 end
 
-class('CodexMaintMenu').extends(GenericMenu)
+class('CodexMaintMenu').extends(GenericMenuList)
 
 function CodexMaintMenu:init()
 
@@ -177,7 +177,7 @@ function CodexMaintMenu:init()
 end
 
 
-class('CodexListMenu').extends(GenericMenu)
+class('CodexListMenu').extends(GenericMenuList)
 
 function CodexListMenu:init(data)
 
@@ -221,7 +221,7 @@ function CodexListMenu:init(data)
     self.data.options = _list
 end
 
-class('NotificationsMenu').extends(GenericMenu)
+class('NotificationsMenu').extends(GenericMenuList)
 
 function NotificationsMenu:init()
 

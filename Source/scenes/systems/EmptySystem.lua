@@ -156,8 +156,8 @@ function EmptySystem:initElectricalAnomaly()
 
     g_NotificationManager:notify("Electrical Anomaly Detected")
 
-    self.columns = 5
-    self.rows = 5
+    self.columns = 6
+    self.rows = 6
 
     self.rays = {}
 
@@ -168,7 +168,7 @@ function EmptySystem:initElectricalAnomaly()
 
     for r=1,self.rows do
         for c=1,self.columns do
-            local _x, _y = (c-1)*_col_width + _col_width/2 + math.random(-_col_width/2, _col_width/2), (r-1)*_row_height + _row_height/2 + math.random(-_row_height/2, _row_height/2)
+            local _x, _y = (c-1)*_col_width + _col_width/2 + math.random(-math.floor(_col_width/2), math.floor(_col_width/2)), (r-1)*_row_height + _row_height/2 + math.random(-math.floor(_row_height/2), math.floor(_row_height/2))
 
             if pd.geometry.point.new(_x, _y):distanceToPoint(pd.geometry.point.new(self.ship.x, self.ship.y)) > 240 then
                 local _ray = AnimatedSprite(image_table)
@@ -194,21 +194,31 @@ function EmptySystem:initElectricalAnomaly()
     
 end
 
+local _ray_p = pd.geometry.point.new(0, 0)
+local _ship_p = pd.geometry.point.new(0, 0)
+
 function EmptySystem:doUpdateElectricalAnomaly()
 
     pd.display.setOffset(0, 0)
 
     local _ship_rect = self.ship:getBoundsRect()
 
+    _ship_p.x = self.ship.x
+    _ship_p.y = self.ship.y
+
     for k, v in pairs(self.rays) do
 
-        if pd.geometry.point.new(v.x, v.y):distanceToPoint(pd.geometry.point.new(self.ship.x, self.ship.y)) < 240 then
+        _ray_p.x = v.x
+        _ray_p.y = v.y
+
+        if _ray_p:distanceToPoint(_ship_p) < 240 then
             
             if v:getLine():intersectsRect(_ship_rect) then
                 pd.display.setOffset(math.random(-1, 1), math.random(-1, 1))
                 
                 if not self.invulnerable then
                     self.invulnerable = true
+                    self.ship.speed_vector += pd.geometry.vector2D.newPolar(math.random(5, 10), math.random(0, 359))
                     g_SystemManager:getPlayer():doHullDamage(math.random(10, 20))
                     local _timer = pd.timer.new(1500)
                     _timer.updateCallback = function ()
@@ -230,15 +240,16 @@ end
 -- Eletrical Anomaly End --
 
 function EmptySystem:doUpdate()
+    local _self <const> = self
 
-    EmptySystem.super.doUpdate(self)
+    EmptySystem.super.doUpdate(_self)
 
-    if self.space_time_anomaly then
-        self:doUpdateSpaceTimeAnomaly()
+    if _self.space_time_anomaly then
+        _self:doUpdateSpaceTimeAnomaly()
     end
 
-    if self.electrical_anomaly then
-        self:doUpdateElectricalAnomaly()
+    if _self.electrical_anomaly then
+        _self:doUpdateElectricalAnomaly()
     end
 
 end

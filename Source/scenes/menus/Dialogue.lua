@@ -2,42 +2,23 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('Dialogue').extends(Scene)
+class('Dialogue').extends(GenericMenu)
 
 function Dialogue:startScene()
-    --printTable(self.data)
+
+    Dialogue.super.startScene(self)
+
     self:initInputs()
-    self:initBg()
+    self:initDialogueWidgets()
 end
 
-function Dialogue:initBg()
-
-    local img = gfx.image.new(400, 240, gfx.kColorBlack)
-    gfx.pushContext(img)
-        local _i = gfx.image.new('assets/backgrounds/grid')
-        _i:drawAnchored(pd.display.getWidth()/2, pd.display.getHeight()/2, 0.5, 0.5)
-    gfx.popContext()
+function Dialogue:initDialogueWidgets()
 
     self.dialogue = self.data.dialogue
     self.current_dialogue = self.dialogue
     self.current_dialogue_index = 1
 
     self.text_input = {text = ''}
-
-    self.bg_image = img:blurredImage(1, 2, gfx.image.kDitherTypeScreen)
-
-    self.bg_sprite = gfx.sprite.new(self.bg_image)
-    self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.bg_sprite:setZIndex(0)
-    self.bg_sprite:add()
-    table.insert(self.sprites, self.bg_sprite)
-
-    self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
-    self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.ui_overlay:setZIndex(4)
-    self.ui_overlay:add()
-
-    table.insert(self.sprites, self.ui_overlay)
 
     img = gfx.image.new('assets/ui/dialog_bg')--gfx.image.new(180, 240, gfx.kColorBlack)
     gfx.pushContext(img)
@@ -109,7 +90,7 @@ function Dialogue:removeElement(spr, callback)
     end
 end
 
-function Dialogue:addElement(spr, callback)
+function Dialogue:addElement(spr, callback, no_flicker)
 
     local _start = -200
     local _end = 200
@@ -120,7 +101,9 @@ function Dialogue:addElement(spr, callback)
     end
     _t.timerEndedCallback = function ()
         self.animations -= 1
-        applyFlicker(spr)
+        if not no_flicker then
+            applyFlicker(spr)
+        end
         if callback then
             callback()
         end
@@ -136,11 +119,17 @@ end
 
 function Dialogue:addBg(image, callback)
 
-    self.character_bg = gfx.sprite.new(getImageWithDitherMask(image, true))
+    if animated then
+        self.character_bg = AnimatedSprite(image)
+    else
+        self.character_bg = gfx.sprite.new(gfx.image.new(image))--getImageWithDitherMask(image, true))
+    end
+
     self.character_bg:moveTo(-playdate.display.getWidth()*0.5, playdate.display.getHeight()/2)
     self.character_bg:setZIndex(1)
     self.character_bg:add()
     table.insert(self.sprites, self.character_bg)
+
 
     self:addElement(self.character_bg, callback)
     
@@ -151,12 +140,21 @@ function Dialogue:removeCharacter(callback)
         self:removeElement(self.character, callback)
         self.character = nil
     end
+
+    if self.character_label then
+        self:removeElement(self.character_label)
+        self.character_label = nil
+    end
 end
 
-function Dialogue:addCharacter(image, callback)
+function Dialogue:addCharacter(image, animated, callback)
 
+    if animated then
+        self.character = AnimatedSprite(image)
+    else
+        self.character = gfx.sprite.new(gfx.image.new(image))
+    end
 
-    self.character = gfx.sprite.new(gfx.image.new(image))
     self.character:moveTo(-playdate.display.getWidth()*0.5, playdate.display.getHeight()/2)
     self.character:setZIndex(1)
     self.character:add()
@@ -164,6 +162,36 @@ function Dialogue:addCharacter(image, callback)
     table.insert(self.sprites, self.character)
 
     self:addElement(self.character, callback)
+    
+end
+
+function Dialogue:addCharacterLabel(name)
+
+    local _img = gfx.image.new(400,240)
+
+    inContext(_img, function ()
+        gfx.setFont(g_font_18)
+        local _w, _h = gfx.getTextSizeForMaxWidth(name, 150)
+        local _margin = 2
+
+        gfx.setColor(gfx.kColorBlack)
+        gfx.fillRoundRect(-2, 192 - _h/2 - _margin, 182, _h + _margin, 2)
+        gfx.setColor(gfx.kColorWhite)
+        gfx.drawRoundRect(-2, 192 - _h/2 - _margin, 182, _h + _margin, 2)
+        gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+        
+        gfx.drawTextInRect(name, 0, 192 - _h/2, 180, _h, nil, nil, kTextAlignment.center)
+        gfx.setImageDrawMode(gfx.kDrawModeCopy)
+        
+    end)
+
+    self.character_label = gfx.sprite.new(_img)
+    self.character_label:moveTo(-playdate.display.getWidth()*0.5, playdate.display.getHeight()/2)
+    self.character_label:setZIndex(2)
+    self.character_label:add()
+    table.insert(self.sprites, self.character_label)
+
+    self:addElement(self.character_label, nil , true)
     
 end
 
@@ -180,8 +208,13 @@ function Dialogue:nextDialogue()
 
         local _d = self.current_dialogue[self.current_dialogue_index].options[_r]
 
-        if _d.trigger then
-            _d.trigger()
+        local _c = function ()
+            if _d.trigger then
+                _d.trigger()
+            end
+            if _d.continue then
+                self:nextDialogue()
+            end
         end
         
         self:addDialogue(_d.answer, DIAG_PLAYER, _c)
@@ -194,17 +227,24 @@ function Dialogue:nextDialogue()
 
     local _d = self.current_dialogue[self.current_dialogue_index]
 
-    if self.waiting_for_text_input then
-
+    local _c = function ()
         if _d.trigger then
             _d.trigger()
         end
+        if _d.continue then
+            self:nextDialogue()
+        end
+    end
+
+    if self.waiting_for_text_input then
 
         local _next = _d.default
 
-        for k,v in pairs(_d.options) do
-            if v.answer == self.text_input.text then
-                _next = v.dialogue
+        if _d.options then
+            for k,v in pairs(_d.options) do
+                if v.answer == self.text_input.text then
+                    _next = v.dialogue
+                end
             end
         end
         
@@ -227,13 +267,10 @@ function Dialogue:nextDialogue()
         return nil
     end
 
-    local _c = function ()
-        if _d.trigger then
-            _d.trigger()
-        end
-        if _d.continue then
-            self:nextDialogue()
-        end
+    if _d.type == DIAG_EMPTY then
+        _c()
+        self.current_dialogue_index += 1
+        return
     end
 
     if _d.type == DIAG_BG_IN then
@@ -243,7 +280,10 @@ function Dialogue:nextDialogue()
     end
 
     if _d.type == DIAG_CHAR_IN then
-        self:addCharacter(_d.file, _c)
+        self:addCharacter(_d.file, _d.animated, _c)
+        if _d.name then
+            self:addCharacterLabel(_d.name)
+        end
         self.current_dialogue_index += 1
         return
     end
@@ -289,6 +329,10 @@ function Dialogue:nextDialogue()
         return
     end
 
+    if type(_d.text) == "function" then
+        _d.text = _d.text()
+    end
+
     self:addDialogue(_d.text, _d.type, _c)
     self.current_dialogue_index += 1
     
@@ -302,12 +346,16 @@ function Dialogue:addDialogue(text, type, callback)
     table.insert(self.bubbles, _dialog_bubble)
     table.insert(self.sprites, _dialog_bubble)
 
+    local _t = nil
+    if type == DIAG_OTHER then
+        _t = rumbleSprite(self.character, nil, 4)
+    end
+
     local _c = function ()
         if callback then
             callback()
         end
         if type == DIAG_OTHER then
-            local _t = rumbleSprite(self.character)
             _t.timerEndedCallback()
             _t:remove()
         end
@@ -493,7 +541,7 @@ function Dialogue:initInputs()
 
         cranked = function (change, acceleratedChange)
             if self.animations == 0 and not self.dialog_hidden and #self.bubbles > 0 then
-                local _t = -pd.getCrankTicks(25)
+                local _t = -pd.getCrankTicks(g_SystemManager.scroll_sensitivity)
                 if math.fmod(_t, 2) ~= 0 then
                     _t += 1 * (_t/math.abs(_t))
                 end
@@ -580,21 +628,18 @@ end
 
 function Dialogue:remove()
     Dialogue.super.remove(self)
+
     if self.character then
         self.character:remove()
     end
     if self.character_bg then
         self.character_bg:remove()
     end
+    if self.character_label then
+        self.character_label:remove()
+    end
     if self.selection_box then
         self.selection_box:remove()
-    end
-
-    for k, v in pairs(self.sprites) do
-        if v.flicker_timer then
-            v.flicker_timer:remove()
-            v.flicker_timer = nil
-        end
     end
 end
 

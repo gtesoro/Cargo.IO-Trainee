@@ -23,6 +23,43 @@ function TextInput:startScene()
 
     table.insert(self.sprites, self.bg_sprite)
 
+    local _img = gfx.image.new(190, 180)
+    
+    gfx.pushContext(_img)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setDitherPattern(0.2, gfx.image.kDitherTypeScreen)
+        gfx.fillRoundRect(0, 0, _img.width, _img.height, 4)
+
+        gfx.setColor(gfx.kColorWhite)
+        gfx.setLineWidth(4)
+        gfx.drawRoundRect(-2, 0, _img.width+2, _img.height, 4)
+        
+    gfx.popContext()
+
+    self.text_bg = gfx.sprite.new(_img)
+    self.text_bg:setCenter(0, 0.5)
+    self.text_bg:moveTo(0,120)
+    self.text_bg:setZIndex(1)
+    self.text_bg:add()
+
+    table.insert(self.sprites, self.text_bg)
+
+    self.text_spr = gfx.sprite.new(gfx.image.new(190, 180))
+    self.text_spr:setCenter(0, 0)
+    self.text_spr:moveTo(32, 34)
+    self.text_spr:setZIndex(2)
+    self.text_spr:add()
+
+    table.insert(self.sprites, self.text_spr)
+
+
+    self.ui_overlay = gfx.sprite.new(g_SystemManager:getOverlayImage())
+    self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
+    self.ui_overlay:setZIndex(4)
+    self.ui_overlay:add()
+
+    table.insert(self.sprites, self.ui_overlay)
+
     pd.keyboard.show()
 
     pd.keyboard.keyboardWillHideCallback = function (ok)
@@ -41,16 +78,14 @@ function TextInput:startScene()
     end
 
     pd.keyboard.textChangedCallback = function ()
-        inContext(self.bg_sprite:getImage(), function ()
-            gfx.clear()
-            self.bg_img:draw(0,0)
-
+        inContext(self.text_spr:getImage(), function ()
+            gfx.clear(gfx.kColorClear)
             gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
             gfx.setFont(g_font_24)
-            gfx.drawTextAligned(playdate.keyboard.text, 100, 120, kTextAlignment.center)
+            gfx.drawTextInRect(playdate.keyboard.text,0, 0, 124, 176, nil, nil, kTextAlignment.center)
             
         end)
-        self.bg_sprite:markDirty()
+        self.text_spr:markDirty()
     end
 
 end

@@ -78,7 +78,7 @@ function Ship:doUpdate()
 
 	if self.move_ship and g_SystemManager:getPlayer().ship.fuel_current > 0 then
 		if self.speed_vector:magnitude() < self.max_speed then
-        	self.speed_vector += pd.geometry.vector2D.newPolar(self.acceleration  , self.angle)
+        	self.speed_vector += pd.geometry.vector2D.newPolar(self.acceleration * self:getScale(), self.angle)
 		end
 		for _, breakpoint in  pairs({25, 50, 75}) do
 			if g_SystemManager:getPlayer().ship.fuel_current - self.fuel_usage < breakpoint and g_SystemManager:getPlayer().ship.fuel_current > breakpoint then 
@@ -91,8 +91,7 @@ function Ship:doUpdate()
 	local shipX, shipY = self:getPosition()
 
 	--self.speed_vector = self.speed_vector - (self.speed_vector * self.friction)
-	self.speed_vector *= (1 - self.friction)
-
+	self.speed_vector *= (1 - self.friction* self:getScale())
 
 	shipX += self.speed_vector.x
 	shipY += self.speed_vector.y

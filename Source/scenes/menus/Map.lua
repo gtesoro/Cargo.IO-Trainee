@@ -1,7 +1,7 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('Map').extends('Scene')
+class('Map').extends(Scene)
 
 function Map:startScene()
 
@@ -70,7 +70,7 @@ function Map:startScene()
 
     table.insert(self.sprites, self.infolay_coords)
 
-    self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
+    self.ui_overlay = gfx.sprite.new(g_SystemManager:getOverlayImage())
     self.ui_overlay:setIgnoresDrawOffset(true)
     self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self.ui_overlay:setZIndex(4)
@@ -207,7 +207,6 @@ function Map:drawMap()
 
     self.map_sprite:markDirty()
 end
-
 
 function Map:doVCR()
 

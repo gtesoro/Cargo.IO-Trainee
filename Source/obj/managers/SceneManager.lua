@@ -68,10 +68,13 @@ end
 
 function SceneManager:switchSceneHWipe(scene, duration, dir)
 
+    if #self.scene_stack > 0 then
+        self.scene_stack[#self.scene_stack]:unfocus()
+    end
+
     local _t_in = Wipe(duration, dir, false)
     _t_in.endCallback = function ()
         if #self.scene_stack > 0 then
-            self.scene_stack[#self.scene_stack]:unfocus()
             self.scene_stack[#self.scene_stack]:remove()
             self.scene_stack[#self.scene_stack]:clean()
         end

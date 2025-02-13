@@ -11,7 +11,7 @@ function OutMenu:init(duration)
     self:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
     self:setIgnoresDrawOffset(true)
 
-    self.grid_sheet = g_SystemManager.fading_grid
+    self.grid_sheet = g_SystemManager:getFadingGrid()
     
     self.grid = gfx.sprite.new(self.grid_sheet:getImage(100))
     self.grid:setIgnoresDrawOffset(true)

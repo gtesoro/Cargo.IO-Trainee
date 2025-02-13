@@ -14,12 +14,13 @@ function TextBubble:init(text, w, type, margin, animate, delay)
     self.type = type or DIAG_OTHER
 
     if self.type == DIAG_OTHER or self.type == DIAG_PLAYER then
-        self.font = g_font_text
+        self.font = g_font_text_family
     else
-        self.font = g_font_desc
+        self.font = g_font_desc_family
     end
     
-    gfx.setFont(self.font)
+    --gfx.setFont(self.font)
+    gfx.setFontFamily(self.font)
     local _w, _h = gfx.getTextSizeForMaxWidth(self.text, w - self.margin*2)
 
     self._h = _h+3
@@ -86,7 +87,9 @@ function TextBubble:drawBubbleBg(value)
         gfx.setColor(gfx.kColorWhite)
         gfx.fillRoundRect(0,0, (value or self.canvas.width)-_hover, self.canvas.height-_hover,2)
     elseif self.type == DIAG_DESC then
-        gfx.setColor(gfx.kColorBlack)
+        -- gfx.setColor(gfx.kColorWhite)
+        -- gfx.fillRoundRect(2,2, (value or self.canvas.width)-2, self.canvas.height-2,2)
+        -- gfx.setColor(gfx.kColorBlack)
         gfx.setLineWidth(4)
         if value and value > self.canvas.height then
             gfx.drawLine(2, value - self.canvas.height, 2, self.canvas.height)
@@ -94,12 +97,12 @@ function TextBubble:drawBubbleBg(value)
         if value and  value <= self.canvas.height then
             gfx.drawLine(2,0, 2, value)
         end
-        
-        -- gfx.setColor(gfx.kColorWhite)
-        -- gfx.fillRoundRect(0,0, (value or self.canvas.width)-2, self.canvas.height-2,2)
         -- gfx.setColor(gfx.kColorBlack)
-        -- gfx.setFont(g_font_desc)
-        -- gfx.fillRect(self.canvas.width-_bar_thick,0, _bar_thick, value or self.canvas.height)
+        -- gfx.fillRoundRect(_hover,_hover, (value or self.canvas.width)-2, self.canvas.height-2,2)
+        -- gfx.setColor(gfx.kColorWhite)
+        -- gfx.fillRoundRect(_hover*2,_hover*2, (value or self.canvas.width)-2, self.canvas.height-2,2)
+
+        
     else
         -- gfx.setColor(gfx.kColorBlack)
         -- gfx.fillRoundRect(0,0, self.canvas.width, value or self.canvas.height, 2)
@@ -131,6 +134,8 @@ function TextBubble:drawText(length)
         self:drawBubbleBg()
         if self.type == DIAG_PLAYER then
             gfx.drawTextInRect(_str, self.canvas.width-self.margin-self._w-3, self.canvas.height-self.margin-self._h, self._w, self._h, nil , nil, kTextAlignment.right)
+        -- elseif self.type == DIAG_DESC then
+        --     gfx.drawTextInRect(_str, self.margin + 3, self.margin + 3, self._w-3, self._h-3)
         else
             gfx.drawTextInRect(_str, self.margin, self.margin, self._w, self._h)
         end

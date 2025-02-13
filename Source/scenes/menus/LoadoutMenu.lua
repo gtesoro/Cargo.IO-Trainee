@@ -2,12 +2,14 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('LoadoutMenu').extends(Scene)
+class('LoadoutMenu').extends(GenericMenu)
 
 function LoadoutMenu:startScene()
 
+    LoadoutMenu.super.startScene(self)
+
     self:initGrids()
-    self:initBg()
+    self:initShip()
     
 end
 
@@ -236,31 +238,7 @@ function LoadoutMenu:setItem(_s)
     end    
 end
 
-
-function LoadoutMenu:initBg()
-
-    local img = gfx.image.new(400, 240, gfx.kColorBlack)
-    gfx.pushContext(img)
-        local _i = gfx.image.new('assets/backgrounds/grid')
-        _i:drawAnchored(pd.display.getWidth()/2, pd.display.getHeight()/2, 0.5, 0.5)
-    gfx.popContext()
-
-
-    self.bg_image = img:blurredImage(1, 2, gfx.image.kDitherTypeScreen)
-    self.bg_sprite = gfx.sprite.new(self.bg_image)
-    self.bg_sprite:setIgnoresDrawOffset(true)
-    self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.bg_sprite:setZIndex(0)
-    self.bg_sprite:add()
-    table.insert(self.sprites, self.bg_sprite)
-
-    self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
-    self.ui_overlay:setIgnoresDrawOffset(true)
-    self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.ui_overlay:setZIndex(3)
-    self.ui_overlay:add()
-
-    table.insert(self.sprites, self.ui_overlay)
+function LoadoutMenu:initShip()
 
     self.ship = gfx.sprite.new(gfx.image.new('assets/iso_ship'))
     self.ship:setIgnoresDrawOffset(true)
@@ -301,30 +279,17 @@ function LoadoutMenu:scrollItemPanel(amount)
 end
 
 function LoadoutMenu:doUpdate()
-    if not self.noise_timer then
-        self.noise_timer = pd.timer.new(math.random(3000, 10000))
-        self.noise_timer.updateCallback = function (timer)
-            if timer.timeLeft < 200 then
-                self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100):vcrPauseFilterImage())
-            end
-        end
-        self.noise_timer.timerEndedCallback = function ()
-            self.bg_sprite:setImage(g_SystemManager.fading_grid:getImage(100))
-            self.bg_sprite:markDirty()
-            self.noise_timer = nil
-        end
-    end
 
-    local _t = -pd.getCrankTicks(25)
-    if math.fmod(_t, 2) ~= 0 then
-        _t += 1 * (_t/math.abs(_t))
-    end
+    -- local _t = -pd.getCrankTicks(g_SystemManager.scroll_sensitivity)
+    -- if math.fmod(_t, 2) ~= 0 then
+    --     _t += 1 * (_t/math.abs(_t))
+    -- end
 
-    if self.scrolled - _t < 0 then
-        self:scrollItemPanel(-self.scrolled)
-        self.scrolled = 0
-    else
-        self:scrollItemPanel(_t)
-        self.scrolled -= _t
-    end
+    -- if self.scrolled - _t < 0 then
+    --     self:scrollItemPanel(-self.scrolled)
+    --     self.scrolled = 0
+    -- else
+    --     self:scrollItemPanel(_t)
+    --     self.scrolled -= _t
+    -- end
 end

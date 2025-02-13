@@ -254,7 +254,7 @@ function Popup:doUpdate()
 
     if not self.blur_timer_in then
 
-        self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
+        self.ui_overlay = gfx.sprite.new(g_SystemManager:getOverlayImage())
         self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
         self.ui_overlay:setZIndex(1005)
         self.ui_overlay:add()

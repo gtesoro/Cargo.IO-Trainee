@@ -19,6 +19,11 @@ function System:startScene()
     self.y_cam_loose = 30
     self.wrap = false
 
+    self.playfield_width = self.data.playfield_width
+    self.playfield_height = self.data.playfield_height
+
+    self.zoom = 1
+
     self.selection_spr = gfx.sprite.new()
     self.selection_spr:add()
     table.insert(self.sprites, self.selection_spr)
@@ -67,7 +72,7 @@ function System:setSelectionSprite(spr)
 
     self.selection_spr:setImage(img)
     
-    self.selection_spr:setZIndex(self.data.playfield_height*2)
+    self.selection_spr:setZIndex(self.playfield_height*2)
     self.selection_spr:moveTo(self.selection_focus:getPosition())
 
     self.selection_spr:setVisible(true)
@@ -119,30 +124,30 @@ function System:initShip()
     self.margin = 40
 
     self.ship = Ship(self)
-    self.ship:setZIndex(self.data.playfield_height*2+1)
-    self.ship:moveTo(self.data.playfield_width/2-100, self.data.playfield_height/2)
+    self.ship:setZIndex(self.playfield_height*2+1)
+    self.ship:moveTo(self.playfield_width/2-100, self.playfield_height/2)
     if g_SystemManager:getPlayer().last_position.x then
-        self.spawn_point = pd.geometry.point.new(self.data.playfield_width/2-100, self.data.playfield_height/2)
+        self.spawn_point = pd.geometry.point.new(self.playfield_width/2-100, self.playfield_height/2)
         local dx, dy, dz = self.data.x - g_SystemManager:getPlayer().last_position.x, self.data.y - g_SystemManager:getPlayer().last_position.y, self.data.z - g_SystemManager:getPlayer().last_position.z
         if math.abs(dx) + math.abs(dy) + math.abs(dz) == 1 then
             if dx > 0 then
-                self.spawn_point = pd.geometry.point.new(self.margin, self.data.playfield_height/2)
+                self.spawn_point = pd.geometry.point.new(self.margin, self.playfield_height/2)
                 self.ship.angle = 90
             end
 
             if dx < 0 then
-                self.spawn_point = pd.geometry.point.new(self.data.playfield_width - self.margin, self.data.playfield_height/2)
+                self.spawn_point = pd.geometry.point.new(self.playfield_width - self.margin, self.playfield_height/2)
                 self.ship.angle = 270
             end
 
             if dy > 0 then
-                self.spawn_point = pd.geometry.point.new(self.data.playfield_width/2, self.margin)
+                self.spawn_point = pd.geometry.point.new(self.playfield_width/2, self.margin)
                 self.ship.angle = 180
             end
 
             if dy < 0 then
-                self.ship:moveTo(self.data.playfield_width/2, self.data.playfield_height - 50)
-                self.spawn_point = pd.geometry.point.new(self.data.playfield_width/2, self.data.playfield_height - self.margin)
+                self.ship:moveTo(self.playfield_width/2, self.playfield_height - 50)
+                self.spawn_point = pd.geometry.point.new(self.playfield_width/2, self.playfield_height - self.margin)
             end
         end
 
@@ -153,17 +158,17 @@ function System:initShip()
     self.x_offset = _x - pd.display.getWidth()/2
     self.y_offset = _y - pd.display.getHeight()/2
 
-    --self.ship:moveTo(30, self.data.playfield_height/2)
+    --self.ship:moveTo(30, self.playfield_height/2)
 
     table.insert(self.sprites, self.ship)
 end
 
 function System:initBg()
 
-    local img = gfx.image.new(self.data.playfield_width, self.data.playfield_height)
+    local img = gfx.image.new(self.playfield_width, self.playfield_height)
     local bg = nil
     if not self.data.background then
-        bg = gfx.image.new(self.data.playfield_width, self.data.playfield_height, gfx.kColorBlack)
+        bg = gfx.image.new(self.playfield_width, self.playfield_height, gfx.kColorBlack)
     else
         bg = gfx.image.new(self.data.background)
     end
@@ -175,7 +180,7 @@ function System:initBg()
     scaleAndCenterImage(bg, img, self.data.bg_random_flip)
 
     self.bg_sprite = gfx.sprite.new(img)
-    self.bg_sprite:moveTo(self.data.playfield_width/2, self.data.playfield_height/2)
+    self.bg_sprite:moveTo(self.playfield_width/2, self.playfield_height/2)
     self.bg_sprite:setZIndex(0)
 
     table.insert(self.sprites, self.bg_sprite)
@@ -246,12 +251,12 @@ function System:handleBorders()
 
         end)
         self.blackout_overlay:markDirty()
-    elseif self.ship.x > self.data.playfield_width then
+    elseif self.ship.x > self.playfield_width then
         self.blackout_overlay:setVisible(true)
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
             gfx.setColor(gfx.kColorClear)
-            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.x - self.data.playfield_width)/margin)*466.48)
+            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.x - self.playfield_width)/margin)*466.48)
             gfx.setColor(gfx.kColorWhite)
             self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
         end)
@@ -266,12 +271,12 @@ function System:handleBorders()
             self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
         end)
         self.blackout_overlay:markDirty()
-    elseif self.ship.y > self.data.playfield_height then
+    elseif self.ship.y > self.playfield_height then
         self.blackout_overlay:setVisible(true)
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
             gfx.setColor(gfx.kColorClear)
-            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.y - self.data.playfield_height)/margin)*466.48)
+            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.y - self.playfield_height)/margin)*466.48)
             gfx.setColor(gfx.kColorWhite)
             self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
         end)
@@ -288,7 +293,7 @@ function System:handleBorders()
         goTo(self.data.x-1, self.data.y , self.data.z, 'left')
     end
 
-    if self.ship.x > self.data.playfield_width + margin then
+    if self.ship.x > self.playfield_width + margin then
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
         end)
@@ -304,7 +309,7 @@ function System:handleBorders()
         goTo(self.data.x, self.data.y -1, self.data.z, 'up')
     end
 
-    if self.ship.y > self.data.playfield_height + margin then
+    if self.ship.y > self.playfield_height + margin then
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
         end)
@@ -318,6 +323,7 @@ function System:initUI()
 
     self.blackout_overlay = gfx.sprite.new(gfx.image.new(400,240))
     self.blackout_overlay:moveTo(200, 120)
+    self.blackout_overlay.no_zoom = true
     self.blackout_overlay:setIgnoresDrawOffset(true)
     self.blackout_overlay:setZIndex(self.ship:getZIndex()+1)
     self.blackout_overlay:add()
@@ -346,8 +352,8 @@ function System:moveCamera()
     _nx = playdate.math.lerp(self.x_offset, _nx, 0.5)
     _ny = playdate.math.lerp(self.y_offset, _ny, 0.5)
 
-    self.x_offset = round(clamp(_nx , 0, self.data.playfield_width - playdate.display.getWidth()))
-    self.y_offset = round(clamp(_ny , 0, self.data.playfield_height - playdate.display.getHeight()))
+    self.x_offset = round(clamp(_nx , 0, self.playfield_width - playdate.display.getWidth()))
+    self.y_offset = round(clamp(_ny , 0, self.playfield_height - playdate.display.getHeight()))
 
     if math.fmod(self.x_offset, 2) == 1 then
         self.x_offset += 1
@@ -408,54 +414,14 @@ function System:initInputs()
             g_SoundManager:stopEngine()
         end,
 
-        upButtonDown = function ()
+        upButtonUp = function ()
+            self:zoomIn()
+        end,
+
+        downButtonUp = function ()
             --self.ship.move_ship = not self.ship.move_ship 
             --g_SoundManager:playNotification()
-
-            local _diag = {
-                {
-                    file = 'assets/backgrounds/ship01',
-                    type = DIAG_BG_IN,
-                    continue = true
-                },
-                {
-                    text = "At the back of the ship, you see a computer node that seems to be active.\nAs you get closer you can make out a message on the screen.",
-                    type = DIAG_DESC
-                },
-                {
-                    file = 'assets/characters/computer',
-                    type = DIAG_CHAR_IN,
-                    continue = true
-                },
-                {
-                    text = "Please input activation code",
-                    type = DIAG_OTHER,
-                },
-                {
-                    type = DIAG_INPUT_TEXT,
-                    default = {
-                        {
-                            text = "Activation code not recognized. Exiting...",
-                            type = DIAG_OTHER
-                        }
-                    },
-                    options = {
-                        {
-                            answer = '123',
-                            dialogue = {
-                                {
-                                    text = "Activation code matches database records.\nActivating...",
-                                    type = DIAG_OTHER
-                                }
-                            }
-                        }
-                    }
-                }
-                
-            }
-        
-            g_SceneManager:pushScene(Dialogue({dialogue = _diag}), 'to menu')
-            
+            self:zoomOut()
         end,
 
         leftButtonUp = function ()
@@ -466,6 +432,60 @@ function System:initInputs()
         end
 
     }
+end
+
+function System:zoomIn()
+
+    self.zoom *= 2
+    self.x_offset *= 2
+    self.y_offset *= 2
+
+    self.playfield_width *= 2
+    self.playfield_height *= 2
+
+    for k, spr in pairs(self.sprites) do
+        if not spr.no_zoom then
+            spr:setScale(self.zoom)
+            spr.zoom = self.zoom
+            spr:moveTo(spr.x*2, spr.y*2)
+            local _rect = spr:getCollideRect()
+            if _rect.width > 0 and _rect.height > 0 then
+                spr:clearCollideRect() 
+                spr:setCollideRect( 0, 0, spr:getSize() )
+            end
+            spr:markDirty()
+        end
+    end
+    
+end
+
+function System:zoomOut()
+
+    if self.playfield_width * 0.5 < 400 or self.playfield_height * 0.5 < 240 then
+        return
+    end
+
+    self.zoom *= 0.5
+    self.x_offset *= 0.5
+    self.y_offset *= 0.5
+
+    self.playfield_width *= 0.5
+    self.playfield_height *= 0.5
+
+    for k, spr in pairs(self.sprites) do
+        if not spr.no_zoom then
+            spr:setScale(self.zoom)
+            spr.zoom = self.zoom
+            spr:moveTo(spr.x*0.5, spr.y*0.5)
+            local _rect = spr:getCollideRect()
+            if _rect.width > 0 and _rect.height > 0 then
+                spr:clearCollideRect() 
+                spr:setCollideRect( 0, 0, spr:getSize() )
+            end
+            spr:markDirty()
+        end        
+    end
+    
 end
 
 

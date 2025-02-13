@@ -36,18 +36,30 @@ end
 function Contract:getContractImage(bg)
 
     local _bg = bg or gfx.kColorClear
-    
 
-    local img = gfx.image.new(300, 424, _bg)
-    inContext(img, function ()
+    local _img_width = 300
 
+    local _x_margin = 20
+
+    local _header = gfx.image.new(_img_width, 80)
+    inContext(_header, function ()
+
+        local _current_y = 10
         gfx.setFont(g_font_24)
 
-        gfx.drawTextAligned(self.name, img.width/2, img.height*0.05, kTextAlignment.center)
-        
-        gfx.setFont(g_font_14)
+        local _w, _h = gfx.getTextSizeForMaxWidth(self.name, _img_width - _x_margin*2)
+        gfx.drawTextInRect(self.name, _x_margin, _current_y, _img_width - _x_margin*2, _h, nil, nil, kTextAlignment.center)
 
-        _system_name = g_SystemManager:getPlayer():getCurrentSystem():getName()
+        _current_y += _h + 10
+        
+        gfx.setFont(g_font_text_bold)
+
+        local _system_name = 'Ruhe'
+
+        if g_SystemManager:getPlayer():getCurrentSystem() then
+            _system_name = g_SystemManager:getPlayer():getCurrentSystem():getName()
+        end
+
         local _cycle, _time = g_SystemManager:getCycle()
 
         if self.state.sign_system then
@@ -58,22 +70,55 @@ function Contract:getContractImage(bg)
             _cycle = self.state.sign_date
         end
 
-        gfx.drawTextAligned(table.concat({_system_name,' Cycle', _cycle}), img.width*0.90, img.height*0.15, kTextAlignment.right)
+        local _text = table.concat({_system_name,', Cycle ', _cycle})
+        local _w, _h = gfx.getTextSizeForMaxWidth(_text, _img_width - _x_margin*3)
+        gfx.drawTextInRect(_text, _x_margin*1.5, _current_y, _img_width - _x_margin*3, _h, nil, nil, kTextAlignment.right)
 
-        gfx.setFont(g_font_text)
+        _current_y += _h + 6
 
-        gfx.setLineWidth(5)
-        gfx.setColor(gfx.kColorBlack)
-        gfx.drawLine(img.width*0.1, img.height*0.20, img.width*0.9, img.height*0.20)
+        gfx.setLineWidth(4)
+        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+        gfx.drawLine(_x_margin, _current_y, _img_width - _x_margin, _current_y)
+    end)
 
-        gfx.drawTextInRect(self.contract_text, img.width*0.1, img.height*0.30, img.width*0.8, img.height*0.60)
+    local _footer = gfx.image.new(_img_width, 90, _bg)
+    inContext(_footer, function ()
 
-        gfx.setFont(g_font_14)
-        gfx.drawTextAligned(self.provider, img.width*0.1, img.height*0.9, kTextAlignment.left)
+        gfx.setLineWidth(4)
+        gfx.setDitherPattern(0.5, gfx.image.kDitherTypeBayer8x8)
+        gfx.drawLine(_x_margin, 2, _img_width - _x_margin, 2)
+
+        gfx.setFontFamily(g_font_text_family)
+
+        local _current_y = 10
+        gfx.setFont(g_font_text_bold)
+        local _w, _h = gfx.getTextSizeForMaxWidth(self.provider, _img_width - _x_margin*3)
+        gfx.drawTextInRect(self.provider, _x_margin*1.5, _current_y, (_img_width - _x_margin*3)/2, _h, nil, nil, kTextAlignment.left)
 
         if self.state.signed then
-            gfx.image.new('assets/contracts/contract_stamp'):drawAnchored(img.width*0.8, img.height*0.9, 0.5, 0.5)
+            g_SystemManager:getPlayer():getSiegelImage():drawAnchored(_img_width - _x_margin*1.5, _current_y, 1, 0)
         end
+        
+    end)
+
+    gfx.setFontFamily(g_font_text_family)
+    local _w, _h = gfx.getTextSizeForMaxWidth(self.contract_text, _img_width - _x_margin*3)
+    local img = gfx.image.new(_img_width, _header.height + _h + _footer.height + 20, _bg)
+    inContext(img, function ()
+
+        _header:draw(0,0)
+
+        local _current_y = 10 + _header.height
+
+        gfx.setFontFamily(g_font_text_family)
+        local _w, _h = gfx.getTextSizeForMaxWidth(self.contract_text, _img_width - _x_margin*3)
+        gfx.drawTextInRect(self.contract_text, _x_margin*1.5, _current_y, _img_width - _x_margin*3, _h, nil, nil, kTextAlignment.left)
+
+        _current_y += _h + 10
+
+        _footer:draw(0,_current_y)
+
+        --gfx.drawRect(0,0, img:getSize())
         
     end)
 
@@ -121,7 +166,12 @@ end
 
 function Contract:onSign()
 
-    self.state.sign_system = g_SystemManager:getPlayer():getCurrentSystem().name
+    local _system = 'Ruhe'
+    if g_SystemManager:getPlayer():getCurrentSystem() then
+        _system = g_SystemManager:getPlayer():getCurrentSystem().name
+    end
+
+    self.state.sign_system = _system
     self.state.sign_date, self.state.sign_time = g_SystemManager:getCycle()
     self.state.signed = true
 
@@ -131,12 +181,30 @@ function Contract:getOptions()
 
     return {
         {
-            name = "Contract",
+            name = "View",
             callback = function ()
                 g_SceneManager:pushScene(ImageViewer({image=gfx.sprite.new(self:getContractImage())}), "between menus")
             end
         }
     }
+end
+
+class('WanderlustContract').extends(Contract)
+
+function WanderlustContract:init()
+
+    WanderlustContract.super.init(self)
+
+    self.name = "Wanderlust"
+    self.duration = 1000
+
+    self.contract_text = [[
+Lore ipsum bla blaba
+This is just some placeholdcer
+There will be constraints
+]]
+    self.provider = "Ruhe"
+
 end
 
 class('CloningContract').extends(Contract)
@@ -224,9 +292,9 @@ function DeliveryContract:init()
 
     self.contract_text = [[
 Upon signing, the contractee commits to deliver the provided cargo to:
-  - %s, %s
-before the end of Cycle %i in exchange for:  
-  - %i Credits
+  - *%s* (%s)
+before the end of *Cycle %i* in exchange for:  
+  - *%i* Credits
 upon delivery. 
 Delays will have penalties on the reward amount.
 Damaging, loosing or stealing the provided cargo will be fined with half of the contractee's net worth.

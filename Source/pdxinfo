@@ -1,7 +1,7 @@
-name=Cargo.IO
+name=Wanderlust
 author=RJV
-description=Cargo.IO Sidequest
-bundleID=com.rjv.cargo.io
+description=Wanderlust
+bundleID=com.rjv.wanderlust
 version=0.0.1
 buildNumber=1
 imagePath=launcher

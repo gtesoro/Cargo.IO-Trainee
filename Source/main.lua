@@ -3,51 +3,39 @@ import "init"
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-local function loadGame()
+local function init()
 
-	SCENE_Z_INDEX = 0
-	UI_Z_INDEX = 10000
-	TRANSITIONS_Z_INDEX = 20000
+	g_font_24 = gfx.font.new('font/BAUHAUS/BH93_24')
+	g_font_18 = gfx.font.new('font/BAUHAUS/BH93_18')
+	g_font_14 = gfx.font.new('font/BAUHAUS/BH93_14')
+	g_font_text = gfx.font.new('font/mecha')
+	assert(g_font_text)
+	g_font_text_bold = gfx.font.new('font/mecha-bold')
+	assert(g_font_text_bold)
+	g_font_desc = gfx.font.new('font/Oklahoma-Bold-Italic')
 
-	g_font_24 = gfx.font.new('font/BH93_24')
-	g_font_18 = gfx.font.new('font/BH93_18')
-	g_font_14 = gfx.font.new('font/BH93_14')
-	g_font_text = gfx.font.new('font/Full Circle/font-full-circle')
-	g_font_desc = gfx.font.new('font/Oklahoma/Oklahoma-Bold-Italic')
-	assert(g_font_desc)
-	--gfx.setFont(g_font_24)
+	g_font_text_family = {
+		[playdate.graphics.font.kVariantNormal] = g_font_text,
+		[playdate.graphics.font.kVariantBold] = g_font_text_bold,
+		[playdate.graphics.font.kVariantItalic] = g_font_text
+	}
 
-	g_inverted = false
+	g_font_desc_family = {
+		[playdate.graphics.font.kVariantNormal] = g_font_desc,
+		[playdate.graphics.font.kVariantBold] = g_font_desc,
+		[playdate.graphics.font.kVariantItalic] = g_font_desc
+	}
+
 	g_fps = false
-	playdate.display.setInverted(g_inverted)
-
-	local menu = playdate.getSystemMenu()
-
-	local menuItem, error = menu:addMenuItem("Show FPS", function()
-		g_fps = not g_fps
-	end)
 
 	playdate.display.setRefreshRate(50)
-	gfx.setBackgroundColor(playdate.graphics.kColorClear)
+	gfx.setBackgroundColor(gfx.kColorClear)
 
-	g_EventManager = EventManager()
 	g_SystemManager = SystemManager()
+	g_EventManager = EventManager()
 	g_SoundManager = SoundManager()
 	g_NotificationManager = NotificationManager()
 	g_SceneManager = SceneManager()
-
-	--pd.setCollectsGarbage(false)
-
-	local menuItem, error = menu:addMenuItem("Save", function()
-		g_SystemManager:save()
-	end)
-	
-
-	local menuItem, error = menu:addMenuItem("Delete Save", function()
-		pd.datastore.delete(g_SystemManager.autosave_filename)
-		g_SceneManager:reset()
-		g_SceneManager:pushScene(Intro())
-	end)
 
 	once = true
 
@@ -62,7 +50,6 @@ function pd.gameWillPause()
 	pd.stop()
 end
 
-
 function pd.gameWillResume()
 	pd.start()
 end
@@ -70,7 +57,6 @@ end
 function pd.deviceWillSleep()
 	pd.stop()
 end
-
 
 function pd.deviceWillLock()
 	pd.stop()
@@ -80,18 +66,25 @@ function pd.deviceDidUnlock()
 	pd.start()
 end
 
-loadGame()
+init()
+
+local _update <const> = gfx.sprite.update
+local _update_timers <const> = pd.timer.updateTimers
+
 
 function playdate.update()
+
+	if g_SystemManager then
+		g_SystemManager:update()
+	end
 	
-	
+	if g_NotificationManager then
+		g_NotificationManager:update()
+	end
 
-	g_SystemManager:update()
-	g_NotificationManager:update()
+	_update()
 
-	gfx.sprite.update()
-
-	pd.timer.updateTimers()
+	_update_timers()
 	
 	if g_fps then
 		playdate.drawFPS(0, 0)
@@ -111,6 +104,5 @@ function playdate.update()
 		-- for i=0,100 do
 		-- 	pd.simulator.writeToFile(img:fadedImage(i/100, gfx.image.kDitherTypeBayer4x4), string.format("C:\\playdate\\Assets\\sim\\fading_grid_%i.png", i))
 		-- end
-
 	end
 end

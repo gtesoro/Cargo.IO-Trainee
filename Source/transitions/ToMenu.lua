@@ -13,7 +13,7 @@ function ToMenu:init(duration)
     gfx.setDrawOffset(0, 0)
 
 
-    self.grid_sheet = g_SystemManager.fading_grid
+    self.grid_sheet = g_SystemManager:getFadingGrid()
 
     self.grid = gfx.sprite.new(self.grid_sheet:getImage(1))
     self.grid:setZIndex(TRANSITIONS_Z_INDEX)

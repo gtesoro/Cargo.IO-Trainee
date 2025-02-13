@@ -6,18 +6,44 @@ class('SystemManager').extends()
 
 function SystemManager:init()
 
+    -- PD Stuff
+    local menu = pd.getSystemMenu()
+
+	menu:addMenuItem("Show FPS", function()
+		g_fps = not g_fps
+	end)
+
+	menu:addMenuItem("Save", function()
+		g_SystemManager:save()
+	end)
+	
+	menu:addMenuItem("Delete Save", function()
+        if g_SystemManager.meta.saves and g_SystemManager.meta.saves[g_SystemManager.save_slot] then
+            g_SystemManager.meta.saves[g_SystemManager.save_slot] = nil
+        end
+        pd.datastore.write(g_SystemManager.meta, META)
+		pd.datastore.delete(g_SystemManager.save_slot)
+		g_SceneManager:reset()
+		g_SceneManager:pushScene(Intro())
+	end)
+
     self.frame_counter = 0
 
     self.on_death = {}
-    self.autosave_filename = 'auto'
+    self.save_slot = nil
 
-    self.crank_menu_sensitivity = 45
-    self.fading_grid = gfx.imagetable.new("assets/backgrounds/fading_grid")
+    self.crank_menu_sensitivity = 5
+    self.scroll_sensitivity = 25
+
+    self.cache = {}
+    self.cache['fading_grid'] = gfx.imagetable.new("assets/backgrounds/fading_grid")
 
     -- Cycle control
     self.cycle_length = 1
 
     self.disable_control = false
+
+    self:loadMeta()
 
     self:initStatic()
     
@@ -36,7 +62,7 @@ function SystemManager:canControl()
 end
 
 function SystemManager:getFadingGrid()
-    return self.fading_grid
+    return self.cache['fading_grid'] 
 end
 
 function SystemManager:pause()
@@ -61,7 +87,11 @@ end
 
 function SystemManager:death()
 
-    pd.datastore.delete(self.autosave_filename)
+    if g_SystemManager.meta.saves and g_SystemManager.meta.saves[g_SystemManager.save_slot] then
+        g_SystemManager.meta.saves[g_SystemManager.save_slot] = nil
+    end
+    pd.datastore.write(g_SystemManager.meta, META)
+    pd.datastore.delete(g_SystemManager.save_slot)
     g_SceneManager:reset()
     g_SceneManager:pushScene(GameOver())
 
@@ -93,6 +123,8 @@ function SystemManager:initState()
     -- Player
     local _player = {}
     self.state.player = _player
+
+    _player.siegel_img = nil
 
     _player.last_position = {}
     _player.current_position = {
@@ -183,16 +215,24 @@ function SystemManager:initCycleManagement()
     
 end
 
+function SystemManager:loadMeta()
+
+    self.meta = playdate.datastore.read(META)
+
+    if not self.meta then
+        self.meta = {}
+    end
+
+end
+
 function SystemManager:load(file)
 
     g_EventManager:reset()
 
-    if not file then
-        file = self.autosave_filename
-    end
-
     self.state = {}
     self.state = playdate.datastore.read(file)
+
+    self.save_slot = file
 
     if not self.state then
         self.state = self:initState()
@@ -222,7 +262,7 @@ end
 
 function SystemManager:save(file)
     if not file then
-        file = self.autosave_filename
+        file = self.save_slot
     end
 
     local _current_system = self.state.player.current_system
@@ -261,6 +301,40 @@ function SystemManager:save(file)
     self.state.player.inventory.items = _inventory_items
     self.state.player.current_system = _current_system
     self.state.player.ship.loadout.items = _loadout_items
+
+    -- Meta
+
+    if not self.meta.saves then
+        self.meta.saves = {}
+    end
+
+    if not self.meta.saves[self.save_slot] then
+        self.meta.saves[self.save_slot] = {}
+    end
+
+    self.meta.saves[self.save_slot] = {
+        system = _current_system.data.name or systemNameFromCoords(_current_system.data.x, _current_system.data.y, _current_system.data.z),
+        credits = self.state.player.money
+    }
+
+    playdate.datastore.write(self.meta, META)
+
+
+end
+
+function SystemManager:getOverlayImage()
+    img = gfx.image.new('assets/backgrounds/ui_overlay')
+
+    -- if g_SystemManager:getPlayer() and g_SystemManager:getPlayer():getSiegelImage() then
+    --     inContext(img, function ()
+    --         gfx.setColor(gfx.kColorBlack)
+    --         gfx.fillRect(354, 194, 36, 36)
+    --         gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+    --         g_SystemManager:getPlayer():getSiegelImage():scaledImage(0.5):draw(356, 196)
+    --     end)
+    -- end
+
+    return img
 end
 
 function SystemManager:getPlayer()
@@ -346,6 +420,13 @@ function Player:addContract(contract)
     contract:onGain()
 
     return true
+end
+
+function Player:getSiegelImage()
+    if g_SystemManager:getPlayer().siegel_img then
+        return gfx.image.new(g_SystemManager:getPlayer().siegel_img)
+    end
+    return nil
 end
 
 function Player:removeContract(contract)

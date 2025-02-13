@@ -10,6 +10,9 @@ end
 
 function GameOver:startScene()
 
+    self:setCenter(0.5,0.5)
+    self:moveTo(200,120)
+
     self.bg_sprite = gfx.sprite.new(gfx.image.new(400,240, gfx.kColorWhite))
     self.bg_sprite:moveTo(200,120)
     self.bg_sprite:setZIndex(0)
@@ -17,9 +20,8 @@ function GameOver:startScene()
     table.insert(self.sprites, self.bg_sprite)
 
     self:initInputs()
-
+    
     self:setImage(self.bg)
-    self:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
     self:setZIndex(1)
     self:add()
 
@@ -48,12 +50,8 @@ function GameOver:doUpdate()
         end
         self.blur_timer.timerEndedCallback = function ()
 
-            inContext(self:getImage(), function ()
-                gfx.clear()
-                gfx.setFont(g_font_24)
-                gfx.drawTextAligned("GAME OVER", 200, 120, kTextAlignment.center)
-                self.animation_finished = true
-            end)
+            self.animation_finished = true
+            self:setImage(gfx.image.new('assets/game_over'))
         end
     end
     

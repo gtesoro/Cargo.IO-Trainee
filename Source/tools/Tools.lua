@@ -200,11 +200,13 @@ function tableHasElement(table, element)
     return false
 end
 
-function rumbleSprite(spr, duration, distance, delay)
+function rumbleSprite(spr, duration, tick, distance, delay)
 
     if spr.rumbling then
         return
     end
+
+    local _tick = tick or 1
     
     local _duration = duration or 999999999999
     local _distance = distance or 1
@@ -215,7 +217,9 @@ function rumbleSprite(spr, duration, distance, delay)
     _t.delay = _delay
     spr.rumbling = true
     _t.updateCallback = function (timer)
-        spr:moveTo(_x + math.random(-_distance, _distance), _y + math.random(-_distance, _distance))
+        if g_SystemManager:isTick(_tick) then
+            spr:moveTo(_x + math.random(-_distance, _distance), _y + math.random(-_distance, _distance))
+        end
     end
     _t.timerEndedCallback = function (timer)
         spr.rumbling = false
@@ -299,58 +303,65 @@ function systemNameFromCoords(x, y, z)
 
 end
 
-function getSignContractCallback(contract)
-    local _func = function ()
-        g_SceneManager:pushScene(ImageViewer({image=gfx.sprite.new(contract:getContractImage()), a_callback=function (_image_viewer)
+function signContractMenu(contract, a_callback, b_callback, notify)
 
-            if contract.state.signed then
-                return
-            end
-            g_SceneManager:pushScene(Popup({text='Sign Contract?', options={
-                {
-                    name='Yes',
-                    callback= function ()
-                        if contract:canSign() then
+    g_SceneManager:pushScene(ImageViewer({image=gfx.sprite.new(contract:getContractImage()), a_callback=function (_image_viewer)
+
+        if contract.state.signed then
+            return
+        end
+        g_SceneManager:pushScene(Popup({text='Sign Contract?', options={
+            {
+                name='Yes',
+                callback= function ()
+                    if contract:canSign() then
+                        
+                        local _timer = pd.timer.new(1000, _image_viewer.image_sprite.y, (-_image_viewer.image_sprite.height) + 90 + 120, pd.easingFunctions.outCubic)
+                        _timer.updateCallback = function (timer)
+                            _image_viewer.image_sprite:moveTo(_image_viewer.image_sprite.x, timer.value)
+                            _image_viewer.image_sprite:markDirty()
+                        end
+                        _timer.timerEndedCallback = function ()
+
+                            inContext(_image_viewer.image_sprite:getImage(), function ()
+                                g_SystemManager:getPlayer():getSiegelImage():drawAnchored(_image_viewer.image_sprite.width - 25, _image_viewer.image_sprite.height - 15, 1, 1)
+                            end)
+
+                            g_SoundManager:playStamp()
                             
-                            local _timer = pd.timer.new(1000, _image_viewer.image_sprite.y, -240, pd.easingFunctions.outCubic)
-                            _timer.updateCallback = function (timer)
-                                _image_viewer.image_sprite:moveTo(_image_viewer.image_sprite.x, timer.value)
-                                _image_viewer.image_sprite:markDirty()
+                            _image_viewer.image_sprite:markDirty()
+
+                            local _timer2 = pd.timer.new(250)
+                            _timer2.updateCallback = function (timer)
+                                pd.display.setOffset(math.random(-2,2), math.random(-2,2))
                             end
-                            _timer.timerEndedCallback = function ()
+                            _timer2.timerEndedCallback = function ()
 
-                                inContext(_image_viewer.image_sprite:getImage(), function ()
-                                    gfx.image.new('assets/contracts/contract_stamp'):drawAnchored(_image_viewer.image_sprite.width*0.8, _image_viewer.image_sprite.height*0.9, 0.5, 0.5)
-                                end)
-
-                                g_SoundManager:playStamp()
-                                
-                                _image_viewer.image_sprite:markDirty()
-
-                                local _timer2 = pd.timer.new(250)
-                                _timer2.updateCallback = function (timer)
-                                    pd.display.setOffset(math.random(-2,2), math.random(-2,2))
-                                end
-                                _timer2.timerEndedCallback = function ()
-
+                                if notify then
                                     g_NotificationManager:notify('Contract Signed')
-                                    contract:onSign()
-                                    g_SystemManager:getPlayer():addContract(contract)
-                                    
+                                end
+                                contract:onSign()
+                                g_SystemManager:getPlayer():addContract(contract)
+                                
+                                if a_callback then
+                                    a_callback()
                                 end
                             end
                         end
                     end
-                },
-                {
-                    name='No'
-                }
-            }}))
-            
-        end}), 'between menus')
-    end
-
-    return _func
+                end
+            },
+            {
+                name='No',
+                callback= function ()
+                    if b_callback then
+                        b_callback()
+                    end
+                end
+            }
+        }}))
+        
+    end}), 'between menus')
 end
 
 function createPopup(data)
@@ -461,6 +472,7 @@ function getStatusImg()
     gfx.setFont(g_font_text)
 
     inContext(img, function ()
+        gfx.setFontFamily(g_font_text_family)
         gfx.setColor(gfx.kColorBlack)
         gfx.fillRoundRect(0,0,img.width, img.height, 2)
 
@@ -472,37 +484,37 @@ function getStatusImg()
         local _system = g_SystemManager:getPlayer():getCurrentSystem()
         local _system_data = _system.data
 
-        local _data = "System."
+        local _data = "*System*"
         gfx.drawTextAligned(_data, img.width*0.05, img.height*0.05, kTextAlignment.left)
 
         _data = string.format("%s", _system:getName()) 
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.05, kTextAlignment.right)
 
-        _data = "Loc."
+        _data = "*Loc*"
         gfx.drawTextAligned(_data, img.width*0.05, img.height*0.2, kTextAlignment.left)
 
         _data = systemNameFromCoords(_system_data.x, _system_data.y, _system_data.z)
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.2, kTextAlignment.right)
 
-        _data = "Cycle."
+        _data = "*Cycle*"
         gfx.drawTextAligned(_data, img.width*0.05, img.height*0.35, kTextAlignment.left)
 
         _data = string.format("%i.%02i", g_SystemManager:getCycle())
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.35, kTextAlignment.right)
 
-        _data = "Credits."
+        _data = "*Credits*"
         gfx.drawTextAligned(_data, img.width*0.05, img.height*0.5, kTextAlignment.left)
 
         _data = string.format("%iC", g_SystemManager:getPlayer().money)
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.5, kTextAlignment.right)
 
-        gfx.drawTextAligned("Hull.", img.width*0.05, img.height*0.65, kTextAlignment.left)
+        gfx.drawTextAligned("*Hull*", img.width*0.05, img.height*0.65, kTextAlignment.left)
 
         _data = string.format("%i%%", 100)
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.65, kTextAlignment.right)
 
 
-        gfx.drawTextAligned("Fuel.", img.width*0.05, img.height*0.80, kTextAlignment.left)
+        gfx.drawTextAligned("*Fuel*", img.width*0.05, img.height*0.80, kTextAlignment.left)
         
         _data = string.format("%i%%", math.floor(g_SystemManager:getPlayer().ship.fuel_current/g_SystemManager:getPlayer().ship.fuel_capacity*100 + 0.5))
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.80, kTextAlignment.right)
@@ -643,6 +655,7 @@ function table_length(T)
 
 
   function inContext(img, func)
+    assert(img)
     gfx.pushContext(img)
         func()
     gfx.popContext()

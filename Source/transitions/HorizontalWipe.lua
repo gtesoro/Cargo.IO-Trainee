@@ -11,12 +11,18 @@ function Wipe:init(duration, dir, reversed)
         self.image = gfx.image.new(400, 240, gfx.kColorBlack)
     end
 
-    inContext(self.image, function ()
-        gfx.image.new('assets/loading'):draw(0,0)
+    local _img = gfx.image.new(400, 240, gfx.kColorWhite)
+
+    _img:addMask(true)
+
+    inContext(_img:getMaskImage(), function ()
+        g_SystemManager:getPlayer():getSiegelImage():drawAnchored(380,220, 1, 1)
     end)
 
-    
-    
+    inContext(self.image, function ()
+        _img:draw(0,0)
+    end)
+
     self:setZIndex(TRANSITIONS_Z_INDEX)
     self:setIgnoresDrawOffset(true)
     self:moveTo(pd.display.getWidth()/2, pd.display.getHeight()/2)
@@ -37,7 +43,6 @@ function Wipe:init(duration, dir, reversed)
     --     end
     -- end
     
-
     if dir == 'left' then
         if reversed then
             self:setClipRect(0,0, 401, 241)

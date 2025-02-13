@@ -1,7 +1,7 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('CargoHub').extends(GenericMenu)
+class('CargoHub').extends(GenericMenuList)
 
 function CargoHub:init()
 
@@ -53,7 +53,7 @@ function CargoHub:init()
                 else
                     local _contract = DeliveryContract()
                     _contract:generateSystemContract()
-                    getSignContractCallback(_contract)()
+                    signContractMenu(_contract, nil, true)
                 end
                 
             end
@@ -69,7 +69,7 @@ function CargoHub:init()
                 else
                     local _contract = DeliveryContract()
                     _contract:generateLocalContract()
-                    getSignContractCallback(_contract)()
+                    signContractMenu(_contract, nil, true)
                 end
                 
             end
@@ -115,7 +115,7 @@ function CargoHubDelivery:init(data)
     
 end
 
-class('CloningFacility').extends(GenericMenu)
+class('CloningFacility').extends(GenericMenuList)
 
 function CloningFacility:init()
 
@@ -125,7 +125,9 @@ function CloningFacility:init()
     self.data.options = {
         {
             name = 'Sign Contract',
-            callback = getSignContractCallback(CloningContract())
+            callback = function ()
+                signContractMenu(CloningContract())
+            end
         },
         {
             name = 'Update Memory',
@@ -146,7 +148,7 @@ function CloningFacility:init()
     self.data.right_side = gfx.sprite.new(getImageWithDitherMask('assets/facilities/namaste', true))
 end
 
-class('Starport').extends(GenericMenu)
+class('Starport').extends(GenericMenuList)
 
 function Starport:init()
 
@@ -189,7 +191,7 @@ function Starport:init()
     
 end
 
-class('Market').extends(GenericMenu)
+class('Market').extends(GenericMenuList)
 
 function Market:init(data)
 

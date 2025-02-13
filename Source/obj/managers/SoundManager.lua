@@ -256,3 +256,35 @@ end
 function SoundManager:stopRadio()
     self.radio:play()
 end
+
+function SoundManager:playIntro()
+
+    self.intro = pd.sound.fileplayer.new("assets/music/intro")
+    self.intro:setVolume(0)
+
+    local _timer = pd.timer.new(500, 0, 1, pd.easingFunctions.inCirc)
+    self.intro:play(0)
+
+    _timer.updateCallback = function (timer)
+        self.intro:setVolume(timer.value)
+    end
+
+    
+end
+
+function SoundManager:stopIntro(c)
+    local _timer = pd.timer.new(500, 1, 0, pd.easingFunctions.outCirc)
+
+    _timer.updateCallback = function (timer)
+        self.intro:setVolume(timer.value)
+    end
+
+    _timer.timerEndedCallback = function ()
+        self.intro:stop()
+        self.intro = nil
+        if c then
+            c()
+        end
+    end
+end
+

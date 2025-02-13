@@ -41,7 +41,7 @@ facility_v_options[FACILITY_CARGO] = {
 }
 
 
-class('LocationMenu').extends(GenericMenu)
+class('LocationMenu').extends(GenericMenuList)
 
 function LocationMenu:init(data)
 

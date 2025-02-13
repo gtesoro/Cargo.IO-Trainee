@@ -48,6 +48,7 @@ function GridBox:init(data, r, c, g_w, g_h, w, h, scale_icons)
         gfx.setColor(gfx.kColorBlack)
         gfx.fillRect(x, y, width, height)
         if data.items[((row-1)*c) + column] then
+            gfx.setImageDrawMode(gfx.kDrawModeInverted)
             local img = data.items[((row-1)*c) + column] :getImage()
             local _s =  1
             if scale_icons then
@@ -128,11 +129,25 @@ function GridBox:initInputs()
             --         g_SoundManager:playMenuListChange()
             --         self.grid:selectPreviousColumn(true)
             --     end
-            --     if self.on_change then
-            --         self.on_change(self:getSelection())
-            --     end
+                
             --     self.accumulated_crank = 0
             -- end
+
+            local _t = -pd.getCrankTicks(g_SystemManager.crank_menu_sensitivity)
+            if _t > 0 then
+                g_SoundManager:playMenuListChange()
+                self.grid:selectPreviousColumn(true)
+                if self.on_change then
+                    self.on_change(self:getSelection())
+                end
+            end
+            if _t < 0 then
+                g_SoundManager:playMenuListChange()
+                self.grid:selectNextColumn(true)
+                if self.on_change then
+                    self.on_change(self:getSelection())
+                end
+            end
         end,
 
         AButtonUp = function ()

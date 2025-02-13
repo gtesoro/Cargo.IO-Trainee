@@ -2,9 +2,11 @@
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 
-class('GenericInventory').extends(Scene)
+class('GenericInventory').extends(GenericMenu)
 
 function GenericInventory:startScene()
+
+    GenericInventory.super.startScene(self)
 
     self:initGrids()
     self:initBg()
@@ -160,12 +162,11 @@ function GenericInventory:setItem(_s)
         self.item_panel = ItemPanel(_s)
         self.item_panel:setCenter(0, 0)
         self.item_panel:add()
-        self.item_panel:moveTo(playdate.display.getWidth()*0.5+16, pd.display.getHeight()*0.15)
+        self.item_panel:moveTo(playdate.display.getWidth()*0.5+16, pd.display.getHeight()*0.1)
         self.item_panel:setZIndex(2)
         table.insert(self.sprites, self.item_panel)
     end    
 end
-
 
 function GenericInventory:scrollItemPanel(amount)
     for k,v in pairs(self.item_panel_underlays) do
@@ -182,33 +183,6 @@ function GenericInventory:scrollItemPanel(amount)
     end
 end
 
-function GenericInventory:initBg()
-
-    local img = gfx.image.new(400, 240, gfx.kColorBlack)
-    gfx.pushContext(img)
-        local _i = gfx.image.new('assets/backgrounds/grid')
-        _i:drawAnchored(pd.display.getWidth()/2, pd.display.getHeight()/2, 0.5, 0.5)
-    gfx.popContext()
-
-
-    self.bg_image = img:blurredImage(1, 2, gfx.image.kDitherTypeScreen)
-    self.bg_sprite = gfx.sprite.new(self.bg_image)
-    self.bg_sprite:setIgnoresDrawOffset(true)
-    self.bg_sprite:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.bg_sprite:setZIndex(0)
-    self.bg_sprite:add()
-    table.insert(self.sprites, self.bg_sprite)
-
-    self.ui_overlay = gfx.sprite.new(gfx.image.new('assets/backgrounds/ui_overlay'))
-    self.ui_overlay:setIgnoresDrawOffset(true)
-    self.ui_overlay:moveTo(playdate.display.getWidth()/2, playdate.display.getHeight()/2)
-    self.ui_overlay:setZIndex(2)
-    self.ui_overlay:add()
-
-    table.insert(self.sprites, self.ui_overlay)
-
-end
-
 function GenericInventory:focus()
     if self.item_grid then
         self:unfocus()
@@ -222,36 +196,19 @@ function GenericInventory:unfocus()
     end
 end
 
-function GenericInventory:add()
-    GenericInventory.super.add(self)
-    applyFlicker(self.bg_sprite)
-end
-
-function GenericInventory:remove()
-    GenericInventory.super.remove(self)
-    for k, v in pairs(self.sprites) do
-        if v.flicker_timer then
-            v.flicker_timer:remove()
-            v.flicker_timer = nil
-        end
-    end
-end
-
 
 function GenericInventory:doUpdate()
 
-    --local _a = pd.getCrankChange()*0.25
-
-    local _t = -pd.getCrankTicks(25)
-    if math.fmod(_t, 2) ~= 0 then
-        _t += 1 * (_t/math.abs(_t))
-    end
-    if self.scrolled - _t < 0 then
-        self:scrollItemPanel(-self.scrolled)
-        self.scrolled = 0
-    else
-        self:scrollItemPanel(_t)
-        self.scrolled -= _t
-    end
+    -- local _t = -pd.getCrankTicks(g_SystemManager.scroll_sensitivity)
+    -- if math.fmod(_t, 2) ~= 0 then
+    --     _t += 1 * (_t/math.abs(_t))
+    -- end
+    -- if self.scrolled - _t < 0 then
+    --     self:scrollItemPanel(-self.scrolled)
+    --     self.scrolled = 0
+    -- else
+    --     self:scrollItemPanel(_t)
+    --     self.scrolled -= _t
+    -- end
     
 end

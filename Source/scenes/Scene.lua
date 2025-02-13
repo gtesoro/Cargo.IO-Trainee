@@ -13,6 +13,12 @@ function Scene:init(data)
 
     self.loaded = false
     self.sprites = {}
+
+    print('Scene Init', self.className)
+    print('-- Data --')
+    printTable(self.data)
+    print('----------')
+    
 end
 
 function Scene:moveTo(x , y)

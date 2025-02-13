@@ -52,7 +52,7 @@ function Item:getAttrs()
         },
         {
             "Price", function ()
-                return _self:getCurrentPrice()
+                return string.format("%i", _self:getCurrentPrice()) 
             end
         }
     }
