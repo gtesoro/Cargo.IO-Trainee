@@ -14,7 +14,7 @@ function ItemContainer:init(item)
 end
 
 function ItemContainer:interact(data)
-    if g_SystemManager:getPlayer():addToInventory(self.item) then
+    if g_SystemManager:getPlayerData():addToInventory(self.item) then
         self:remove()
     end
 end
@@ -59,7 +59,7 @@ function Item:getAttrs()
 end
 
 function Item:getCurrentPrice()
-    math.randomseed(g_SystemManager:getPlayer().cycle + stringToSeed(self.className))
+    math.randomseed(g_SystemManager:getPlayerData().cycle + stringToSeed(self.className))
     return  math.random(self.price_min, self.price_max)
 end
 
@@ -132,7 +132,7 @@ function FuelCell:init()
             },
             callback = function (_self)
                 
-                g_SystemManager:getPlayer().ship.fuel_current = g_SystemManager:getPlayer().ship.fuel_capacity
+                g_SystemManager:getPlayerData().ship.fuel_current = g_SystemManager:getPlayerData().ship.fuel_capacity
                 g_NotificationManager:notify("Fuel Refilled")
                 _self:remove()
                 _self.data.parent:focus()
@@ -383,12 +383,12 @@ function YggdrasilAtlas:init()
                 ShopInventory=true
             },
             callback = function (_self)
-                table.insert(g_SystemManager:getPlayer().codex.systems, "Yggdrasil")
+                table.insert(g_SystemManager:getPlayerData().codex.systems, "Yggdrasil")
                 for k, v in pairs(g_SystemManager:getSystemByName("Yggdrasil").locations) do
-                    table.insert(g_SystemManager:getPlayer().codex.locations, v.name)
+                    table.insert(g_SystemManager:getPlayerData().codex.locations, v.name)
                 end
                 g_NotificationManager:notify('Codex Updated')
-                g_SystemManager:getPlayer():removeFromInventory(_self.data.parent.item_grid:getSelection())
+                g_SystemManager:getPlayerData():removeFromInventory(_self.data.parent.item_grid:getSelection())
                 _self.data.parent.item_grid:drawGrid()
                 _self.data.parent:focus()
                 _self:remove()

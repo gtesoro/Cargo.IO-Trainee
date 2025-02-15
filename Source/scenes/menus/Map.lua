@@ -5,7 +5,7 @@ class('Map').extends(Scene)
 
 function Map:startScene()
 
-    self.player_pos = g_SystemManager:getPlayer().current_position
+    self.player_pos = g_SystemManager:getPlayerData().current_position
     self.current_z = self.player_pos.z
 
     self.unknown_system = {
@@ -103,7 +103,7 @@ function Map:getMapSize()
 
     local _w, _h = 400, 240
 
-    for k,v in pairs(g_SystemManager:getPlayer().map) do
+    for k,v in pairs(g_SystemManager:getPlayerData().map) do
 
         local _x, _y = math.abs(v[1]), math.abs(v[2])
 
@@ -134,8 +134,8 @@ function Map:drawMap()
 
         gfx.clear()
 
-        for k,c in pairs(g_SystemManager:getPlayer().map) do
-            for k,o in pairs(g_SystemManager:getPlayer().map) do
+        for k,c in pairs(g_SystemManager:getPlayerData().map) do
+            for k,o in pairs(g_SystemManager:getPlayerData().map) do
                 if self:areAdjacent(c[1], c[2], o[1], o[2]) then
                     gfx.setColor(gfx.kColorWhite)
                     gfx.setLineWidth(3)
@@ -146,7 +146,7 @@ function Map:drawMap()
             end
         end
 
-        for k,v in pairs(g_SystemManager:getPlayer().map) do
+        for k,v in pairs(g_SystemManager:getPlayerData().map) do
             local _x, _y = v[1]*_separation + _img.width/2, v[2]*_separation + _img.height/2
             local _system = g_SystemManager:getSystem(v[1], v[2], v[3])
             if _system and _system.thumbnail then
@@ -230,7 +230,7 @@ function Map:initInputs()
         -- end,
 
         AButtonUp = function ()
-            if #g_SystemManager:getPlayer():getLoadoutByType('LeapEngine') > 0 and self.pointer_system then
+            if #g_SystemManager:getPlayerData():getLoadoutByType('LeapEngine') > 0 and self.pointer_system then
                 goTo(self.pointer_system.x, self.pointer_system.y, self.pointer_system.z)
             end
         end,
@@ -288,7 +288,7 @@ function Map:getSystemFromOffset(x_offset, y_offset)
 
     local _s = string.format('%d.%d.%d', _x, _y, _z)
 
-    if g_SystemManager:getPlayer().map[_s] then
+    if g_SystemManager:getPlayerData().map[_s] then
         local _s = g_SystemManager:getSystem(_x, _y, _z)
 
         if _s then
@@ -360,8 +360,8 @@ function Map:doUpdate()
                 --gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
                 gfx.drawTextAligned(self.pointer_system.name, 200, 25, kTextAlignment.center)
                 gfx.drawTextAligned(systemNameFromCoords(self.pointer_system.x, self.pointer_system.y, self.pointer_system.z) , 200, 45, kTextAlignment.center)
-                local _current = g_SystemManager:getPlayer():getCurrentSystem().data
-                if #g_SystemManager:getPlayer():getLoadoutByType('LeapEngine') > 0  and
+                local _current = g_SystemManager:getPlayerData():getCurrentSystem().data
+                if #g_SystemManager:getPlayerData():getLoadoutByType('LeapEngine') > 0  and
                     self.pointer_system ~= _current.x and  
                     self.pointer_system.y ~= _current.y and  
                     self.pointer_system.z ~= _current.z then

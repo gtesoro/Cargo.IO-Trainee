@@ -31,7 +31,7 @@ function System:startScene()
 
     self:initBg()
     
-    self:initShip()
+    self:initPlayer()
     self:initInputs()
     self:moveCamera()
     self:initUI()
@@ -119,48 +119,48 @@ function System:updateSelectionSprite()
 
 end
 
-function System:initShip()
+function System:initPlayer()
 
     self.margin = 40
 
-    self.ship = Ship(self)
-    self.ship:setZIndex(self.playfield_height*2+1)
-    self.ship:moveTo(self.playfield_width/2-100, self.playfield_height/2)
-    if g_SystemManager:getPlayer().last_position.x then
+    self.player = Player(self)
+    self.player:setZIndex(self.playfield_height*2+1)
+    self.player:moveTo(self.playfield_width/2-100, self.playfield_height/2)
+    if g_SystemManager:getPlayerData().last_position.x then
         self.spawn_point = pd.geometry.point.new(self.playfield_width/2-100, self.playfield_height/2)
-        local dx, dy, dz = self.data.x - g_SystemManager:getPlayer().last_position.x, self.data.y - g_SystemManager:getPlayer().last_position.y, self.data.z - g_SystemManager:getPlayer().last_position.z
+        local dx, dy, dz = self.data.x - g_SystemManager:getPlayerData().last_position.x, self.data.y - g_SystemManager:getPlayerData().last_position.y, self.data.z - g_SystemManager:getPlayerData().last_position.z
         if math.abs(dx) + math.abs(dy) + math.abs(dz) == 1 then
             if dx > 0 then
                 self.spawn_point = pd.geometry.point.new(self.margin, self.playfield_height/2)
-                self.ship.angle = 90
+                self.player.angle = 90
             end
 
             if dx < 0 then
                 self.spawn_point = pd.geometry.point.new(self.playfield_width - self.margin, self.playfield_height/2)
-                self.ship.angle = 270
+                self.player.angle = 270
             end
 
             if dy > 0 then
                 self.spawn_point = pd.geometry.point.new(self.playfield_width/2, self.margin)
-                self.ship.angle = 180
+                self.player.angle = 180
             end
 
             if dy < 0 then
-                self.ship:moveTo(self.playfield_width/2, self.playfield_height - 50)
+                self.player:moveTo(self.playfield_width/2, self.playfield_height - 50)
                 self.spawn_point = pd.geometry.point.new(self.playfield_width/2, self.playfield_height - self.margin)
             end
         end
 
-        self.ship:moveTo(self.spawn_point.x, self.spawn_point.y)
-        self.ship:updateImg()
+        self.player:moveTo(self.spawn_point.x, self.spawn_point.y)
+        self.player:updateImg()
     end
-    local _x, _y = self.ship:getPosition()
+    local _x, _y = self.player:getPosition()
     self.x_offset = _x - pd.display.getWidth()/2
     self.y_offset = _y - pd.display.getHeight()/2
 
-    --self.ship:moveTo(30, self.playfield_height/2)
+    --self.player:moveTo(30, self.playfield_height/2)
 
-    table.insert(self.sprites, self.ship)
+    table.insert(self.sprites, self.player)
 end
 
 function System:initBg()
@@ -240,52 +240,52 @@ function System:handleBorders()
 
     self.blackout_overlay:setVisible(true)
     local margin = 64
-    if self.ship.x < 0 then
+    if self.player.x < 0 then
         self.blackout_overlay:setVisible(true)
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
             gfx.setColor(gfx.kColorClear)
-            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.x/margin))*466.48)
+            gfx.fillCircleAtPoint(clamp(self.player.x - self.x_offset, 0, 400), clamp(self.player.y - self.y_offset, 0, 240), (1 - math.abs(self.player.x/margin))*466.48)
             gfx.setColor(gfx.kColorWhite)
-            self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5 )
+            self.player:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.player.x - self.x_offset, 0, 400), clamp(self.player.y - self.y_offset, 0, 240), 0.5 , 0.5 )
 
         end)
         self.blackout_overlay:markDirty()
-    elseif self.ship.x > self.playfield_width then
+    elseif self.player.x > self.playfield_width then
         self.blackout_overlay:setVisible(true)
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
             gfx.setColor(gfx.kColorClear)
-            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.x - self.playfield_width)/margin)*466.48)
+            gfx.fillCircleAtPoint(clamp(self.player.x - self.x_offset, 0, 400), clamp(self.player.y - self.y_offset, 0, 240), (1 - math.abs(self.player.x - self.playfield_width)/margin)*466.48)
             gfx.setColor(gfx.kColorWhite)
-            self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
+            self.player:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.player.x - self.x_offset, 0, 400), clamp(self.player.y - self.y_offset, 0, 240), 0.5 , 0.5)
         end)
         self.blackout_overlay:markDirty()
-    elseif self.ship.y < 0 then
+    elseif self.player.y < 0 then
         self.blackout_overlay:setVisible(true)
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
             gfx.setColor(gfx.kColorClear)
-            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.y/margin))*466.48)
+            gfx.fillCircleAtPoint(clamp(self.player.x - self.x_offset, 0, 400), clamp(self.player.y - self.y_offset, 0, 240), (1 - math.abs(self.player.y/margin))*466.48)
             gfx.setColor(gfx.kColorWhite)
-            self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
+            self.player:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.player.x - self.x_offset, 0, 400), clamp(self.player.y - self.y_offset, 0, 240), 0.5 , 0.5)
         end)
         self.blackout_overlay:markDirty()
-    elseif self.ship.y > self.playfield_height then
+    elseif self.player.y > self.playfield_height then
         self.blackout_overlay:setVisible(true)
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
             gfx.setColor(gfx.kColorClear)
-            gfx.fillCircleAtPoint(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), (1 - math.abs(self.ship.y - self.playfield_height)/margin)*466.48)
+            gfx.fillCircleAtPoint(clamp(self.player.x - self.x_offset, 0, 400), clamp(self.player.y - self.y_offset, 0, 240), (1 - math.abs(self.player.y - self.playfield_height)/margin)*466.48)
             gfx.setColor(gfx.kColorWhite)
-            self.ship:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.ship.x - self.x_offset, 0, 400), clamp(self.ship.y - self.y_offset, 0, 240), 0.5 , 0.5)
+            self.player:getImage():fadedImage(0.5, gfx.image.kDitherTypeBayer8x8):drawAnchored(clamp(self.player.x - self.x_offset, 0, 400), clamp(self.player.y - self.y_offset, 0, 240), 0.5 , 0.5)
         end)
         self.blackout_overlay:markDirty()
     else
         self.blackout_overlay:setVisible(false)
     end
 
-    if self.ship.x < -margin then
+    if self.player.x < -margin then
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
         end)
@@ -293,7 +293,7 @@ function System:handleBorders()
         goTo(self.data.x-1, self.data.y , self.data.z, 'left')
     end
 
-    if self.ship.x > self.playfield_width + margin then
+    if self.player.x > self.playfield_width + margin then
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
         end)
@@ -301,7 +301,7 @@ function System:handleBorders()
         goTo(self.data.x+1, self.data.y , self.data.z, 'right')
     end
 
-    if self.ship.y < -margin then
+    if self.player.y < -margin then
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
         end)
@@ -309,7 +309,7 @@ function System:handleBorders()
         goTo(self.data.x, self.data.y -1, self.data.z, 'up')
     end
 
-    if self.ship.y > self.playfield_height + margin then
+    if self.player.y > self.playfield_height + margin then
         inContext(self.blackout_overlay:getImage(), function ()
             gfx.clear(gfx.kColorWhite)
         end)
@@ -325,12 +325,12 @@ function System:initUI()
     self.blackout_overlay:moveTo(200, 120)
     self.blackout_overlay.no_zoom = true
     self.blackout_overlay:setIgnoresDrawOffset(true)
-    self.blackout_overlay:setZIndex(self.ship:getZIndex()+1)
+    self.blackout_overlay:setZIndex(self.player:getZIndex()+1)
     self.blackout_overlay:add()
 
     table.insert(self.sprites, self.blackout_overlay)
 
-    --table.insert(self.sprites, FuelUI(self.ship))
+    --table.insert(self.sprites, FuelUI(self.player))
     
 end
 
@@ -342,11 +342,11 @@ function System:moveCamera()
     local _nx = self.x_offset
     local _ny = self.y_offset
 
-    if math.abs(_cx - self.ship.x) > self.x_cam_loose  then
-        _nx = self.ship.x - playdate.display.getWidth()/2 + (self.x_cam_loose * (_cx - self.ship.x)/math.abs(_cx - self.ship.x))
+    if math.abs(_cx - self.player.x) > self.x_cam_loose  then
+        _nx = self.player.x - playdate.display.getWidth()/2 + (self.x_cam_loose * (_cx - self.player.x)/math.abs(_cx - self.player.x))
     end
-    if math.abs(_cy - self.ship.y) > self.y_cam_loose  then
-        _ny = self.ship.y - playdate.display.getHeight()/2 + (self.y_cam_loose * (_cy - self.ship.y)/math.abs(_cy - self.ship.y))
+    if math.abs(_cy - self.player.y) > self.y_cam_loose  then
+        _ny = self.player.y - playdate.display.getHeight()/2 + (self.y_cam_loose * (_cy - self.player.y)/math.abs(_cy - self.player.y))
     end
     
     _nx = playdate.math.lerp(self.x_offset, _nx, 0.5)
@@ -393,16 +393,16 @@ function System:initInputs()
                 return
             end
 
-            local ship_angle = self.ship.angle
-            ship_angle += change * self.ship.rotation_modifier
-		    self.ship:setAngle(ship_angle)
+            local ship_angle = self.player.angle
+            ship_angle += change * self.player.rotation_modifier
+		    self.player:setAngle(ship_angle)
         end,
 
         BButtonDown = function ()
             if not g_SystemManager:canControl() then
                 return
             end
-            self.ship.move_ship = true
+            self.player.move_ship = true
             g_SoundManager:playEngine()
         end,
 
@@ -410,18 +410,18 @@ function System:initInputs()
             if not g_SystemManager:canControl() then
                 return
             end
-            self.ship.move_ship = false
+            self.player.move_ship = false
             g_SoundManager:stopEngine()
         end,
 
         upButtonUp = function ()
-            self:zoomIn()
+            --self:zoomIn()
         end,
 
         downButtonUp = function ()
-            --self.ship.move_ship = not self.ship.move_ship 
+            --self.player.move_ship = not self.player.move_ship 
             --g_SoundManager:playNotification()
-            self:zoomOut()
+            --self:zoomOut()
         end,
 
         leftButtonUp = function ()
@@ -443,19 +443,20 @@ function System:zoomIn()
     self.playfield_width *= 2
     self.playfield_height *= 2
 
+    self.player.speed_vector *= 2
+
     for k, spr in pairs(self.sprites) do
         if not spr.no_zoom then
+            spr:moveTo(spr.x*2, spr.y*2)
             spr:setScale(self.zoom)
             spr.zoom = self.zoom
-            spr:moveTo(spr.x*2, spr.y*2)
             local _rect = spr:getCollideRect()
-            if _rect.width > 0 and _rect.height > 0 then
-                spr:clearCollideRect() 
-                spr:setCollideRect( 0, 0, spr:getSize() )
-            end
+            spr:setCollideRect( _rect.x*2, _rect.y*2, _rect.width*2, _rect.height*2 )
             spr:markDirty()
         end
     end
+
+    self:moveCamera()
     
 end
 
@@ -472,33 +473,34 @@ function System:zoomOut()
     self.playfield_width *= 0.5
     self.playfield_height *= 0.5
 
+    self.player.speed_vector *= 0.5
+
     for k, spr in pairs(self.sprites) do
         if not spr.no_zoom then
+            spr:moveTo(spr.x*0.5, spr.y*0.5)
             spr:setScale(self.zoom)
             spr.zoom = self.zoom
-            spr:moveTo(spr.x*0.5, spr.y*0.5)
             local _rect = spr:getCollideRect()
-            if _rect.width > 0 and _rect.height > 0 then
-                spr:clearCollideRect() 
-                spr:setCollideRect( 0, 0, spr:getSize() )
-            end
+            spr:setCollideRect( _rect.x*0.5, _rect.y*0.5, _rect.width*0.5, _rect.height*0.5)
             spr:markDirty()
         end        
     end
+
+    self:moveCamera()
     
 end
 
 
 function System:doUpdate()
 
-    self.ship:doUpdate()
+    self.player:doUpdate()
     self:moveCamera()
 
     self:handleBorders()
 
     self:updateSelectionSprite()
 
-    local collisions = self.ship:overlappingSprites()
+    local collisions = self.player:overlappingSprites()
 
     if #collisions == 0 then
         self.selection_spr:setVisible(false)
@@ -507,11 +509,13 @@ function System:doUpdate()
 
 	for i = 1, #collisions do
         if collisions[i].interactuable then
-            self:setSelectionSprite(collisions[i])
-            if pd.buttonJustReleased(playdate.kButtonA) then
+            if not self.selection_focus then
+                self:setSelectionSprite(collisions[i])
+            end
+            if pd.buttonJustReleased(pd.kButtonA) then
                 self.selection_spr:setVisible(false)
                 self.selection_focus = nil
-                self.ship:stop()
+                self.player:stop()
                 collisions[i]:interact()
                 break
             end

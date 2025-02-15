@@ -77,7 +77,7 @@ function LoadoutMenu:initGrids()
         end
 
         local _items = {}
-        for k,v in pairs(g_SystemManager:getPlayer().inventory.items) do
+        for k,v in pairs(g_SystemManager:getPlayerData().inventory.items) do
             if v.type == 'Equipment' then
                 table.insert(_items, v)
             end
@@ -100,7 +100,7 @@ function LoadoutMenu:initGrids()
                     local _item = _self:getSelection()
                     if _item then
                         if _item == _cross then
-                            if g_SystemManager:getPlayer():addToInventory(_source, false) then
+                            if g_SystemManager:getPlayerData():addToInventory(_source, false) then
                                 table.remove(_myself.data.items, _myself.item_grid:getSelectionIndex())
                                 g_NotificationManager:notify(string.format("%s Unequiped", _source.name))
                                 _source:onUnequip()
@@ -112,18 +112,18 @@ function LoadoutMenu:initGrids()
                                 g_NotificationManager:notify(string.format("%s Unequiped", _source.name))
                                 _source:onUnequip()
     
-                                g_SystemManager:getPlayer():removeFromInventory(_item, false)
+                                g_SystemManager:getPlayerData():removeFromInventory(_item, false)
                                 table.insert(_myself.data.items, _item)
                                 _myself.item_grid:drawGrid()
                                 _item:onEquip()
                                 g_NotificationManager:notify(string.format("%s Equiped", _item.name))
     
-                                g_SystemManager:getPlayer():addToInventory(_source, false)
+                                g_SystemManager:getPlayerData():addToInventory(_source, false)
     
                                 
                                 
                             else
-                                g_SystemManager:getPlayer():removeFromInventory(_item, false)
+                                g_SystemManager:getPlayerData():removeFromInventory(_item, false)
                                 table.insert(_myself.data.items, _item)
                                 _myself.item_grid:drawGrid()
                                 _item:onEquip()

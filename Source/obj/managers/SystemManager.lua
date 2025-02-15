@@ -120,7 +120,7 @@ function SystemManager:initState()
 
     self.state.global = {}
 
-    -- Player
+    -- PlayerData
     local _player = {}
     self.state.player = _player
 
@@ -186,14 +186,14 @@ function SystemManager:initCycleManagement()
         self.cycle_compensation = self.state.player.cycle_time
 
         self.cycle_timer.timerEndedCallback = function ()
-            g_SystemManager:getPlayer().cycle += 1
+            g_SystemManager:getPlayerData().cycle += 1
             g_EventManager:trigger(EVENT_NEXT_CYCLE, g_SystemManager:getCycle())
             self.cycle_compensation = 0
             self.cycle_timer = pd.timer.new(self.cycle_length*60*1000)
             self.cycle_timer.repeats = true
 
             self.cycle_timer.timerEndedCallback = function ()
-                g_SystemManager:getPlayer().cycle += 1
+                g_SystemManager:getPlayerData().cycle += 1
                 g_EventManager:trigger(EVENT_NEXT_CYCLE, g_SystemManager:getCycle())
             end
         end
@@ -204,7 +204,7 @@ function SystemManager:initCycleManagement()
         self.cycle_timer.repeats = true
 
         self.cycle_timer.timerEndedCallback = function ()
-            g_SystemManager:getPlayer().cycle += 1
+            g_SystemManager:getPlayerData().cycle += 1
             g_EventManager:trigger(EVENT_NEXT_CYCLE, g_SystemManager:getCycle())
         end
 
@@ -256,7 +256,7 @@ function SystemManager:load(file)
         end
     end
 
-    self.state.player = Player(self.state.player)
+    self.state.player = PlayerData(self.state.player)
 
 end
 
@@ -325,19 +325,19 @@ end
 function SystemManager:getOverlayImage()
     img = gfx.image.new('assets/backgrounds/ui_overlay')
 
-    -- if g_SystemManager:getPlayer() and g_SystemManager:getPlayer():getSiegelImage() then
+    -- if g_SystemManager:getPlayerData() and g_SystemManager:getPlayerData():getSiegelImage() then
     --     inContext(img, function ()
     --         gfx.setColor(gfx.kColorBlack)
     --         gfx.fillRect(354, 194, 36, 36)
     --         gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-    --         g_SystemManager:getPlayer():getSiegelImage():scaledImage(0.5):draw(356, 196)
+    --         g_SystemManager:getPlayerData():getSiegelImage():scaledImage(0.5):draw(356, 196)
     --     end)
     -- end
 
     return img
 end
 
-function SystemManager:getPlayer()
+function SystemManager:getPlayerData()
     if self.state then
         return self.state.player
     end
@@ -391,17 +391,17 @@ function SystemManager:getLocations()
     return nil
 end
 
-class('Player').extends()
+class('PlayerData').extends()
 
-function Player:init(player)
+function PlayerData:init(player)
     tableUpdate(self, player)
 end
 
-function Player:getInventory()
+function PlayerData:getInventory()
     return self.inventory
 end
 
-function Player:logNotification(str)
+function PlayerData:logNotification(str)
     if not self.notifications then
         self.notifications = {}
     end
@@ -415,21 +415,21 @@ function Player:logNotification(str)
 
 end
 
-function Player:addContract(contract)
+function PlayerData:addContract(contract)
     self.contracts[#self.contracts+1] = contract
     contract:onGain()
 
     return true
 end
 
-function Player:getSiegelImage()
-    if g_SystemManager:getPlayer().siegel_img then
-        return gfx.image.new(g_SystemManager:getPlayer().siegel_img)
+function PlayerData:getSiegelImage()
+    if g_SystemManager:getPlayerData().siegel_img then
+        return gfx.image.new(g_SystemManager:getPlayerData().siegel_img)
     end
     return nil
 end
 
-function Player:removeContract(contract)
+function PlayerData:removeContract(contract)
     local _key = nil
     for k, v in pairs(self.contracts) do
         if v == contract then
@@ -446,11 +446,11 @@ function Player:removeContract(contract)
     return false
 end
 
-function Player:freeInventory()
+function PlayerData:freeInventory()
     return self.inventory.capacity - #self.inventory.items
 end
 
-function Player:addToInventory(item, notify)
+function PlayerData:addToInventory(item, notify)
 
     if notify == nil then
         notify = true
@@ -470,7 +470,7 @@ function Player:addToInventory(item, notify)
     return false
 end
 
-function Player:removeFromInventory(item, notify)
+function PlayerData:removeFromInventory(item, notify)
 
     if notify == nil then
         notify = true
@@ -496,23 +496,23 @@ function Player:removeFromInventory(item, notify)
 end
 
 
-function Player:setCurrentSystem(system)
+function PlayerData:setCurrentSystem(system)
     self.current_system = system
 end
 
-function Player:getCurrentSystem()
+function PlayerData:getCurrentSystem()
     return self.current_system 
 end
 
-function Player:setCurrentLocation(location)
+function PlayerData:setCurrentLocation(location)
     self.current_location = location
 end
 
-function Player:getCurrentLocation()
+function PlayerData:getCurrentLocation()
     return self.current_location 
 end
 
-function Player:doHullDamage(amount)
+function PlayerData:doHullDamage(amount)
 
     if amount == 0 or amount == nil then
         return
@@ -527,7 +527,7 @@ function Player:doHullDamage(amount)
     
 end
 
-function Player:chargeMoney(amount)
+function PlayerData:chargeMoney(amount)
 
     if amount == 0 or amount == nil then
         return true
@@ -543,7 +543,7 @@ function Player:chargeMoney(amount)
     
 end
 
-function Player:gainMoney(amount)
+function PlayerData:gainMoney(amount)
 
     if amount == 0 or amount == nil then
         return true
@@ -556,7 +556,7 @@ function Player:gainMoney(amount)
     
 end
 
-function Player:getLoadoutByType(item_type)
+function PlayerData:getLoadoutByType(item_type)
 
     local _ret = {}
 
@@ -570,7 +570,7 @@ function Player:getLoadoutByType(item_type)
     
 end
 
-function Player:getItemsByType(item_type)
+function PlayerData:getItemsByType(item_type)
 
     local _ret = {}
 
@@ -584,7 +584,7 @@ function Player:getItemsByType(item_type)
     
 end
 
-function Player:hasContract(contract)
+function PlayerData:hasContract(contract)
 
     for k,v in pairs(self.contracts) do
         if v == contract then
@@ -597,7 +597,7 @@ function Player:hasContract(contract)
 end
 
 
-function Player:getContractByType(contract)
+function PlayerData:getContractByType(contract)
 
     local _ret = {}
 

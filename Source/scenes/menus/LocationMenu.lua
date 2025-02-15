@@ -46,7 +46,7 @@ class('LocationMenu').extends(GenericMenuList)
 function LocationMenu:init(data)
 
     self.b_callback = function ()
-        g_SystemManager:getPlayer():setCurrentLocation(nil)
+        g_SystemManager:getPlayerData():setCurrentLocation(nil)
     end
 
     LocationMenu.super.init(self)
@@ -86,7 +86,7 @@ end
 
 function LocationMenu:add()
     LocationMenu.super.add(self)
-    g_SystemManager:getPlayer():setCurrentLocation(self.data)
+    g_SystemManager:getPlayerData():setCurrentLocation(self.data)
 end
 
 function LocationMenu:getOptions(facilities)

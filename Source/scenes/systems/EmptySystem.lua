@@ -47,10 +47,10 @@ end
 
 function EmptySystem:initEnemy()
 
-    self.enemy = Enemy(self.ship)
-    self.enemy:setZIndex(self.ship:getZIndex())
+    self.enemy = Enemy(self.player)
+    self.enemy:setZIndex(self.player:getZIndex())
     self.enemy:add()
-    self.enemy:moveTo(self.ship.x + 200, self.ship.y + 120)
+    self.enemy:moveTo(self.player.x + 200, self.player.y + 120)
     
     table.insert(self.sprites, self.enemy)
 
@@ -114,7 +114,7 @@ function EmptySystem:initFloaters()
         for c=1,self.columns do
             local _x, _y = (c-1)*_col_width + _col_width/2 + math.random(-_col_width/2, _col_width/2), (r-1)*_row_height + _row_height/2 + math.random(-_row_height/2, _row_height/2)
 
-            if pd.geometry.point.new(_x, _y):distanceToPoint(pd.geometry.point.new(self.ship.x, self.ship.y)) > 240 then
+            if pd.geometry.point.new(_x, _y):distanceToPoint(pd.geometry.point.new(self.player.x, self.player.y)) > 240 then
                 local _max_d = math.max(_row_height, _col_width)
                 local _f = self:generateFloater(_x, _y, _max_d*0.5, _max_d*0.9)
 
@@ -128,7 +128,7 @@ function EmptySystem:initFloaters()
 end
 
 function EmptySystem:doUpdateSpaceTimeAnomaly()
-    local _ship_point = pd.geometry.point.new(self.ship:getPosition())
+    local _ship_point = pd.geometry.point.new(self.player:getPosition())
 
     for k,v in pairs(self.floaters) do
         local _floater_point = pd.geometry.point.new(v[1], v[2])
@@ -136,13 +136,13 @@ function EmptySystem:doUpdateSpaceTimeAnomaly()
 
         if _floater_point:distanceToPoint(_ship_point) < _floater_diameter/2 then
             local _v = (_ship_point - _floater_point)
-            self.ship.speed_vector -= _v:normalized() * 0.20 * (_v:magnitude()/(_floater_diameter/2))
+            self.player.speed_vector -= _v:normalized() * 0.20 * (_v:magnitude()/(_floater_diameter/2))
         end
 
         if _floater_point:distanceToPoint(_ship_point) < self.swallow_distance then
 
-            self.ship:moveTo(self.spawn_point)
-            self.ship:stop()
+            self.player:moveTo(self.spawn_point)
+            self.player:stop()
             --g_SystemManager:nextCycle()
         end
     end
@@ -170,7 +170,7 @@ function EmptySystem:initElectricalAnomaly()
         for c=1,self.columns do
             local _x, _y = (c-1)*_col_width + _col_width/2 + math.random(-math.floor(_col_width/2), math.floor(_col_width/2)), (r-1)*_row_height + _row_height/2 + math.random(-math.floor(_row_height/2), math.floor(_row_height/2))
 
-            if pd.geometry.point.new(_x, _y):distanceToPoint(pd.geometry.point.new(self.ship.x, self.ship.y)) > 240 then
+            if pd.geometry.point.new(_x, _y):distanceToPoint(pd.geometry.point.new(self.player.x, self.player.y)) > 240 then
                 local _ray = AnimatedSprite(image_table)
                 _ray:moveTo(_x, _y)
                 _ray:setZIndex(self.bg_sprite:getZIndex()+1)
@@ -201,10 +201,10 @@ function EmptySystem:doUpdateElectricalAnomaly()
 
     pd.display.setOffset(0, 0)
 
-    local _ship_rect = self.ship:getBoundsRect()
+    local _ship_rect = self.player:getBoundsRect()
 
-    _ship_p.x = self.ship.x
-    _ship_p.y = self.ship.y
+    _ship_p.x = self.player.x
+    _ship_p.y = self.player.y
 
     for k, v in pairs(self.rays) do
 
@@ -218,15 +218,15 @@ function EmptySystem:doUpdateElectricalAnomaly()
                 
                 if not self.invulnerable then
                     self.invulnerable = true
-                    self.ship.speed_vector += pd.geometry.vector2D.newPolar(math.random(5, 10), math.random(0, 359))
-                    g_SystemManager:getPlayer():doHullDamage(math.random(10, 20))
+                    self.player.speed_vector += pd.geometry.vector2D.newPolar(math.random(5, 10), math.random(0, 359))
+                    g_SystemManager:getPlayerData():doHullDamage(math.random(10, 20))
                     local _timer = pd.timer.new(1500)
                     _timer.updateCallback = function ()
-                        self.ship:setVisible(not self.ship:isVisible())
+                        self.player:setVisible(not self.player:isVisible())
                     end
                     _timer.timerEndedCallback = function ()
                         self.invulnerable = false
-                        self.ship:setVisible(true)
+                        self.player:setVisible(true)
                     end
                 end
             end

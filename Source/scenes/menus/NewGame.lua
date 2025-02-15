@@ -45,14 +45,14 @@ function NewGame:init(slot)
         {
             trigger = function ()
                 g_SceneManager:pushScene(TextInput({callback= function (text)
-                    g_SystemManager:getPlayer().name = text
+                    g_SystemManager:getPlayerData().name = text
                 end}), 'between menus')
             end,
             type = DIAG_EMPTY
         },
         {
             text = function ()
-                return string.format('Thank you, %s.', g_SystemManager:getPlayer().name)
+                return string.format('Thank you, %s.', g_SystemManager:getPlayerData().name)
             end,
             type = DIAG_OTHER
         },
@@ -82,7 +82,7 @@ function NewGame:init(slot)
         },
         {
             text = function ()
-                return string.format('Is this acceptable for you, %s?', g_SystemManager:getPlayer().name)
+                return string.format('Is this acceptable for you, %s?', g_SystemManager:getPlayerData().name)
             end,
             type = DIAG_OTHER
         },
@@ -113,7 +113,7 @@ function NewGame:init(slot)
                                             {
                                                 name='Yes',
                                                 callback= function ()
-                                                    g_SystemManager:getPlayer().siegel_img = _self:getSelection().image_path
+                                                    g_SystemManager:getPlayerData().siegel_img = _self:getSelection().image_path
                                                     g_SceneManager:popScene('between menus')
                                                 end
                                             },
@@ -146,7 +146,7 @@ function NewGame:init(slot)
                         },
                         {
                             text = function ()
-                                return string.format("Welcome to the *Ruhevolk*. Enjoy your *Wonderlust*.\nSee you at the end, %s!", g_SystemManager:getPlayer().name)
+                                return string.format("Welcome to the *Ruhevolk*. Enjoy your *Wonderlust*.\nSee you at the end, %s!", g_SystemManager:getPlayerData().name)
                             end,
                             type = DIAG_OTHER
                         },
@@ -155,7 +155,7 @@ function NewGame:init(slot)
                                 g_SoundManager:stopComputerHum()
                                 g_SoundManager:playDegauss()
                                 g_SoundManager:playMenuSwitch()
-                                goTo(g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z, nil, true)
+                                goTo(g_SystemManager:getPlayerData().current_position.x, g_SystemManager:getPlayerData().current_position.y, g_SystemManager:getPlayerData().current_position.z, nil, true)
                             end,
                             type = DIAG_EMPTY
                         }

@@ -24,7 +24,7 @@ function SaveSelect:getOption(name, slot)
                 g_SoundManager:stopComputerHum()
                 g_SoundManager:playDegauss()
                 g_SoundManager:playMenuSwitch()
-                goTo(g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z, nil, true)
+                goTo(g_SystemManager:getPlayerData().current_position.x, g_SystemManager:getPlayerData().current_position.y, g_SystemManager:getPlayerData().current_position.z, nil, true)
             else
                 g_SceneManager:pushScene(NewGame(slot), 'between menus')
             end

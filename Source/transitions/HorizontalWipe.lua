@@ -16,7 +16,7 @@ function Wipe:init(duration, dir, reversed)
     _img:addMask(true)
 
     inContext(_img:getMaskImage(), function ()
-        g_SystemManager:getPlayer():getSiegelImage():drawAnchored(380,220, 1, 1)
+        g_SystemManager:getPlayerData():getSiegelImage():drawAnchored(380,220, 1, 1)
     end)
 
     inContext(self.image, function ()

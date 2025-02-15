@@ -141,7 +141,7 @@ function NotificationManager:_notify(str, duration, log)
     g_SoundManager:playNotification(self.in_out_duration)
 
     if log then
-        g_SystemManager:getPlayer():logNotification(str)
+        g_SystemManager:getPlayerData():logNotification(str)
     end
 
     return true

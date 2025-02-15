@@ -14,6 +14,86 @@ function getRandomDistinctPair(min, max)
     return first, second
 end
 
+function openCloseDoors(callback)
+
+    local _door_right = gfx.sprite.new(gfx.image.new('assets/door_right'))
+    local _door_left = gfx.sprite.new(gfx.image.new('assets/door_left'))
+
+    _door_right:setIgnoresDrawOffset(true)
+    _door_right:moveTo(600, 120)
+    _door_right:setZIndex(TRANSITIONS_Z_INDEX)
+    _door_right:add()
+
+    _door_left:setIgnoresDrawOffset(true)
+    _door_left:moveTo(-200, 120)
+    _door_left:setZIndex(TRANSITIONS_Z_INDEX)
+    _door_left:add()
+
+    local _timer_doors_close = pd.timer.new(500, 0, 400, pd.easingFunctions.outCirc)
+
+    _timer_doors_close.updateCallback = function (timer)
+        _door_left:moveTo(-200 + timer.value, 120)
+        _door_right:moveTo(600 - timer.value, 120)
+    end
+
+    _timer_doors_close.timerEndedCallback = function ()
+        _door_left:moveTo(200, 120)
+        _door_right:moveTo(200, 120)
+
+        callback()
+
+        local _timer_doors_open = pd.timer.new(500, 0, 400, pd.easingFunctions.intCirc)
+        --_timer_doors_open.delay = 1000
+        _timer_doors_open.updateCallback = function (timer)
+            _door_left:moveTo(200 - timer.value, 120)
+            _door_right:moveTo(200 + timer.value, 120)
+        end
+        _timer_doors_open.timerEndedCallback = function ()
+            
+            _door_left:remove()
+            _door_right:remove()
+        end
+        
+    end
+
+end
+
+
+function exitShip()
+
+    local _current_system = g_SystemManager:getPlayerData():getCurrentSystem()
+
+    openCloseDoors(function ()
+        local _ship_placeholder = gfx.sprite.new(_current_system.player:getImage())
+        _ship_placeholder.angle = _current_system.player.angle
+        _ship_placeholder:setZIndex(_current_system.player:getZIndex()-1)
+        _ship_placeholder:setCollideRect( 0, 0, _ship_placeholder:getSize())
+        _ship_placeholder:moveTo(_current_system.player.x, _current_system.player.y)
+        _ship_placeholder:add()
+
+        _ship_placeholder.interactuable = true
+        _ship_placeholder.interact = function ()
+
+            openCloseDoors(function ()
+                _ship_placeholder:remove()
+                table_remove(_current_system.sprites, _ship_placeholder)
+                _current_system.player:setShip()
+                _current_system.player:setAngle(_ship_placeholder.angle)
+            end)
+            
+        end
+
+        table.insert(_current_system.sprites, _ship_placeholder)
+
+        _current_system.player:setEVA()
+
+        g_SceneManager:popToSystem()
+        _current_system:moveCamera()
+    end)
+    
+end
+
+
 function drawDottedCircle(centerX, centerY, radius, dotCount, dotRadius, rotationAngle)
     -- Iterate through the number of dots you want to place on the circle
     for i = 1, dotCount do
@@ -324,7 +404,7 @@ function signContractMenu(contract, a_callback, b_callback, notify)
                         _timer.timerEndedCallback = function ()
 
                             inContext(_image_viewer.image_sprite:getImage(), function ()
-                                g_SystemManager:getPlayer():getSiegelImage():drawAnchored(_image_viewer.image_sprite.width - 25, _image_viewer.image_sprite.height - 15, 1, 1)
+                                g_SystemManager:getPlayerData():getSiegelImage():drawAnchored(_image_viewer.image_sprite.width - 25, _image_viewer.image_sprite.height - 15, 1, 1)
                             end)
 
                             g_SoundManager:playStamp()
@@ -341,7 +421,7 @@ function signContractMenu(contract, a_callback, b_callback, notify)
                                     g_NotificationManager:notify('Contract Signed')
                                 end
                                 contract:onSign()
-                                g_SystemManager:getPlayer():addContract(contract)
+                                g_SystemManager:getPlayerData():addContract(contract)
                                 
                                 if a_callback then
                                     a_callback()
@@ -370,7 +450,7 @@ end
 
 function goTo(x, y, z, direction, no_last_position_update)
 
-    local _player = g_SystemManager:getPlayer()
+    local _player = g_SystemManager:getPlayerData()
 
     if not direction then
         direction = 'down'
@@ -481,7 +561,7 @@ function getStatusImg()
 
         gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
 
-        local _system = g_SystemManager:getPlayer():getCurrentSystem()
+        local _system = g_SystemManager:getPlayerData():getCurrentSystem()
         local _system_data = _system.data
 
         local _data = "*System*"
@@ -505,7 +585,7 @@ function getStatusImg()
         _data = "*Credits*"
         gfx.drawTextAligned(_data, img.width*0.05, img.height*0.5, kTextAlignment.left)
 
-        _data = string.format("%iC", g_SystemManager:getPlayer().money)
+        _data = string.format("%iC", g_SystemManager:getPlayerData().money)
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.5, kTextAlignment.right)
 
         gfx.drawTextAligned("*Hull*", img.width*0.05, img.height*0.65, kTextAlignment.left)
@@ -516,7 +596,7 @@ function getStatusImg()
 
         gfx.drawTextAligned("*Fuel*", img.width*0.05, img.height*0.80, kTextAlignment.left)
         
-        _data = string.format("%i%%", math.floor(g_SystemManager:getPlayer().ship.fuel_current/g_SystemManager:getPlayer().ship.fuel_capacity*100 + 0.5))
+        _data = string.format("%i%%", math.floor(g_SystemManager:getPlayerData().ship.fuel_current/g_SystemManager:getPlayerData().ship.fuel_capacity*100 + 0.5))
         gfx.drawTextAligned(_data, img.width*0.95, img.height*0.80, kTextAlignment.right)
 
 
@@ -532,17 +612,17 @@ function drawPauseMenu()
         gfx.setFont(g_font_18)
         gfx.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
         gfx.setColor(gfx.kColorWhite)
-        if g_SystemManager:getPlayer().current_position.x then
+        if g_SystemManager:getPlayerData().current_position.x then
             local _label = "System"
-            local _data = g_SystemManager:getPlayer():getCurrentSystem():getName()
+            local _data = g_SystemManager:getPlayerData():getCurrentSystem():getName()
             
             --gfx.drawTextAligned(_label, img.width*0.05, img.height*0.3, kTextAlignment.left)
             gfx.drawTextAligned(_data, img.width*0.45, img.height*0.3, kTextAlignment.right)
         end
 
-        if g_SystemManager:getPlayer().cycle then
+        if g_SystemManager:getPlayerData().cycle then
             local _label = "Cycle"
-            local _data = string.format("Cycle %i", g_SystemManager:getPlayer().cycle)
+            local _data = string.format("Cycle %i", g_SystemManager:getPlayerData().cycle)
             
             --gfx.drawTextAligned(_label, img.width*0.05, img.height*0.4, kTextAlignment.left)
             gfx.drawTextAligned(_data, img.width*0.45, img.height*0.4, kTextAlignment.right)
@@ -550,9 +630,9 @@ function drawPauseMenu()
         
         end
 
-        if g_SystemManager:getPlayer().money then
+        if g_SystemManager:getPlayerData().money then
             local _label = ""
-            local _data = string.format("%iC", g_SystemManager:getPlayer().money)
+            local _data = string.format("%iC", g_SystemManager:getPlayerData().money)
             
             
             --gfx.drawTextAligned(_label, img.width*0.05, img.height*0.5, kTextAlignment.left)
@@ -561,7 +641,7 @@ function drawPauseMenu()
 
         gfx.drawTextAligned("Fuel", img.width/4, img.height*0.78, kTextAlignment.center)
         gfx.setImageDrawMode(playdate.graphics.kDrawModeCopy)
-        gfx.imagetable.new('assets/fuel'):getImage(clamp(math.floor(10*(g_SystemManager:getPlayer().ship.fuel_current/g_SystemManager:getPlayer().ship.fuel_capacity))+2, 1, 11)):drawAnchored(img.width/4, img.height*.9 , 0.5, 0.5)
+        gfx.imagetable.new('assets/fuel'):getImage(clamp(math.floor(10*(g_SystemManager:getPlayerData().ship.fuel_current/g_SystemManager:getPlayerData().ship.fuel_capacity))+2, 1, 11)):drawAnchored(img.width/4, img.height*.9 , 0.5, 0.5)
         gfx.setFont()
     gfx.popContext()
 

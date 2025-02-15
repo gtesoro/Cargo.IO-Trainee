@@ -13,7 +13,7 @@ function CargoHub:init()
             callback = function ()
 
                 local _items = {}
-                for k,v in pairs(g_SystemManager:getPlayer().inventory.items) do
+                for k,v in pairs(g_SystemManager:getPlayerData().inventory.items) do
                     if v:isa(QlCargo) then
                         table.insert(_items, v)
                     end
@@ -29,12 +29,12 @@ function CargoHub:init()
                         columns=#_items,
                         a_callback= function (_self)
                             local _item = _self:getSelection()
-                            if _item.destination.name ~= g_SystemManager:getPlayer():getCurrentLocation().name then
+                            if _item.destination.name ~= g_SystemManager:getPlayerData():getCurrentLocation().name then
                                 createPopup({text='Wrong destination'})
                             else
-                                g_SystemManager:getPlayer():removeFromInventory(_item)
-                                for k,v in pairs(g_SystemManager:getPlayer():getContractByType("DeliveryContract")) do
-                                    g_SystemManager:getPlayer():removeContract(v)
+                                g_SystemManager:getPlayerData():removeFromInventory(_item)
+                                for k,v in pairs(g_SystemManager:getPlayerData():getContractByType("DeliveryContract")) do
+                                    g_SystemManager:getPlayerData():removeContract(v)
                                     v:onComplete()
                                 end
                             end
@@ -48,7 +48,7 @@ function CargoHub:init()
         {
             name = 'System Delivery Contract',
             callback = function ()
-                if #g_SystemManager:getPlayer():getContractByType('DeliveryContract') > 0 then
+                if #g_SystemManager:getPlayerData():getContractByType('DeliveryContract') > 0 then
                     createPopup({text='You can only have one Quick Lock delivery contract at the same time.'})
                 else
                     local _contract = DeliveryContract()
@@ -59,12 +59,12 @@ function CargoHub:init()
             end
         }
     }
-    local _locations = g_SystemManager:getPlayer():getCurrentSystem().locations
+    local _locations = g_SystemManager:getPlayerData():getCurrentSystem().locations
     if _locations and #_locations > 1 then
         table.insert(self.data.options, {
             name = 'Local Delivery Contract',
             callback = function ()
-                if #g_SystemManager:getPlayer():getContractByType('DeliveryContract') > 0 then
+                if #g_SystemManager:getPlayerData():getContractByType('DeliveryContract') > 0 then
                     createPopup({text='You can only have one Quick Lock delivery contract at the same time.'})
                 else
                     local _contract = DeliveryContract()
@@ -86,7 +86,7 @@ function CargoHubDelivery:init(data)
 
     CargoHubDelivery.super.init(self, data)
 
-    self.data.items = g_SystemManager:getPlayer().inventory.items
+    self.data.items = g_SystemManager:getPlayerData().inventory.items
 
     self.data.context_options = {
         {
@@ -96,12 +96,12 @@ function CargoHubDelivery:init(data)
                 if not item:isa(QlCargo) then
                     createPopup({text='This hub only accepts Quick Lock cargo'})
                 else
-                    if item.destination.name ~= g_SystemManager:getPlayer():getCurrentLocation().name then
+                    if item.destination.name ~= g_SystemManager:getPlayerData():getCurrentLocation().name then
                         createPopup({text='Wrong destination'})
                     else
-                        g_SystemManager:getPlayer():removeFromInventory(item)
-                        for k,v in pairs(g_SystemManager:getPlayer():getContractByType("DeliveryContract")) do
-                            g_SystemManager:getPlayer():removeContract(v)
+                        g_SystemManager:getPlayerData():removeFromInventory(item)
+                        for k,v in pairs(g_SystemManager:getPlayerData():getContractByType("DeliveryContract")) do
+                            g_SystemManager:getPlayerData():removeContract(v)
                             v:onComplete()
                         end
                     end
@@ -132,7 +132,7 @@ function CloningFacility:init()
         {
             name = 'Update Memory',
             callback = function ()
-                local _contract = g_SystemManager:getPlayer():getContractByType('CloningContract')[1]
+                local _contract = g_SystemManager:getPlayerData():getContractByType('CloningContract')[1]
                 if _contract then 
                     _contract:updateMemory()
                 else
@@ -158,14 +158,14 @@ function Starport:init()
         {
             name = 'Garage',
             callback = function ()
-                g_SceneManager:pushScene(LoadoutMenu({items=g_SystemManager:getPlayer().ship.loadout.items, read_only=false}), 'between menus')
+                g_SceneManager:pushScene(LoadoutMenu({items=g_SystemManager:getPlayerData().ship.loadout.items, read_only=false}), 'between menus')
             end
         },
         {
             name = 'Refuel - 10C',
             callback = function ()
-                if g_SystemManager:getPlayer():chargeMoney(10) then
-                    g_SystemManager:getPlayer().ship.fuel_current = g_SystemManager:getPlayer().ship.fuel_capacity
+                if g_SystemManager:getPlayerData():chargeMoney(10) then
+                    g_SystemManager:getPlayerData().ship.fuel_current = g_SystemManager:getPlayerData().ship.fuel_capacity
                     g_NotificationManager:notify("Fuel Refilled")
                 end
             end
@@ -173,11 +173,11 @@ function Starport:init()
         {
             name = 'Repair Hull - 100C',
             callback = function ()
-                if g_SystemManager:getPlayer().ship.hull_current == g_SystemManager:getPlayer().ship.hull_total then
+                if g_SystemManager:getPlayerData().ship.hull_current == g_SystemManager:getPlayerData().ship.hull_total then
                     g_NotificationManager:notify("Hull does not need repair")
                 else
-                    if g_SystemManager:getPlayer():chargeMoney(100) then
-                        g_SystemManager:getPlayer().ship.hull_current = g_SystemManager:getPlayer().ship.hull_total
+                    if g_SystemManager:getPlayerData():chargeMoney(100) then
+                        g_SystemManager:getPlayerData().ship.hull_current = g_SystemManager:getPlayerData().ship.hull_total
                         g_NotificationManager:notify("Hull Repaired")
                     end
                 end
@@ -233,8 +233,8 @@ function ShopInventory:init(data)
             callback = function (_self)
                 local item = _self.data.parent.item_grid:getSelection()
 
-                if g_SystemManager:getPlayer():chargeMoney(item:getCurrentPrice()) then
-                    g_SystemManager:getPlayer():addToInventory(item)
+                if g_SystemManager:getPlayerData():chargeMoney(item:getCurrentPrice()) then
+                    g_SystemManager:getPlayerData():addToInventory(item)
 
                     --table.remove(self.data.items, _self.data.parent.item_grid:getSelectionIndex())
                     _self.data.parent.item_grid:drawGrid()
@@ -253,7 +253,7 @@ function ShopPlayerInventory:init(data)
 
     ShopPlayerInventory.super.init(self, data)
 
-    self.data.items = g_SystemManager:getPlayer().inventory.items
+    self.data.items = g_SystemManager:getPlayerData().inventory.items
 
     self.data.context_options = {
         {
@@ -261,8 +261,8 @@ function ShopPlayerInventory:init(data)
             callback = function (_self)
                 local item = _self.data.parent.item_grid:getSelection()
                 local price = item:getCurrentPrice()
-                g_SystemManager:getPlayer():gainMoney(price)
-                g_SystemManager:getPlayer():removeFromInventory(item)
+                g_SystemManager:getPlayerData():gainMoney(price)
+                g_SystemManager:getPlayerData():removeFromInventory(item)
                 _self.data.parent.item_grid:drawGrid()
                 _self.data.parent:focus()
                 _self:remove()

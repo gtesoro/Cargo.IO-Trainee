@@ -44,7 +44,7 @@ local function init()
 end
 
 function pd.gameWillPause()
-	if g_SystemManager:getPlayer() then
+	if g_SystemManager:getPlayerData() then
 		pd.setMenuImage(drawPauseMenu())
 	end
 	pd.stop()

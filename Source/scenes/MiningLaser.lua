@@ -158,7 +158,7 @@ function MiningLaser:animateMineral(mineral)
         self:closeDoor()
     end
 
-    g_SystemManager:getPlayer():addToInventory(getRandomMineral())
+    g_SystemManager:getPlayerData():addToInventory(getRandomMineral())
 
 end
 

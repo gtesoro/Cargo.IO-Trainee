@@ -14,7 +14,7 @@ function PlayerMenu:init()
             name = 'Ship',
             sprite = gfx.sprite.new(getStatusImg()),
             callback = function ()
-                g_SceneManager:pushScene(LoadoutMenu({items=g_SystemManager:getPlayer().ship.loadout.items, read_only=true}), 'between menus')
+                g_SceneManager:pushScene(LoadoutMenu({items=g_SystemManager:getPlayerData().ship.loadout.items, read_only=true}), 'between menus')
             end
         },
         {
@@ -70,32 +70,35 @@ function FunctionsMenu:init()
             {
                 name = 'Exit Ship',
                 callback = function ()
+
+                    exitShip()
                     
-                    g_SceneManager:pushScene(Popup({text='Space contains no breathtable gases.\nAre you sure?', options={
-                        {
-                            name='Yes',
-                            no_exit=true,
-                            callback= function ()
-                                g_SoundManager:stopComputerHum()
-                                g_SystemManager:disableControl()
-                                g_SceneManager:popToSystem()
-                                g_SoundManager:playChoking()
-                                local _t = pd.timer.new(3000)
-                                _t.timerEndedCallback = function ()
-                                    g_SystemManager:enableControl()
-                                    g_EventManager:trigger(EVENT_DEATH)
-                                end
-                            end
-                        },
-                        {
-                            name='No'
-                        }
-                    }}))
+                    
+                    -- g_SceneManager:pushScene(Popup({text='Space contains no breathtable gases.\nAre you sure?', options={
+                    --     {
+                    --         name='Yes',
+                    --         no_exit=true,
+                    --         callback= function ()
+                    --             g_SoundManager:stopComputerHum()
+                    --             g_SystemManager:disableControl()
+                    --             g_SceneManager:popToSystem()
+                    --             g_SoundManager:playChoking()
+                    --             local _t = pd.timer.new(3000)
+                    --             _t.timerEndedCallback = function ()
+                    --                 g_SystemManager:enableControl()
+                    --                 g_EventManager:trigger(EVENT_DEATH)
+                    --             end
+                    --         end
+                    --     },
+                    --     {
+                    --         name='No'
+                    --     }
+                    -- }}))
                 end
             }
         }
     
-    if #g_SystemManager:getPlayer():getLoadoutByType('LeapEngine') > 0 then
+    if #g_SystemManager:getPlayerData():getLoadoutByType('LeapEngine') > 0 then
         table.insert(self.data.options, {
             name = "Leap",
             callback = function ()
@@ -135,7 +138,7 @@ function ContractListMenu:init()
     self.data.options = function ()
         local _ret = {}
 
-        for k, v in pairs(g_SystemManager:getPlayer().contracts) do
+        for k, v in pairs(g_SystemManager:getPlayerData().contracts) do
             _ret[#_ret+1] = {
                 name = v.name,
                 sprite = v:getIcon(),
@@ -185,7 +188,7 @@ function CodexListMenu:init(data)
 
     local _list = {}
         
-    -- for k, v in pairs(g_SystemManager:getPlayer().codex.locations) do
+    -- for k, v in pairs(g_SystemManager:getPlayerData().codex.locations) do
     --     local _location = g_SystemManager:getLocation(v)
     --     _list[#_list+1] = {
     --         name = _location.name,
@@ -229,7 +232,7 @@ function NotificationsMenu:init()
 
     local _list = {}
         
-    local _table = g_SystemManager:getPlayer().notifications
+    local _table = g_SystemManager:getPlayerData().notifications
     for i = #_table, 1, -1 do
         _list[#_list+1] = {
             name = string.format("Cycle %i.%02d - %s", _table[i].cycle, _table[i].time, _table[i].text)
@@ -248,14 +251,14 @@ function PlayerInventory:init()
 
     PlayerInventory.super.init(self)
 
-    self.data.items = g_SystemManager:getPlayer().inventory.items
+    self.data.items = g_SystemManager:getPlayerData().inventory.items
 
     self.data.context_options = {
         {
             name="Drop",
             callback = function (_self)
 
-                g_SystemManager:getPlayer():removeFromInventory(_self.data.parent.item_grid:getSelection())
+                g_SystemManager:getPlayerData():removeFromInventory(_self.data.parent.item_grid:getSelection())
                 
                 _self.data.parent.item_grid:drawGrid()
                 _self.data.parent:focus()

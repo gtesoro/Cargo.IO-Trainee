@@ -290,13 +290,29 @@ function getStaticData()
         stage = "Ship02",
         stage_overlay = "assets/spaceships/N.01-C",
         stage_middle = "assets/spaceships/N.01-C_Middle",
-        stage_offset_x = 100,
-        stage_offset_y = 100,
+        stage_offset_x = 0,
+        stage_offset_y = 0,
         x = -3,
         y = 0,
         z = 0,
         playfield_width = 2000,
         playfield_height = 2000,
+    }
+
+    table.insert(_systems, _sys)
+
+    _sys = {
+        class = 'StageSystem',
+        name = "DevStage2",
+        background = "assets/checker_test_16",
+        stage = "Test",
+        stage_offset_x = 0,
+        stage_offset_y = 0,
+        x = -4,
+        y = 0,
+        z = 0,
+        playfield_width = 400,
+        playfield_height = 240,
     }
     
     table.insert(_systems, _sys)

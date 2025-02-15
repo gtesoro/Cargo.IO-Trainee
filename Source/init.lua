@@ -39,7 +39,7 @@ import "obj/contracts/contracts"
 import "ui/fuel"
 
 import "obj/Planet"
-import "obj/Ship"
+import "obj/Player"
 import "obj/Enemy"
 import "obj/Particle"
 import "obj/InteractionPoint"

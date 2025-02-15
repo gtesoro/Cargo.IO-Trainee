@@ -39,7 +39,7 @@ function AsteroidSystem:initAsteroids()
             local _self = self
             function spr:interact()
 
-                if #g_SystemManager:getPlayer():getLoadoutByType('Laser') > 0 then
+                if #g_SystemManager:getPlayerData():getLoadoutByType('Laser') > 0 then
                     g_SceneManager:pushScene(MiningLaser({bg_img = _self:getCurrentBg()}), 'wipe down')
                     table_remove(_self.sprites, spr)
                     table_remove(_self.asteroids, spr)

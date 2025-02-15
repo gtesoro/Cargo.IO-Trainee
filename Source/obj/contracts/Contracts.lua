@@ -56,8 +56,8 @@ function Contract:getContractImage(bg)
 
         local _system_name = 'Ruhe'
 
-        if g_SystemManager:getPlayer():getCurrentSystem() then
-            _system_name = g_SystemManager:getPlayer():getCurrentSystem():getName()
+        if g_SystemManager:getPlayerData():getCurrentSystem() then
+            _system_name = g_SystemManager:getPlayerData():getCurrentSystem():getName()
         end
 
         local _cycle, _time = g_SystemManager:getCycle()
@@ -96,7 +96,7 @@ function Contract:getContractImage(bg)
         gfx.drawTextInRect(self.provider, _x_margin*1.5, _current_y, (_img_width - _x_margin*3)/2, _h, nil, nil, kTextAlignment.left)
 
         if self.state.signed then
-            g_SystemManager:getPlayer():getSiegelImage():drawAnchored(_img_width - _x_margin*1.5, _current_y, 1, 0)
+            g_SystemManager:getPlayerData():getSiegelImage():drawAnchored(_img_width - _x_margin*1.5, _current_y, 1, 0)
         end
         
     end)
@@ -140,14 +140,14 @@ end
 
 -- function Contract:onCancel()
 
---     if g_SystemManager:getPlayer():hasContract(self) then
+--     if g_SystemManager:getPlayerData():hasContract(self) then
 --         g_SceneManager:pushScene(Popup({text='Cancel Contract?', options={
 --             {
 --                 name='Yes',
 --                 callback= function ()
 --                     g_NotificationManager:notify(string.format("Contract Canceled: %s", self.name))
 --                     self:onLose()
---                     g_SystemManager:getPlayer():removeContract(self)
+--                     g_SystemManager:getPlayerData():removeContract(self)
 --                     g_SceneManager:popScene('between menus')
 --                 end
 --             },
@@ -167,8 +167,8 @@ end
 function Contract:onSign()
 
     local _system = 'Ruhe'
-    if g_SystemManager:getPlayer():getCurrentSystem() then
-        _system = g_SystemManager:getPlayer():getCurrentSystem().name
+    if g_SystemManager:getPlayerData():getCurrentSystem() then
+        _system = g_SystemManager:getPlayerData():getCurrentSystem().name
     end
 
     self.state.sign_system = _system
@@ -231,7 +231,7 @@ end
 function CloningContract:cycleCheck(cycle)
     if cycle >= self.state.sign_date + self.duration then
         g_NotificationManager:notify('Cloning Contract Expired')
-        g_SystemManager:getPlayer():removeContract(self)
+        g_SystemManager:getPlayerData():removeContract(self)
         self:onLose()
     end
 end
@@ -245,7 +245,7 @@ function CloningContract:load(state)
 end
 
 function CloningContract:canSign()
-    return g_SystemManager:getPlayer():chargeMoney(self:getSignPrice())
+    return g_SystemManager:getPlayerData():chargeMoney(self:getSignPrice())
 end
 
 
@@ -278,7 +278,7 @@ function CloningContract:onDeath()
     g_SystemManager:load(self.save_name)
     g_SceneManager:reset()
     g_NotificationManager:notify('Clone Deployed')
-    goTo(g_SystemManager:getPlayer().current_position.x, g_SystemManager:getPlayer().current_position.y, g_SystemManager:getPlayer().current_position.z)
+    goTo(g_SystemManager:getPlayerData().current_position.x, g_SystemManager:getPlayerData().current_position.y, g_SystemManager:getPlayerData().current_position.z)
 end
 
 class('DeliveryContract').extends(Contract)
@@ -304,16 +304,16 @@ end
 
 function DeliveryContract:generateLocalContract()
 
-    local _current_system = g_SystemManager:getPlayer():getCurrentSystem()
+    local _current_system = g_SystemManager:getPlayerData():getCurrentSystem()
 
-    math.randomseed(g_SystemManager:getPlayer().cycle + stringToSeed(_current_system.data.name))
+    math.randomseed(g_SystemManager:getPlayerData().cycle + stringToSeed(_current_system.data.name))
 
     local _locations = _current_system.locations
 
     self.state.destination_system = _current_system.data
     self.state.destination = _locations[math.random(1, #_locations)].location_data
 
-    while self.state.destination == g_SystemManager:getPlayer():getCurrentLocation() do
+    while self.state.destination == g_SystemManager:getPlayerData():getCurrentLocation() do
         self.state.destination = _locations[math.random(1, #_locations)].location_data
     end
     self.state.length = 1
@@ -331,9 +331,9 @@ end
 
 function DeliveryContract:generateSystemContract()
 
-    local _current_system = g_SystemManager:getPlayer():getCurrentSystem()
+    local _current_system = g_SystemManager:getPlayerData():getCurrentSystem()
 
-    math.randomseed(g_SystemManager:getPlayer().cycle + stringToSeed(_current_system.data.name))
+    math.randomseed(g_SystemManager:getPlayerData().cycle + stringToSeed(_current_system.data.name))
 
     local _possible_systems = {}
 
@@ -381,30 +381,30 @@ function DeliveryContract:renderText()
     return string.format(self.contract_text, 
                          self.state.destination.name, 
                          self.state.destination_system.name,
-                         g_SystemManager:getPlayer().cycle+self.state.length,
+                         g_SystemManager:getPlayerData().cycle+self.state.length,
                          self.state.reward)
 
 end
 
 function DeliveryContract:canSign() 
-    return g_SystemManager:getPlayer():freeInventory() > 1
+    return g_SystemManager:getPlayerData():freeInventory() > 1
 end
 
 function DeliveryContract:onGain()
-    g_SystemManager:getPlayer():addToInventory(QlCargo(self.state.destination))
+    g_SystemManager:getPlayerData():addToInventory(QlCargo(self.state.destination))
 end
 
 function DeliveryContract:onComplete()
     self.state.completed = true
     
     local _reward = self.state.reward
-    if self.state.sign_date + self.state.length < g_SystemManager:getPlayer().cycle then
-        local _diff = g_SystemManager:getPlayer().cycle - (self.state.sign_date + self.state.length)
+    if self.state.sign_date + self.state.length < g_SystemManager:getPlayerData().cycle then
+        local _diff = g_SystemManager:getPlayerData().cycle - (self.state.sign_date + self.state.length)
         g_NotificationManager:notify(string.format("Late Penalty: -%i", _reward - math.floor(_reward/(2 ^ _diff))))
         _reward = math.floor(_reward/(2 ^ _diff))
     end
     g_NotificationManager:notify(string.format("Contract Completed: %s", self.name))
-    g_SystemManager:getPlayer():gainMoney(_reward)
+    g_SystemManager:getPlayerData():gainMoney(_reward)
 end
 
 function DeliveryContract:load(state)
